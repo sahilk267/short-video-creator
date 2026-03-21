@@ -139,18 +139,26 @@ export class ShortCreator {
       await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
 
       const isAiImage = config.useAiImages || this.config.useAiImages;
-      const tempMediaFileName = `scene-${index}${isAiImage ? ".jpg" : ".mp4"}`;
+      const mediaExt = isAiImage ? ".jpg" : ".mp4";
+      const tempMediaFileName = `${cuid()}${mediaExt}`;
       const tempMediaPath = path.join(this.config.tempDirPath, tempMediaFileName);
+      tempFiles.push(tempMediaPath);
 
       let mediaUrl = "";
-      if (config.useAiImages || this.config.useAiImages) {
+      if (isAiImage) {
         // Use AI image from Pollinations.ai
-        const aiPrompt = scene.text.slice(0, 100); // Simple prompt from text
+        const aiPrompt = scene.visualPrompt || scene.text.slice(0, 150);
         const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt)}?width=${orientation === OrientationEnum.landscape ? 1920 : 1080}&height=${orientation === OrientationEnum.landscape ? 1080 : 1920}&nologo=true`;
         
         logger.debug({ aiPrompt, pollinationsUrl }, "Fetching AI image from Pollinations.ai");
-        await this.downloadFile(pollinationsUrl, tempMediaPath); // use tempMediaPath
-        mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
+        try {
+          await this.downloadFile(pollinationsUrl, tempMediaPath);
+          mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
+        } catch (err) {
+          logger.error({ err, pollinationsUrl }, "Failed to download AI image");
+          // Fallback to a placeholder or throw error
+          throw new Error(`Failed to generate AI image for scene ${index + 1}`);
+        }
       } else {
         const video = await this.pexelsApi.findVideo(
           scene.searchTerms,
@@ -168,7 +176,8 @@ export class ShortCreator {
       scenes.push({
         captions,
         headline: scene.headline || scene.text.split(" ").slice(0, 5).join(" ") + "...",
-        [config.useAiImages || this.config.useAiImages ? "imageUrl" : "video"]: mediaUrl,
+        [isAiImage ? "imageUrl" : "video"]: mediaUrl,
+        visualPrompt: scene.visualPrompt,
         audio: {
           url: `http://localhost:${this.config.port}/api/tmp/${tempMp3FileName}`,
           duration: audioLength,

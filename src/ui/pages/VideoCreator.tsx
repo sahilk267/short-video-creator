@@ -16,15 +16,15 @@ import {
   Alert,
   IconButton,
   Divider,
+  FormControlLabel,
+  Switch,
+  Chip,
+  Stack,
   InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import {
-  FormControlLabel,
-  Switch,
-} from "@mui/material";
 import {
   SceneInput,
   RenderConfig,
@@ -39,12 +39,13 @@ interface SceneFormData {
   text: string;
   searchTerms: string;
   headline: string;
+  visualPrompt: string;
 }
 
 const VideoCreator: React.FC = () => {
   const navigate = useNavigate();
   const [scenes, setScenes] = useState<SceneFormData[]>([
-    { text: "", searchTerms: "", headline: "" },
+    { text: "", searchTerms: "", headline: "", visualPrompt: "" },
   ]);
   const [config, setConfig] = useState<RenderConfig>({
     paddingBack: 1500,
@@ -59,8 +60,9 @@ const VideoCreator: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [newsSources, setNewsSources] = useState<{ id: string; name: string }[]>([]);
+  const [sources, setSources] = useState<{ id: string; name: string; category: string }[]>([]);
   const [selectedSource, setSelectedSource] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("World");
   const [voices, setVoices] = useState<VoiceEnum[]>([]);
   const [musicTags, setMusicTags] = useState<MusicMoodEnum[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
@@ -76,7 +78,7 @@ const VideoCreator: React.FC = () => {
 
         setVoices(voicesResponse.data);
         setMusicTags(musicResponse.data);
-        setNewsSources(newsResponse.data);
+        setSources(newsResponse.data);
       } catch (err) {
         console.error("Failed to fetch options:", err);
         setError(
@@ -91,7 +93,7 @@ const VideoCreator: React.FC = () => {
   }, []);
 
   const handleAddScene = () => {
-    setScenes([...scenes, { text: "", searchTerms: "", headline: "" }]);
+    setScenes([...scenes, { text: "", searchTerms: "", headline: "", visualPrompt: "" }]);
   };
 
   const handleRemoveScene = (index: number) => {
@@ -112,7 +114,8 @@ const VideoCreator: React.FC = () => {
         setScenes(res.data.scenes.map((s: any) => ({
           text: s.text,
           searchTerms: Array.isArray(s.searchTerms) ? s.searchTerms.join(", ") : s.searchTerms,
-          headline: s.headline || ""
+          headline: s.headline || "",
+          visualPrompt: s.visualPrompt || ""
         })));
       }
     } catch (err: any) {
@@ -149,6 +152,7 @@ const VideoCreator: React.FC = () => {
       const apiScenes: SceneInput[] = scenes.map((scene) => ({
         text: scene.text,
         headline: scene.headline.trim() || undefined,
+        visualPrompt: scene.visualPrompt.trim() || undefined,
         searchTerms: scene.searchTerms
           .split(",")
           .map((term) => term.trim())
@@ -188,27 +192,59 @@ const VideoCreator: React.FC = () => {
         Create New Video
       </Typography>
 
-      <Paper sx={{ p: 4, mb: 4, bgcolor: "rgba(25, 118, 210, 0.05)", border: "1px dashed #1976d2", borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom color="primary" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <AutoFixHighIcon /> Magic Auto-Scripting (with Ollama)
+      <Paper sx={{ p: 4, mb: 4, bgcolor: "rgba(25, 118, 210, 0.04)", border: "1px dashed #1976d2" }}>
+        <Typography variant="h6" sx={{ display: "flex", alignItems: "center", mb: 2, color: "#1976d2" }}>
+          <AutoFixHighIcon sx={{ mr: 1 }} /> Magic Auto-Scripting (with Ollama)
         </Typography>
         <Typography variant="body2" sx={{ mb: 3, opacity: 0.8 }}>
-          Select a global news source. Ollama will fetch the latest headlines and automatically create a 5-scene script for you.
+          Select a global news category and source. Ollama will fetch the latest headlines and automatically create a 5-scene script for you.
         </Typography>
-        <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} sm={8}>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>Select Category:</Typography>
+          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
+            {[
+              { id: "General", label: "🌍 General" },
+              { id: "World", label: "🌐 World" },
+              { id: "Technology", label: "💻 Tech" },
+              { id: "Business", label: "📈 Business" },
+              { id: "Cricket", label: "🏏 Cricket" },
+              { id: "NBA", label: "🏀 NBA" },
+              { id: "Sports", label: "🏆 Sports" },
+              { id: "Science", label: "🔬 Science" }
+            ].map((cat) => (
+              <Chip
+                key={cat.id}
+                label={cat.label}
+                clickable
+                color={selectedCategory === cat.id ? "primary" : "default"}
+                variant={selectedCategory === cat.id ? "filled" : "outlined"}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setSelectedSource(""); // Reset source when category changes
+                }}
+              />
+            ))}
+          </Stack>
+        </Box>
+
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={8}>
             <FormControl fullWidth>
-              <InputLabel>Select News Source</InputLabel>
+              <InputLabel id="news-source-label">Select News Source</InputLabel>
               <Select
+                labelId="news-source-label"
                 value={selectedSource}
                 label="Select News Source"
                 onChange={(e) => setSelectedSource(e.target.value)}
               >
-                {newsSources.map((source) => (
-                  <MenuItem key={source.id} value={source.id}>
-                    {source.name}
-                  </MenuItem>
-                ))}
+                {sources
+                  .filter((s) => s.category === selectedCategory)
+                  .map((source: any) => (
+                    <MenuItem key={source.id} value={source.id}>
+                      {source.name} {source.subCategory ? `(${source.subCategory})` : ""}
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
           </Grid>
@@ -284,6 +320,18 @@ const VideoCreator: React.FC = () => {
                   }
                   placeholder="e.g. BREAKING NEWS: MARKET CRASHES"
                   helperText="Short catchy headline for the top banner. If empty, it will be auto-generated."
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Visual Prompt (for AI Images)"
+                  value={scene.visualPrompt}
+                  onChange={(e) =>
+                    handleSceneChange(index, "visualPrompt", e.target.value)
+                  }
+                  helperText="Detailed description for AI image generation. Leave empty to use scene text."
                 />
               </Grid>
 

@@ -26,6 +26,7 @@ export type Scene = {
   headline?: string;
   video?: string;
   imageUrl?: string;
+  visualPrompt?: string;
   audio: {
     url: string;
     duration: number;
@@ -40,6 +41,7 @@ export const sceneInput = z.object({
       "Search term for video, 1 word, and at least 2-3 search terms should be provided for each scene. Make sure to match the overall context with the word - regardless what the video search result would be.",
     ),
   headline: z.string().optional().describe("Headline for the scene"),
+  visualPrompt: z.string().optional().describe("Descriptive prompt for AI image generation"),
 });
 export type SceneInput = z.infer<typeof sceneInput>;
 

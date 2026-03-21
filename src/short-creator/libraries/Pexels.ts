@@ -133,11 +133,12 @@ export class PexelsAPI {
     timeout: number = defaultTimeoutMs,
     retryCounter: number = 0,
   ): Promise<Video> {
-    // shuffle the search terms to randomize the search order
+    // shuffle only the joker terms to randomize the fallback
     const shuffledJokerTerms = jokerTerms.sort(() => Math.random() - 0.5);
-    const shuffledSearchTerms = searchTerms.sort(() => Math.random() - 0.5);
+    // don't shuffle search terms to prioritize the most relevant ones first
+    const prioritizedSearchTerms = searchTerms; 
 
-    for (const searchTerm of [...shuffledSearchTerms, ...shuffledJokerTerms]) {
+    for (const searchTerm of [...prioritizedSearchTerms, ...shuffledJokerTerms]) {
       try {
         return await this._findVideo(
           searchTerm,

@@ -29,15 +29,17 @@ STRICT INSTRUCTIONS:
 3. Start the output with "[" and end it with "]".
 4. Each object must have these EXACT fields:
    - "text": Punchy narration for the scene (around 20-30 words).
-   - "searchTerms": An array of 3-5 keywords for finding background visuals.
+   - "searchTerms": An array of 3-5 HIGHLY SPECIFIC keywords for stock video search (e.g., "busy stock trading floor" instead of "money").
    - "headline": A short, high-impact headline for the top banner.
+   - "visualPrompt": A detailed, descriptive visual prompt for AI image generation (e.g., "Close-up of a high-tech stock market display with green glowing numbers in a dark futuristic office").
 
 JSON Format Example:
 [
   {
     "text": "World leaders meet in Geneva to discuss the latest climate accords...",
-    "searchTerms": ["climate summit", "geneva", "world leaders"],
-    "headline": "CLIMATE CRISIS TALKS"
+    "searchTerms": ["climate summit", "geneva", "world leaders meeting"],
+    "headline": "CLIMATE CRISIS TALKS",
+    "visualPrompt": "A large conference hall in Geneva with world flags and leaders sitting at a round table, cinematic lighting, professional atmosphere."
   }
 ]
 `;
@@ -77,9 +79,17 @@ JSON Format Example:
       
       // If the model wrapped it in an object like { "scenes": [...] }
       if (!Array.isArray(scenes) && typeof scenes === 'object' && scenes !== null) {
+        // Case 1: Wrapped in a known property
         const possibleArray = scenes.scenes || scenes.script || Object.values(scenes).find(Array.isArray);
         if (possibleArray) {
           scenes = possibleArray;
+        } 
+        // Case 2: Indexed object like {"0": {...}, "1": {...}}
+        else if (Object.keys(scenes).every(key => !isNaN(Number(key)))) {
+          console.log('[OllamaGenerator] Detected indexed object, converting to array');
+          scenes = Object.keys(scenes)
+            .sort((a, b) => Number(a) - Number(b))
+            .map(key => (scenes as any)[key]);
         }
       }
 
