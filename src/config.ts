@@ -56,7 +56,7 @@ export const logger = isRunningInDocker
     }));
 
 export class Config {
-  private dataDirPath: string;
+  public dataDirPath: string;
   private libsDirPath: string;
   private staticDirPath: string;
 

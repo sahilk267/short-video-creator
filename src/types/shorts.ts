@@ -21,6 +21,13 @@ export enum CaptionPositionEnum {
   bottom = "bottom",
 }
 
+export enum LanguageEnum {
+  en = "en",
+  hi = "hi",
+  es = "es",
+  auto = "auto",
+}
+
 export type Scene = {
   captions: Caption[];
   headline?: string;
@@ -34,14 +41,35 @@ export type Scene = {
 };
 
 export const sceneInput = z.object({
-  text: z.string().describe("Text to be spoken in the video"),
+  text: z.string()
+    .min(10, "Scene text must be at least 10 characters")
+    .max(500, "Scene text must not exceed 500 characters")
+    .describe("Text to be spoken in the video - should be conversational and engaging"),
   searchTerms: z
-    .array(z.string())
+    .array(z.string().min(1).max(50))
+    .min(2, "At least 2 search terms required per scene")
+    .max(10, "Maximum 10 search terms per scene")
     .describe(
-      "Search term for video, 1 word, and at least 2-3 search terms should be provided for each scene. Make sure to match the overall context with the word - regardless what the video search result would be.",
+      "Search terms for video content. Provide 2-5 relevant keywords that match the scene's context and visual theme.",
     ),
-  headline: z.string().optional().describe("Headline for the scene"),
-  visualPrompt: z.string().optional().describe("Descriptive prompt for AI image generation"),
+  headline: z.string()
+    .min(5, "Headline must be at least 5 characters")
+    .max(100, "Headline must not exceed 100 characters")
+    .optional()
+    .describe("Compelling headline for the scene that captures attention"),
+  visualPrompt: z.string()
+    .min(10, "Visual prompt must be at least 10 characters")
+    .max(200, "Visual prompt must not exceed 200 characters")
+    .optional()
+    .describe("Detailed description for AI image generation - include style, mood, and specific visual elements"),
+  language: z
+    .nativeEnum(LanguageEnum)
+    .default(LanguageEnum.en)
+    .describe("TTS language for the scene"),
+  translationTarget: z
+    .nativeEnum(LanguageEnum)
+    .optional()
+    .describe("Optional translation target language for text before TTS"),
 });
 export type SceneInput = z.infer<typeof sceneInput>;
 
@@ -91,40 +119,41 @@ export enum MusicVolumeEnum {
 export const renderConfig = z.object({
   paddingBack: z
     .number()
-    .optional()
+    .min(0, "Padding must be non-negative")
+    .max(10000, "Padding must not exceed 10 seconds")
+    .default(1500)
     .describe(
-      "For how long the video should be playing after the speech is done, in milliseconds. 1500 is a good value.",
+      "Duration in milliseconds to continue video after speech ends. Recommended: 1500ms.",
     ),
   music: z
     .nativeEnum(MusicMoodEnum)
-    .optional()
-    .describe("Music tag to be used to find the right music for the video"),
+    .default(MusicMoodEnum.chill)
+    .describe("Music mood that matches the video's emotional tone"),
   captionPosition: z
     .nativeEnum(CaptionPositionEnum)
-    .optional()
-    .describe("Position of the caption in the video"),
+    .default(CaptionPositionEnum.bottom)
+    .describe("Caption placement for optimal readability"),
   captionBackgroundColor: z
     .string()
-    .optional()
-    .describe(
-      "Background color of the caption, a valid css color, default is blue",
-    ),
+    .regex(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$|^rgb\(\d{1,3},\s*\d{1,3},\s*\d{1,3}\)$|^rgba\(\d{1,3},\s*\d{1,3},\s*\d{1,3},\s*[0-1]?\.?\d*\)$|^[a-zA-Z]+$/, "Invalid color format - use hex (#FFF), rgb(), rgba(), or color name")
+    .default("#0066CC")
+    .describe("Caption background color for better text visibility"),
   voice: z
     .nativeEnum(VoiceEnum)
-    .optional()
-    .describe("Voice to be used for the speech, default is af_heart"),
+    .default(VoiceEnum.af_heart)
+    .describe("Voice actor for natural speech synthesis"),
   orientation: z
     .nativeEnum(OrientationEnum)
-    .optional()
-    .describe("Orientation of the video, default is portrait"),
+    .default(OrientationEnum.portrait)
+    .describe("Video aspect ratio - portrait for mobile, landscape for desktop"),
   musicVolume: z
     .nativeEnum(MusicVolumeEnum)
-    .optional()
-    .describe("Volume of the music, default is high"),
+    .default(MusicVolumeEnum.medium)
+    .describe("Background music volume level"),
   useAiImages: z
     .boolean()
-    .optional()
-    .describe("Whether to use AI generated images instead of stock videos"),
+    .default(false)
+    .describe("Use AI-generated images instead of stock videos for custom visuals"),
 });
 export type RenderConfig = z.infer<typeof renderConfig>;
 
@@ -152,8 +181,23 @@ export type CaptionPage = {
 };
 
 export const createShortInput = z.object({
-  scenes: z.array(sceneInput).describe("Each scene to be created"),
-  config: renderConfig.describe("Configuration for rendering the video"),
+  scenes: z.array(sceneInput)
+    .min(1, "At least 1 scene required")
+    .max(20, "Maximum 20 scenes allowed for video length constraints")
+    .describe("Video scenes in sequential order - each scene should flow naturally to the next"),
+  config: renderConfig.describe("Video rendering configuration - affects style, audio, and presentation"),
+}).refine((data) => {
+  // Business logic validation: ensure total text length is reasonable for video duration
+  const totalTextLength = data.scenes.reduce((sum, scene) => sum + scene.text.length, 0);
+  const estimatedDuration = totalTextLength * 0.05; // Rough estimate: 50ms per character for speech
+  
+  if (estimatedDuration > 120) { // 2 minutes max
+    return false;
+  }
+  
+  return true;
+}, {
+  message: "Total video content too long - estimated duration exceeds 2 minutes. Reduce scene count or text length.",
 });
 export type CreateShortInput = z.infer<typeof createShortInput>;
 
@@ -173,16 +217,12 @@ export type MusicTag = `${MusicMoodEnum}`;
 
 export type kokoroModelPrecision = "fp32" | "fp16" | "q8" | "q4" | "q4f16";
 
-export type whisperModels =
-  | "tiny"
-  | "tiny.en"
-  | "base"
-  | "base.en"
-  | "small"
-  | "small.en"
-  | "medium"
-  | "medium.en"
-  | "large-v1"
-  | "large-v2"
-  | "large-v3"
-  | "large-v3-turbo";
+export const videoIdSchema = z.string()
+  .regex(/^[a-zA-Z0-9_-]{8,}$/, "Video ID must be at least 8 characters with only letters, numbers, hyphens, and underscores")
+  .describe("Unique identifier for video processing jobs");
+
+export const statusRequestSchema = z.object({
+  videoId: videoIdSchema,
+});
+
+export type StatusRequest = z.infer<typeof statusRequestSchema>;

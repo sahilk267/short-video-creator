@@ -6,10 +6,13 @@ import type {
 import fs from "fs-extra";
 import path from "path";
 
-import { validateCreateShortInput } from "../validator";
+import { validateCreateShortInput, validateVideoId } from "../validator";
 import { ShortCreator } from "../../short-creator/ShortCreator";
 import { logger } from "../../logger";
 import { Config } from "../../config";
+import { ReportStore } from "../../db/ReportStore";
+import { ScriptPlanStore } from "../../db/ScriptPlanStore";
+import { ReportMerger } from "../../aggregator/ReportMerger";
 import { NEWS_SOURCES, RssFetcher } from "../../news-fetcher/RssFetcher";
 import { AiLlmGenerator } from "../../script-generator/AiLlmGenerator";
 
@@ -18,11 +21,15 @@ export class APIRouter {
   public router: express.Router;
   private shortCreator: ShortCreator;
   private config: Config;
+  private reportStore: ReportStore;
+  private scriptPlanStore: ScriptPlanStore;
 
   constructor(config: Config, shortCreator: ShortCreator) {
     this.config = config;
     this.router = express.Router();
     this.shortCreator = shortCreator;
+    this.reportStore = new ReportStore(config.dataDirPath);
+    this.scriptPlanStore = new ScriptPlanStore(config.dataDirPath);
 
     this.router.use(express.json());
 
@@ -76,17 +83,18 @@ export class APIRouter {
     this.router.get(
       "/short-video/:videoId/status",
       async (req: ExpressRequest, res: ExpressResponse) => {
-        const { videoId } = req.params;
-        if (!videoId) {
-          res.status(400).json({
-            error: "videoId is required",
+        try {
+          const videoId = validateVideoId(req.params.videoId);
+          const status = this.shortCreator.status(videoId);
+          res.status(200).json({
+            status,
           });
-          return;
+        } catch (error: unknown) {
+          logger.error(error, "Error validating video ID");
+          res.status(400).json({
+            error: error instanceof Error ? error.message : "Invalid video ID",
+          });
         }
-        const status = this.shortCreator.status(videoId);
-        res.status(200).json({
-          status,
-        });
       },
     );
 
@@ -234,6 +242,123 @@ export class APIRouter {
       "/news-sources",
       (req: ExpressRequest, res: ExpressResponse) => {
         res.status(200).json(NEWS_SOURCES);
+      },
+    );
+
+    this.router.get(
+      "/reports",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const reports = await this.reportStore.list();
+          res.status(200).json({ reports });
+        } catch (error: unknown) {
+          logger.error(error, "Error listing reports");
+          res.status(500).json({ error: "Failed to list reports" });
+        }
+      },
+    );
+
+    this.router.get(
+      "/reports/:reportId",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const report = await this.reportStore.get(req.params.reportId);
+          if (!report) {
+            res.status(404).json({ error: "Report not found" });
+            return;
+          }
+          res.status(200).json({ report });
+        } catch (error: unknown) {
+          logger.error(error, "Error fetching report");
+          res.status(500).json({ error: "Failed to fetch report" });
+        }
+      },
+    );
+
+    this.router.post(
+      "/reports/fetch",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const sourceId = req.body.sourceId || NEWS_SOURCES[0]?.id;
+          if (!sourceId) {
+            res.status(400).json({ error: "No sourceId provided and no default source available" });
+            return;
+          }
+
+          const source = NEWS_SOURCES.find((item) => item.id === sourceId);
+          if (!source) {
+            res.status(404).json({ error: "Source not found" });
+            return;
+          }
+
+          const rssFetcher = new RssFetcher();
+          const stories = await rssFetcher.fetchStories(sourceId);
+
+          const insertedReports = [];
+          for (const story of stories) {
+            const record = await this.reportStore.add({
+              sourceId: source.id,
+              sourceName: source.name,
+              category: source.category || "General",
+              title: story.title,
+              content: story.content,
+              link: story.link,
+              pubDate: story.pubDate,
+            });
+            insertedReports.push(record);
+          }
+
+          res.status(201).json({
+            inserted: insertedReports.length,
+            reports: insertedReports,
+          });
+        } catch (error: unknown) {
+          logger.error(error, "Error fetching reports");
+          res.status(500).json({ error: "Failed to fetch reports" });
+        }
+      },
+    );
+
+    this.router.post(
+      "/reports/merge",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const category = req.body.category || "World";
+          const maxDuration = Number(req.body.maxDuration) || 120;
+
+          const reports = await this.reportStore.list();
+          if (reports.length === 0) {
+            res.status(404).json({ error: "No reports available to merge" });
+            return;
+          }
+
+          const plan = ReportMerger.mergeReports(reports, category, maxDuration);
+          const saved = await this.scriptPlanStore.add(plan);
+
+          await Promise.all(
+            reports
+              .filter((item) => item.category.toLowerCase() === category.toLowerCase())
+              .map((item) => this.reportStore.updateStatus(item.id, "merged")),
+          );
+
+          res.status(201).json({ plan: saved });
+        } catch (error: unknown) {
+          logger.error(error, "Error merging reports");
+          res.status(500).json({ error: "Failed to merge reports" });
+        }
+      },
+    );
+
+    this.router.get(
+      "/script-plans",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const plans = await this.scriptPlanStore.list();
+          res.status(200).json({ plans });
+        } catch (error: unknown) {
+          logger.error(error, "Error listing script plans");
+          res.status(500).json({ error: "Failed to list script plans" });
+        }
       },
     );
 

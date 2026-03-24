@@ -10,6 +10,31 @@ export class AiLlmGenerator {
     this.model = model;
   }
 
+  async translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string> {
+    if (!text || sourceLanguage === targetLanguage) {
+      return text;
+    }
+
+    const prompt = `You are a professional translator. Convert the following text from ${sourceLanguage} to ${targetLanguage}. Output only translated text with no extra commentary.\n\nText:\n${text}`;
+    const response = await axios.post(`${this.apiUrl}/api/generate`, {
+      model: this.model,
+      prompt,
+      stream: false,
+      format: 'text',
+    });
+
+    if (!response?.data?.response) {
+      throw new Error('Translation API returned no response');
+    }
+
+    let result = response.data.response;
+    if (typeof result !== 'string') {
+      result = String(result);
+    }
+
+    return result.trim();
+  }
+
   async generateScript(newsStories: any[]): Promise<SceneInput[]> {
     const newsContent = newsStories
       .map((s, i) => `${i + 1}. TITLE: ${s.title}\nCONTENT: ${s.content}`)

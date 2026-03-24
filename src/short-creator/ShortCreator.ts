@@ -11,6 +11,7 @@ import { Remotion } from "./libraries/Remotion";
 import { Whisper } from "./libraries/Whisper";
 import { FFMpeg } from "./libraries/FFmpeg";
 import { PexelsAPI } from "./libraries/Pexels";
+import { TtsAdapter } from "./libraries/TtsAdapter";
 import { Config } from "../config";
 import { logger } from "../logger";
 import { MusicManager } from "./music";
@@ -30,6 +31,8 @@ export class ShortCreator {
     config: RenderConfig;
     id: string;
   }[] = [];
+  private ttsAdapter: TtsAdapter;
+
   constructor(
     private config: Config,
     private remotion: Remotion,
@@ -38,7 +41,9 @@ export class ShortCreator {
     private ffmpeg: FFMpeg,
     private pexelsApi: PexelsAPI,
     private musicManager: MusicManager,
-  ) {}
+  ) {
+    this.ttsAdapter = new TtsAdapter(kokoro);
+  }
 
   public status(id: string): VideoStatus {
     const videoPath = this.getVideoPath(id);
@@ -112,10 +117,7 @@ export class ShortCreator {
     for (const scene of inputScenes) {
       const sceneNum = index + 1;
       console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Generating audio...`);
-      const audio = await this.kokoro.generate(
-        scene.text,
-        config.voice ?? "af_heart",
-      );
+      const audio = await this.ttsAdapter.synthesize(scene);
       let { audioLength } = audio;
       const { audio: audioStream } = audio;
 
@@ -140,7 +142,7 @@ export class ShortCreator {
       await this.ffmpeg.saveNormalizedAudio(audioStream, tempWavPath);
       
       console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Transcribing with Whisper...`);
-      const captions = await this.whisper.CreateCaption(tempWavPath);
+      const captions = await this.whisper.CreateCaption(tempWavPath, scene.language);
 
       await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
 
