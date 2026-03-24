@@ -119,9 +119,9 @@ const VideoCreator: React.FC = () => {
         })));
       }
     } catch (err: any) {
-      console.error("Auto-script error:", err);
+      console.error("AI LLM auto-script error:", err);
       const msg = err.response?.data?.message || err.message || "Failed to generate script";
-      const raw = err.response?.data?.rawOllamaOutput;
+      const raw = err.response?.data?.rawAI_LLMOutput;
       setError(`${msg}${raw ? ` | RAW OUTPUT: ${JSON.stringify(raw)}` : ""}`);
     } finally {
       setAutoLoading(false);

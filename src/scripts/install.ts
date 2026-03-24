@@ -29,10 +29,4 @@ export async function install() {
   }
 }
 
-install()
-  .then(() => {
-    logger.info("Installation complete");
-  })
-  .catch((error: unknown) => {
-    logger.error(error, "Installation failed");
-  });
+// remove top-level execution to prevent double install when imported

@@ -67,7 +67,7 @@ RUN pnpm build
 
 FROM base
 COPY static /app/static
-COPY --from=install-whisper /whisper /app/data/libs/whisper
+COPY --from=install-whisper /whisper /app/libs/whisper
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 COPY package.json /app/
@@ -76,12 +76,11 @@ COPY package.json /app/
 ENV DATA_DIR_PATH=/app/data
 ENV DOCKER=true
 ENV WHISPER_MODEL=base.en
+ENV WHISPER_INSTALL_PATH=/app/libs/whisper
 # number of chrome tabs to use for rendering
 ENV CONCURRENCY=1
 # video cache - 2000MB
 ENV VIDEO_CACHE_SIZE_IN_BYTES=2097152000
 
-# install kokoro, headless chrome and ensure music files are present
-RUN node dist/scripts/install.js
-
+# CMD starts the app, which now handles its own installation at runtime
 CMD ["pnpm", "start"]

@@ -11,7 +11,7 @@ import { ShortCreator } from "../../short-creator/ShortCreator";
 import { logger } from "../../logger";
 import { Config } from "../../config";
 import { NEWS_SOURCES, RssFetcher } from "../../news-fetcher/RssFetcher";
-import { OllamaGenerator } from "../../script-generator/OllamaGenerator";
+import { AiLlmGenerator } from "../../script-generator/AiLlmGenerator";
 
 // todo abstract class
 export class APIRouter {
@@ -155,6 +155,12 @@ export class APIRouter {
         if (tmpFile.endsWith(".mp4")) {
           res.setHeader("Content-Type", "video/mp4");
         }
+        if (tmpFile.endsWith(".jpg") || tmpFile.endsWith(".jpeg")) {
+          res.setHeader("Content-Type", "image/jpeg");
+        }
+        if (tmpFile.endsWith(".png")) {
+          res.setHeader("Content-Type", "image/png");
+        }
 
         const tmpFileStream = fs.createReadStream(tmpFilePath);
         tmpFileStream.on("error", (error) => {
@@ -251,18 +257,16 @@ export class APIRouter {
             return;
           }
 
-          const ollamaGenerator = new OllamaGenerator(
-            this.config.ollamaUrl,
-            this.config.ollamaModel
-          );
-          const scenes = await ollamaGenerator.generateScript(stories);
+          const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
+          const scenes = await aiLlm.generateScript(stories);
 
           res.status(200).json({ scenes });
         } catch (error: any) {
-          logger.error(error, "Error in auto-script generation");
+          logger.error({ err: error, body: req.body }, "Error in auto-script generation");
           res.status(500).json({
             error: "Failed to generate script",
             message: error.message || "Unknown error",
+            details: error.stack || "No stack trace available",
             rawOllamaOutput: error.rawResponse || "No output captured"
           });
         }

@@ -9,6 +9,7 @@ import { FFMpeg } from "./short-creator/libraries/FFmpeg";
 import { PexelsAPI } from "./short-creator/libraries/Pexels";
 import { Config } from "./config";
 import { ShortCreator } from "./short-creator/ShortCreator";
+import { install } from "./scripts/install";
 import { logger } from "./logger";
 import { Server } from "./server/server";
 import { MusicManager } from "./short-creator/music";
@@ -21,6 +22,9 @@ async function main() {
     logger.error(err, "Error in config");
     process.exit(1);
   }
+
+  logger.info("Initializing applications...");
+  await install();
 
   const musicManager = new MusicManager(config);
   try {
@@ -82,6 +86,7 @@ async function main() {
   }
 
   logger.debug("initializing the server");
+
   const server = new Server(config, shortCreator);
   const app = server.start();
 

@@ -12,19 +12,48 @@ const defaultWhisperModel: whisperModels = "medium.en"; // possible options: "ti
 
 // Create the global logger
 const versionNumber = process.env.npm_package_version;
-export const logger = pino({
-  level: process.env.LOG_LEVEL || defaultLogLevel,
-  timestamp: pino.stdTimeFunctions.isoTime,
-  formatters: {
-    level: (label) => {
-      return { level: label };
-    },
-  },
-  base: {
-    pid: process.pid,
-    version: versionNumber,
-  },
-});
+const dataDirPath = process.env.DATA_DIR_PATH || path.join(os.homedir(), ".ai-agents-az-video-generator");
+const logsDirPath = path.join(dataDirPath, "logs");
+
+// Ensure logs directory exists
+fs.ensureDirSync(logsDirPath);
+
+const isRunningInDocker = process.env.DOCKER === "true";
+
+// Simple logger for Docker to avoid pino worker thread issues
+export const logger = isRunningInDocker 
+  ? pino({
+      level: process.env.LOG_LEVEL || defaultLogLevel,
+      timestamp: pino.stdTimeFunctions.isoTime,
+    })
+  : pino({
+      timestamp: pino.stdTimeFunctions.isoTime,
+      formatters: {
+        level: (label: string) => {
+          return { level: label };
+        },
+      },
+      base: {
+        pid: process.pid,
+        version: versionNumber,
+      },
+    }, pino.transport({
+      targets: [
+        {
+          target: 'pino/file',
+          level: process.env.LOG_LEVEL || defaultLogLevel,
+          options: { destination: 1 } // stdout
+        },
+        {
+          target: 'pino/file',
+          level: process.env.LOG_LEVEL || defaultLogLevel,
+          options: { 
+            destination: path.join(logsDirPath, "app.log"),
+            mkdir: true 
+          }
+        }
+      ]
+    }));
 
 export class Config {
   private dataDirPath: string;
@@ -35,9 +64,11 @@ export class Config {
   public whisperInstallPath: string;
   public videosDirPath: string;
   public tempDirPath: string;
+  public logsDirPath: string;
   public packageDirPath: string;
   public musicDirPath: string;
   public pexelsApiKey: string;
+  public pollinationsApiKey: string;
   public logLevel: pino.Level;
   public whisperVerbose: boolean;
   public port: number;
@@ -51,8 +82,8 @@ export class Config {
   public concurrency?: number;
   public videoCacheSizeInBytes: number | null = null;
   public useAiImages: boolean = false;
-  public ollamaUrl: string = "http://localhost:11434";
-  public ollamaModel: string = "llama3";
+  public aiLlmUrl: string = "http://localhost:12434";
+  public aiLlmModel: string = "docker.io/ai/llama3.2:latest";
 
   constructor() {
     this.dataDirPath =
@@ -60,9 +91,10 @@ export class Config {
       path.join(os.homedir(), ".ai-agents-az-video-generator");
     this.libsDirPath = path.join(this.dataDirPath, "libs");
 
-    this.whisperInstallPath = path.join(this.libsDirPath, "whisper");
+    this.whisperInstallPath = process.env.WHISPER_INSTALL_PATH || path.join(this.dataDirPath, "libs", "whisper");
     this.videosDirPath = path.join(this.dataDirPath, "videos");
     this.tempDirPath = path.join(this.dataDirPath, "temp");
+    this.logsDirPath = path.join(this.dataDirPath, "logs");
     this.installationSuccessfulPath = path.join(
       this.dataDirPath,
       "installation-successful",
@@ -72,12 +104,14 @@ export class Config {
     fs.ensureDirSync(this.libsDirPath);
     fs.ensureDirSync(this.videosDirPath);
     fs.ensureDirSync(this.tempDirPath);
+    fs.ensureDirSync(this.logsDirPath);
 
     this.packageDirPath = path.join(__dirname, "..");
     this.staticDirPath = path.join(this.packageDirPath, "static");
     this.musicDirPath = path.join(this.staticDirPath, "music");
 
     this.pexelsApiKey = process.env.PEXELS_API_KEY as string;
+    this.pollinationsApiKey = process.env.POLLINATIONS_API_KEY as string || "";
     this.logLevel = (process.env.LOG_LEVEL || defaultLogLevel) as pino.Level;
     this.whisperVerbose = process.env.WHISPER_VERBOSE === "true";
     this.port = process.env.PORT ? parseInt(process.env.PORT) : defaultPort;
@@ -103,8 +137,27 @@ export class Config {
     }
 
     this.useAiImages = process.env.USE_AI_IMAGES === "true";
-    this.ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
-    this.ollamaModel = process.env.OLLAMA_MODEL || "llama3";
+    this.aiLlmUrl = process.env.AI_LLM_URL || "http://localhost:12434";
+    this.aiLlmModel = process.env.AI_LLM_MODEL || "docker.io/ai/llama3.2:latest";
+
+    // Redirect caches to the persistent volume
+    if (this.runningInDocker) {
+      process.env.PUPPETEER_CACHE_DIR = path.join(this.dataDirPath, "cache", "puppeteer");
+      process.env.HF_HOME = path.join(this.dataDirPath, "cache", "huggingface");
+      logger.info({ 
+        puppeteerCache: process.env.PUPPETEER_CACHE_DIR,
+        hfHome: process.env.HF_HOME 
+      }, "Caches redirected to persistent volume");
+    }
+
+    logger.info({
+      port: this.port,
+      dataDir: this.dataDirPath,
+      aiLlmUrl: this.aiLlmUrl,
+      aiLlmModel: this.aiLlmModel,
+      runningInDocker: this.runningInDocker,
+      devMode: this.devMode
+    }, "Configuration loaded");
   }
 
   public ensureConfig() {

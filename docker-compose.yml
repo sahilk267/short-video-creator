@@ -1,4 +1,3 @@
-version: "3"
 
 services:
   short-creator:
@@ -9,8 +8,17 @@ services:
       - .env
     environment:
       - DEV=false
+      - NODE_OPTIONS=--max-old-space-size=4096
     ports:
       - "3123:3123"
+    volumes:
+      - ./data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: ["node", "dist/index.js"]
+    shm_size: '2gb'
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6g

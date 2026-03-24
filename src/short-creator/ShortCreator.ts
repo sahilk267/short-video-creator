@@ -71,14 +71,16 @@ export class ShortCreator {
       return;
     }
     const { sceneInput, config, id } = this.queue[0];
+    console.log(`[ShortCreator] Starting to process video ${id} with ${sceneInput.length} scenes.`);
     logger.debug(
       { sceneInput, config, id },
       "Processing video item in the queue",
     );
     try {
       await this.createShort(id, sceneInput, config);
-      logger.debug({ id }, "Video created successfully");
-    } catch (error: unknown) {
+      console.log(`[ShortCreator] Video ${id} created successfully.`);
+    } catch (error: any) {
+      console.error(`[ShortCreator] Error creating video ${id}: ${error.message}`);
       logger.error(error, "Error creating video");
     } finally {
       this.queue.shift();
@@ -108,6 +110,8 @@ export class ShortCreator {
 
     let index = 0;
     for (const scene of inputScenes) {
+      const sceneNum = index + 1;
+      console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Generating audio...`);
       const audio = await this.kokoro.generate(
         scene.text,
         config.voice ?? "af_heart",
@@ -134,32 +138,63 @@ export class ShortCreator {
       tempFiles.push(tempWavPath, tempMp3Path);
 
       await this.ffmpeg.saveNormalizedAudio(audioStream, tempWavPath);
+      
+      console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Transcribing with Whisper...`);
       const captions = await this.whisper.CreateCaption(tempWavPath);
 
       await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
 
       const isAiImage = config.useAiImages || this.config.useAiImages;
-      const mediaExt = isAiImage ? ".jpg" : ".mp4";
-      const tempMediaFileName = `${cuid()}${mediaExt}`;
-      const tempMediaPath = path.join(this.config.tempDirPath, tempMediaFileName);
+      let mediaExt = ".mp4"; // Default generic extension, will be updated
+      if (isAiImage) {
+        mediaExt = ".jpg"; 
+      }
+      let tempMediaFileName = `${cuid()}${mediaExt}`;
+      let tempMediaPath = path.join(this.config.tempDirPath, tempMediaFileName);
       tempFiles.push(tempMediaPath);
 
       let mediaUrl = "";
       if (isAiImage) {
-        // Use AI image from Pollinations.ai
-        const aiPrompt = scene.visualPrompt || scene.text.slice(0, 150);
-        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt)}?width=${orientation === OrientationEnum.landscape ? 1920 : 1080}&height=${orientation === OrientationEnum.landscape ? 1080 : 1920}&nologo=true`;
+        if (!this.config.pollinationsApiKey) {
+          console.error(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Pollinations API key is missing. Now required by Pollinations.ai. Falling back to Pexels video.`);
+          logger.warn("POLLINATIONS_API_KEY is not set in environment. Falling back to stock video.");
+        }
         
-        logger.debug({ aiPrompt, pollinationsUrl }, "Fetching AI image from Pollinations.ai");
+        // Use AI image from Pollinations.ai if key is available
+        const aiPrompt = scene.visualPrompt || scene.text.slice(0, 150);
+        const apiKeyParam = this.config.pollinationsApiKey ? `&key=${this.config.pollinationsApiKey}` : '';
+        const pollinationsUrl = `https://gen.pollinations.ai/image/${encodeURIComponent(aiPrompt)}?width=${orientation === OrientationEnum.landscape ? 1920 : 1080}&height=${orientation === OrientationEnum.landscape ? 1080 : 1920}&nologo=true${apiKeyParam}`;
+        
+        console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Fetching AI image: ${pollinationsUrl.replace(/key=[^&]*/, 'key=***')}`);
         try {
           await this.downloadFile(pollinationsUrl, tempMediaPath);
           mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
-        } catch (err) {
-          logger.error({ err, pollinationsUrl }, "Failed to download AI image");
-          // Fallback to a placeholder or throw error
-          throw new Error(`Failed to generate AI image for scene ${index + 1}`);
+        } catch (err: any) {
+          console.error(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] AI image failed (${pollinationsUrl}): ${err.message}. Falling back to Pexels video.`);
+          logger.error(err, `Error downloading AI image for scene ${sceneNum}`);
+          // If AI image fails, we fallback to Pexels video
+          const video = await this.pexelsApi.findVideo(
+            scene.searchTerms,
+            audioLength,
+            excludeVideoIds,
+            orientation,
+          );
+          console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Fallback video found: ${video.url}`);
+          // Delete the old .jpg temp path from the tempFiles array
+          const oldIndex = tempFiles.indexOf(tempMediaPath);
+          if (oldIndex > -1) {
+             tempFiles.splice(oldIndex, 1);
+          }
+          mediaExt = ".mp4";
+          tempMediaFileName = `${cuid()}${mediaExt}`;
+          tempMediaPath = path.join(this.config.tempDirPath, tempMediaFileName);
+          tempFiles.push(tempMediaPath);
+          await this.downloadFile(video.url, tempMediaPath);
+          excludeVideoIds.push(video.id);
+          mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
         }
       } else {
+        console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Searching Pexels for: ${scene.searchTerms.join(", ")}`);
         const video = await this.pexelsApi.findVideo(
           scene.searchTerms,
           audioLength,
@@ -167,7 +202,7 @@ export class ShortCreator {
           orientation,
         );
 
-        logger.debug(`Downloading video from ${video.url} to ${tempMediaPath}`);
+        console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Downloading video: ${video.url}`);
         await this.downloadFile(video.url, tempMediaPath);
         excludeVideoIds.push(video.id);
         mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
@@ -176,7 +211,7 @@ export class ShortCreator {
       scenes.push({
         captions,
         headline: scene.headline || scene.text.split(" ").slice(0, 5).join(" ") + "...",
-        [isAiImage ? "imageUrl" : "video"]: mediaUrl,
+        [mediaUrl.endsWith(".mp4") ? "video" : "imageUrl"]: mediaUrl,
         visualPrompt: scene.visualPrompt,
         audio: {
           url: `http://localhost:${this.config.port}/api/tmp/${tempMp3FileName}`,
@@ -194,6 +229,7 @@ export class ShortCreator {
     const selectedMusic = this.findMusic(totalDuration, config.music);
     logger.debug({ selectedMusic }, "Selected music for the video");
 
+    console.log(`[ShortCreator] Final rendering with Remotion for video ${videoId}...`);
     await this.remotion.render(
       {
         music: selectedMusic,
