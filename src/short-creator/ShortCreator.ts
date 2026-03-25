@@ -12,6 +12,7 @@ import { Whisper } from "./libraries/Whisper";
 import { FFMpeg } from "./libraries/FFmpeg";
 import { PexelsAPI } from "./libraries/Pexels";
 import { TtsAdapter } from "./libraries/TtsAdapter";
+import { SubtitleBuilder } from "./libraries/SubtitleBuilder";
 import { Config } from "../config";
 import { logger } from "../logger";
 import { MusicManager } from "./music";
@@ -24,12 +25,21 @@ import type {
   MusicTag,
   MusicForVideo,
 } from "../types/shorts";
+import { LanguageEnum } from "../types/shorts";
+
+type VariantSpec = {
+  audioLanguage: LanguageEnum;
+  subtitleLanguage: "en" | "hi" | "es";
+  suffix: string;
+};
 
 export class ShortCreator {
   private queue: {
     sceneInput: SceneInput[];
     config: RenderConfig;
     id: string;
+    videoType: "short" | "long";
+    subtitleLanguage?: string;
   }[] = [];
   private ttsAdapter: TtsAdapter;
 
@@ -56,13 +66,20 @@ export class ShortCreator {
     return "failed";
   }
 
-  public addToQueue(sceneInput: SceneInput[], config: RenderConfig): string {
+  public addToQueue(
+    sceneInput: SceneInput[],
+    config: RenderConfig,
+    videoType: "short" | "long" = "short",
+    subtitleLanguage?: string,
+  ): string {
     // todo add mutex lock
     const id = cuid();
     this.queue.push({
       sceneInput,
       config,
       id,
+      videoType,
+      subtitleLanguage,
     });
     if (this.queue.length === 1) {
       this.processQueue();
@@ -75,14 +92,14 @@ export class ShortCreator {
     if (this.queue.length === 0) {
       return;
     }
-    const { sceneInput, config, id } = this.queue[0];
+    const { sceneInput, config, id, videoType, subtitleLanguage } = this.queue[0];
     console.log(`[ShortCreator] Starting to process video ${id} with ${sceneInput.length} scenes.`);
     logger.debug(
       { sceneInput, config, id },
       "Processing video item in the queue",
     );
     try {
-      await this.createShort(id, sceneInput, config);
+      await this.createShort(id, sceneInput, config, videoType, subtitleLanguage);
       console.log(`[ShortCreator] Video ${id} created successfully.`);
     } catch (error: any) {
       console.error(`[ShortCreator] Error creating video ${id}: ${error.message}`);
@@ -97,11 +114,60 @@ export class ShortCreator {
     videoId: string,
     inputScenes: SceneInput[],
     config: RenderConfig,
+    videoType: "short" | "long" = "short",
+    subtitleLanguage?: string,
   ): Promise<string> {
+    // Phase 2.6: when subtitle language is not explicitly set, auto-generate
+    // three configured language variants from the same input.
+    if (!subtitleLanguage) {
+      const variants: VariantSpec[] = [
+        { audioLanguage: LanguageEnum.en, subtitleLanguage: "es", suffix: "en_es" },
+        { audioLanguage: LanguageEnum.hi, subtitleLanguage: "hi", suffix: "hi_hinglish" },
+        { audioLanguage: LanguageEnum.es, subtitleLanguage: "en", suffix: "es_en" },
+      ];
+      for (const variant of variants) {
+        const variantId = `${videoId}_${variant.suffix}`;
+        const variantScenes = inputScenes.map((scene) => ({
+          ...scene,
+          language: variant.audioLanguage,
+        }));
+        await this.createShort(
+          variantId,
+          variantScenes,
+          config,
+          videoType,
+          variant.subtitleLanguage,
+        );
+      }
+      return videoId;
+    }
+
+    // Phase 3.3: split long scripts into chunks by duration limit.
+    const chunkedScenes = this.splitScenesByDuration(
+      inputScenes,
+      config.durationLimit,
+      videoType,
+    );
+    if (chunkedScenes.length > 1) {
+      for (let i = 0; i < chunkedScenes.length; i++) {
+        const chunkId = `${videoId}_part${i + 1}`;
+        await this.createShort(
+          chunkId,
+          chunkedScenes[i],
+          config,
+          videoType,
+          subtitleLanguage,
+        );
+      }
+      return videoId;
+    }
+
     logger.debug(
       {
         inputScenes,
         config,
+        videoType,
+        subtitleLanguage,
       },
       "Creating short video",
     );
@@ -143,6 +209,20 @@ export class ShortCreator {
       
       console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Transcribing with Whisper...`);
       const captions = await this.whisper.CreateCaption(tempWavPath, scene.language);
+
+      // Build and save subtitle files if subtitleLanguage specified (Phase 2.5)
+      if (subtitleLanguage && captions.length > 0) {
+        try {
+          await SubtitleBuilder.buildAndSave(
+            captions,
+            { audioLanguage: scene.language, subtitleLanguage },
+            this.config.tempDirPath,
+            `${tempId}_sub`,
+          );
+        } catch (subErr) {
+          logger.warn({ subErr }, "Subtitle generation failed, continuing without subtitles");
+        }
+      }
 
       await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
 
@@ -212,7 +292,11 @@ export class ShortCreator {
 
       scenes.push({
         captions,
-        headline: scene.headline || scene.text.split(" ").slice(0, 5).join(" ") + "...",
+        // Phase 3.4: prefer cue label for timeline-aware chapter/headline rendering.
+        headline:
+          scene.cues?.[0]?.label ||
+          scene.headline ||
+          scene.text.split(" ").slice(0, 5).join(" ") + "...",
         [mediaUrl.endsWith(".mp4") ? "video" : "imageUrl"]: mediaUrl,
         visualPrompt: scene.visualPrompt,
         audio: {
@@ -248,6 +332,7 @@ export class ShortCreator {
       },
       videoId,
       orientation,
+      videoType,
     );
 
     for (const file of tempFiles) {
@@ -255,6 +340,38 @@ export class ShortCreator {
     }
 
     return videoId;
+  }
+
+  private estimateSceneDurationSeconds(scene: SceneInput): number {
+    // Practical estimate for speech generation pace.
+    return Math.max(2.5, scene.text.length * 0.06);
+  }
+
+  private splitScenesByDuration(
+    scenes: SceneInput[],
+    durationLimit: number,
+    videoType: "short" | "long",
+  ): SceneInput[][] {
+    const effectiveLimit = videoType === "short" ? Math.min(durationLimit, 180) : Math.max(durationLimit, 300);
+    const chunks: SceneInput[][] = [];
+    let current: SceneInput[] = [];
+    let currentDuration = 0;
+
+    for (const scene of scenes) {
+      const est = this.estimateSceneDurationSeconds(scene);
+      if (current.length > 0 && currentDuration + est > effectiveLimit) {
+        chunks.push(current);
+        current = [];
+        currentDuration = 0;
+      }
+      current.push(scene);
+      currentDuration += est;
+    }
+
+    if (current.length > 0) {
+      chunks.push(current);
+    }
+    return chunks;
   }
 
   public getVideoPath(videoId: string): string {

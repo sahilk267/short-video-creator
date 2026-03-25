@@ -6,7 +6,7 @@ import {
 import path from "path";
 
 import { Config } from "../../config";
-import type { Caption, LanguageEnum } from "../../types/shorts";
+import { type Caption, LanguageEnum } from "../../types/shorts";
 import { logger } from "../../logger";
 
 export const ErrorWhisper = new Error("There was an error with WhisperCpp");

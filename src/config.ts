@@ -85,6 +85,26 @@ export class Config {
   public aiLlmUrl: string = "http://localhost:12434";
   public aiLlmModel: string = "docker.io/ai/llama3.2:latest";
 
+  // Phase 4: Redis / BullMQ
+  public redisHost: string = "localhost";
+  public redisPort: number = 6379;
+  public redisPassword: string = "";
+  public redisEnabled: boolean = false;
+  public renderWorkerConcurrency: number = 1;
+  public publishWorkerConcurrency: number = 3;
+
+  // Phase 5: Publishing credentials
+  public youtubeClientId: string = "";
+  public youtubeClientSecret: string = "";
+  public youtubeRefreshToken: string = "";
+  public telegramBotToken: string = "";
+  public telegramChannelId: string = "";
+  public instagramAccessToken: string = "";
+  public facebookAccessToken: string = "";
+
+  // Phase 6: Scheduling
+  public cronInterval: string = "*/30 * * * *";
+
   constructor() {
     this.dataDirPath =
       process.env.DATA_DIR_PATH ||
@@ -139,6 +159,30 @@ export class Config {
     this.useAiImages = process.env.USE_AI_IMAGES === "true";
     this.aiLlmUrl = process.env.AI_LLM_URL || "http://localhost:12434";
     this.aiLlmModel = process.env.AI_LLM_MODEL || "docker.io/ai/llama3.2:latest";
+
+  // Phase 4: Redis
+  this.redisHost = process.env.REDIS_HOST || "localhost";
+  this.redisPort = process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379;
+  this.redisPassword = process.env.REDIS_PASSWORD || "";
+  this.redisEnabled = process.env.REDIS_ENABLED === "true";
+  this.renderWorkerConcurrency = process.env.RENDER_WORKER_CONCURRENCY
+    ? parseInt(process.env.RENDER_WORKER_CONCURRENCY)
+    : 1;
+  this.publishWorkerConcurrency = process.env.PUBLISH_WORKER_CONCURRENCY
+    ? parseInt(process.env.PUBLISH_WORKER_CONCURRENCY)
+    : 3;
+
+  // Phase 5: Publishing
+  this.youtubeClientId = process.env.YOUTUBE_CLIENT_ID || "";
+  this.youtubeClientSecret = process.env.YOUTUBE_CLIENT_SECRET || "";
+  this.youtubeRefreshToken = process.env.YOUTUBE_REFRESH_TOKEN || "";
+  this.telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
+  this.telegramChannelId = process.env.TELEGRAM_CHANNEL_ID || "";
+  this.instagramAccessToken = process.env.INSTAGRAM_ACCESS_TOKEN || "";
+  this.facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN || "";
+
+  // Phase 6: Scheduling
+  this.cronInterval = process.env.CRON_INTERVAL || "*/30 * * * *";
 
     // Redirect caches to the persistent volume
     if (this.runningInDocker) {

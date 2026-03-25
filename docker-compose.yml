@@ -1,5 +1,14 @@
 
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   short-creator:
     build:
       context: .
@@ -9,6 +18,9 @@ services:
     environment:
       - DEV=false
       - NODE_OPTIONS=--max-old-space-size=4096
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_ENABLED=true
     ports:
       - "3123:3123"
     volumes:
@@ -18,7 +30,12 @@ services:
     entrypoint: ["node", "dist/index.js"]
     shm_size: '2gb'
     restart: unless-stopped
+    depends_on:
+      - redis
     deploy:
+
+      volumes:
+        redis_data:
       resources:
         limits:
           memory: 6g

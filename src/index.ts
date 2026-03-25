@@ -13,6 +13,11 @@ import { install } from "./scripts/install";
 import { logger } from "./logger";
 import { Server } from "./server/server";
 import { MusicManager } from "./short-creator/music";
+import { testRedisConnection } from "./workers/QueueManager";
+import { RenderWorker } from "./workers/RenderWorker";
+import { PublishWorker } from "./workers/PublishWorker";
+import { DeadLetterWorker } from "./workers/DeadLetterWorker";
+import { SchedulerService } from "./services/SchedulerService";
 
 async function main() {
   const config = new Config();
@@ -90,7 +95,40 @@ async function main() {
   const server = new Server(config, shortCreator);
   const app = server.start();
 
-  // todo add shutdown handler
+  // Phase 4: Start BullMQ workers if Redis is available
+  let renderWorker: RenderWorker | undefined;
+  let publishWorker: PublishWorker | undefined;
+  let deadLetterWorker: DeadLetterWorker | undefined;
+
+  if (config.redisEnabled) {
+    const redisOk = await testRedisConnection(config);
+    if (redisOk) {
+      renderWorker = new RenderWorker(config, shortCreator);
+      publishWorker = new PublishWorker(config);
+      deadLetterWorker = new DeadLetterWorker(config);
+      logger.info("BullMQ workers started (render, publish, deadletter)");
+    } else {
+      logger.warn("Redis unavailable – BullMQ workers NOT started. App runs in direct-queue mode.");
+    }
+  }
+
+  // Phase 6: Start cron scheduler
+  const scheduler = new SchedulerService(config, shortCreator);
+  scheduler.start();
+
+  // Graceful shutdown
+  const shutdown = async (signal: string) => {
+    logger.info({ signal }, "Graceful shutdown initiated");
+    scheduler.stop();
+    await Promise.allSettled([
+      renderWorker?.close(),
+      publishWorker?.close(),
+      deadLetterWorker?.close(),
+    ]);
+    process.exit(0);
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT",  () => shutdown("SIGINT"));
 }
 
 main().catch((error: unknown) => {

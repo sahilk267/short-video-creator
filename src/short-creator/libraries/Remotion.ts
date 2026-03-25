@@ -9,6 +9,7 @@ import { shortVideoSchema } from "../../components/utils";
 import { logger } from "../../logger";
 import { OrientationEnum } from "../../types/shorts";
 import { getOrientationConfig } from "../../components/utils";
+import { AvailableComponentsEnum } from "../../components/types";
 
 export class Remotion {
   constructor(
@@ -36,16 +37,24 @@ export class Remotion {
     data: z.infer<typeof shortVideoSchema>,
     id: string,
     orientation: OrientationEnum,
+    videoType: "short" | "long" = "short",
   ) {
-    const { component } = getOrientationConfig(orientation);
+    // Long-form always uses the LongFormVideo composition (16:9 landscape)
+    let componentId: string;
+    if (videoType === "long") {
+      componentId = AvailableComponentsEnum.LongFormVideo;
+    } else {
+      const { component } = getOrientationConfig(orientation);
+      componentId = component;
+    }
 
     const composition = await selectComposition({
       serveUrl: this.bundled,
-      id: component,
+      id: componentId,
       inputProps: data,
     });
 
-    logger.debug({ component, videoID: id }, "Rendering video with Remotion");
+    logger.debug({ component: componentId, videoID: id, videoType }, "Rendering video with Remotion");
 
     const outputLocation = path.join(this.config.videosDirPath, `${id}.mp4`);
 
@@ -66,7 +75,7 @@ export class Remotion {
     logger.debug(
       {
         outputLocation,
-        component,
+        component: componentId,
         videoID: id,
       },
       "Video rendered with Remotion",
@@ -95,3 +104,4 @@ export class Remotion {
     });
   }
 }
+

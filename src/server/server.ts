@@ -8,6 +8,13 @@ import path from "path";
 import { ShortCreator } from "../short-creator/ShortCreator";
 import { APIRouter } from "./routers/rest";
 import { MCPRouter } from "./routers/mcp";
+import { HealthRouter } from "./routers/health";
+import { PublishRouter } from "./routers/publish";
+import { QueueRouter } from "./routers/queue";
+import { TenantRouter } from "./routers/tenants";
+import { MarketingRouter } from "./routers/marketing";
+import { AiRouter } from "./routers/ai";
+import { ContentRouter } from "./routers/content";
 import { logger } from "../logger";
 import { Config } from "../config";
 
@@ -19,15 +26,25 @@ export class Server {
     this.config = config;
     this.app = express();
 
-    // add healthcheck endpoint
-    this.app.get("/health", (req: ExpressRequest, res: ExpressResponse) => {
-      res.status(200).json({ status: "ok" });
-    });
-
     const apiRouter = new APIRouter(config, shortCreator);
     const mcpRouter = new MCPRouter(shortCreator);
+    const healthRouter = new HealthRouter(config);
+    const publishRouter = new PublishRouter(config);
+    const queueRouter = new QueueRouter(config, shortCreator);
+    const tenantRouter = new TenantRouter(config);
+    const marketingRouter = new MarketingRouter(config);
+    const aiRouter = new AiRouter(config);
+    const contentRouter = new ContentRouter();
+
     this.app.use("/api", apiRouter.router);
     this.app.use("/mcp", mcpRouter.router);
+    this.app.use("/api/health", healthRouter.router);
+    this.app.use("/api/publish", publishRouter.router);
+    this.app.use("/api/queue", queueRouter.router);
+    this.app.use("/api/tenants", tenantRouter.router);
+    this.app.use("/api/marketing", marketingRouter.router);
+    this.app.use("/api/ai", aiRouter.router);
+    this.app.use("/api/content", contentRouter.router);
 
     // Serve static files from the UI build
     this.app.use(express.static(path.join(__dirname, "../../dist/ui")));

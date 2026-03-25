@@ -2,6 +2,7 @@ import { CalculateMetadataFunction, Composition } from "remotion";
 import { shortVideoSchema } from "../utils";
 import { PortraitVideo } from "../videos/PortraitVideo";
 import { LandscapeVideo } from "../videos/LandscapeVideo";
+import { LongFormVideo } from "../videos/LongFormVideo";
 import { TestVideo } from "../videos/Test";
 import z from "zod";
 import { AvailableComponentsEnum } from "../types";
@@ -272,6 +273,47 @@ export const RemotionRoot: React.FC = () => {
             paddingBack: 1500,
             captionBackgroundColor: "#ff0000",
             captionPosition: "center",
+          },
+        }}
+        calculateMetadata={calculateMetadata}
+      />
+      <Composition
+        id={AvailableComponentsEnum.LongFormVideo}
+        component={LongFormVideo}
+        durationInFrames={30}
+        fps={FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          music: {
+            url:
+              "http://localhost:3123/api/music/" +
+              encodeURIComponent(
+                "Aurora on the Boulevard - National Sweetheart.mp3",
+              ),
+            file: "Aurora on the Boulevard - National Sweetheart.mp3",
+            start: 0,
+            end: 175,
+          },
+          scenes: [
+            {
+              captions: [
+                { text: " Hello", startMs: 390, endMs: 990 },
+                { text: " World.", startMs: 990, endMs: 2000 },
+              ],
+              video:
+                "https://videos.pexels.com/video-files/1168989/1168989-hd_1920_1080_30fps.mp4",
+              audio: {
+                url: "http://localhost:3123/api/tmp/test.mp3",
+                duration: 3.15,
+              },
+            },
+          ],
+          config: {
+            durationMs: 4650,
+            paddingBack: 1500,
+            captionBackgroundColor: "#111111",
+            captionPosition: "bottom",
           },
         }}
         calculateMetadata={calculateMetadata}

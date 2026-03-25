@@ -1,0 +1,155 @@
+/**
+ * PublishRouter – Phase 5.5
+ *
+ * POST /api/publish          – enqueue a video for publishing
+ * GET  /api/publish/:id      – get publish job status + attempts
+ * GET  /api/publish          – list recent publish jobs
+ */
+import { Router } from "express";
+import type { Request, Response } from "express";
+import type { Config } from "../../config";
+import { PublishJobStore } from "../../db/PublishJobStore";
+import { createPublishQueue } from "../../workers/QueueManager";
+import { logger } from "../../logger";
+import type { PlatformType } from "../../types/shorts";
+import type { PublishJobPayload } from "../../workers/PublishWorker";
+import { validatePublishPayload } from "../../publishers/PlatformLimits";
+
+const ALLOWED_PLATFORMS: PlatformType[] = ["youtube", "telegram", "instagram", "facebook"];
+
+export class PublishRouter {
+  public router: Router;
+  private publishJobStore: PublishJobStore;
+
+  constructor(private config: Config) {
+    this.router = Router();
+    this.publishJobStore = new PublishJobStore(config.dataDirPath);
+    this.registerRoutes();
+  }
+
+  private registerRoutes(): void {
+    this.router.use(express_json_middleware());
+    this.router.post("/", (req: Request, res: Response) => this.createPublishJob(req, res));
+    this.router.get("/", (req: Request, res: Response) => this.listPublishJobs(req, res));
+    this.router.get("/:id", (req: Request, res: Response) => this.getPublishJob(req, res));
+  }
+
+  private async createPublishJob(req: Request, res: Response): Promise<void> {
+    const {
+      renderOutputPath,
+      platform,
+      channelId,
+      title,
+      description = "",
+      tags = [],
+      category = "General",
+      language = "en",
+      thumbnailPath,
+      scheduleAt,
+    } = req.body as Partial<PublishJobPayload>;
+
+    if (!renderOutputPath || typeof renderOutputPath !== "string") {
+      res.status(400).json({ error: "renderOutputPath is required" });
+      return;
+    }
+    if (!platform || !ALLOWED_PLATFORMS.includes(platform as PlatformType)) {
+      res.status(400).json({ error: `platform must be one of: ${ALLOWED_PLATFORMS.join(", ")}` });
+      return;
+    }
+    if (!channelId || typeof channelId !== "string") {
+      res.status(400).json({ error: "channelId is required" });
+      return;
+    }
+    if (!title || typeof title !== "string") {
+      res.status(400).json({ error: "title is required" });
+      return;
+    }
+
+    // Idempotency: check for duplicate
+    const duplicate = await this.publishJobStore.findDuplicate(renderOutputPath, platform as PlatformType);
+    if (duplicate && duplicate.status === "published") {
+      res.status(409).json({ error: "Video already published to this platform", jobId: duplicate.id });
+      return;
+    }
+
+    const job = await this.publishJobStore.createJob({
+      renderOutputPath,
+      platform: platform as PlatformType,
+      channelId,
+      title: title as string,
+      description: description as string,
+      tags: tags as string[],
+      category: category as string,
+      language: language as string,
+      thumbnailPath,
+      scheduleAt: scheduleAt ? new Date(scheduleAt).toISOString() : undefined,
+    });
+
+    if (this.config.redisEnabled) {
+      const payloadValidation = validatePublishPayload(platform as PlatformType, {
+        videoFilePath: renderOutputPath,
+        title: title as string,
+        description: description as string,
+        tags: tags as string[],
+        category: category as string,
+        language: language as string,
+        thumbnailPath,
+        scheduleAt: scheduleAt ? new Date(scheduleAt) : undefined,
+      });
+      if (!payloadValidation.valid) {
+        res.status(400).json({
+          error: "Publish payload violates platform limits",
+          details: payloadValidation.errors,
+        });
+        return;
+      }
+
+      const publishQueue = createPublishQueue(this.config);
+      const payload: PublishJobPayload = {
+        publishJobId: job.id,
+        renderOutputPath,
+        platform: platform as PlatformType,
+        channelId,
+        title: title as string,
+        description: description as string,
+        tags: tags as string[],
+        category: category as string,
+        language: language as string,
+        thumbnailPath,
+        scheduleAt,
+      };
+      await publishQueue.add("publish", payload, { jobId: job.id });
+      logger.info({ publishJobId: job.id, platform }, "Publish job enqueued via BullMQ");
+    } else {
+      logger.warn({ publishJobId: job.id }, "Redis disabled – publish job saved to DB but not enqueued");
+    }
+
+    res.status(201).json({ publishJobId: job.id, status: job.status });
+  }
+
+  private async listPublishJobs(req: Request, res: Response): Promise<void> {
+    const status = req.query["status"] as string | undefined;
+    const jobs = status
+      ? await this.publishJobStore.listJobsByStatus(status as any)
+      : await this.publishJobStore.listJobs();
+    res.json(jobs);
+  }
+
+  private async getPublishJob(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const job = await this.publishJobStore.getJob(id);
+    if (!job) {
+      res.status(404).json({ error: "Publish job not found" });
+      return;
+    }
+    const attempts = await this.publishJobStore.getAttempts(id);
+    res.json({ ...job, attempts });
+  }
+}
+
+// Helper – express.json() as inline middleware factory
+function express_json_middleware() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const express = require("express") as typeof import("express");
+  return express.json();
+}

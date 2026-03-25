@@ -70,6 +70,17 @@ export const sceneInput = z.object({
     .nativeEnum(LanguageEnum)
     .optional()
     .describe("Optional translation target language for text before TTS"),
+  cues: z
+    .array(
+      z.object({
+        startMs: z.number().min(0),
+        endMs: z.number().min(0),
+        label: z.string().min(1).max(120).optional(),
+        brollSearchTerms: z.array(z.string().min(1).max(50)).optional(),
+      }),
+    )
+    .optional()
+    .describe("Optional scene timing cues for chaptering and B-roll hints"),
 });
 export type SceneInput = z.infer<typeof sceneInput>;
 
@@ -108,6 +119,13 @@ export enum OrientationEnum {
   landscape = "landscape",
   portrait = "portrait",
 }
+
+export enum VideoTypeEnum {
+  short = "short",
+  long = "long",
+}
+
+export type VideoType = `${VideoTypeEnum}`;
 
 export enum MusicVolumeEnum {
   muted = "muted",
@@ -154,6 +172,16 @@ export const renderConfig = z.object({
     .boolean()
     .default(false)
     .describe("Use AI-generated images instead of stock videos for custom visuals"),
+  videoType: z
+    .nativeEnum(VideoTypeEnum)
+    .default(VideoTypeEnum.short)
+    .describe("Render mode: short or long"),
+  durationLimit: z
+    .number()
+    .min(15)
+    .max(3600)
+    .default(180)
+    .describe("Target maximum output duration in seconds before auto-splitting"),
 });
 export type RenderConfig = z.infer<typeof renderConfig>;
 
@@ -226,3 +254,106 @@ export const statusRequestSchema = z.object({
 });
 
 export type StatusRequest = z.infer<typeof statusRequestSchema>;
+
+// ─── Phase 4: Queue Job Status Types ────────────────────────────────────────
+export type RenderJobStatus =
+  | "scheduled"
+  | "queued"
+  | "processing"
+  | "ready"
+  | "rendered"
+  | "failed"
+  | "skipped";
+
+export type PublishJobStatus =
+  | "scheduled"
+  | "queued"
+  | "publishing"
+  | "published"
+  | "failed"
+  | "skipped";
+
+// ─── Phase 5: Platform Publisher Types ──────────────────────────────────────
+export type PlatformType = "youtube" | "telegram" | "instagram" | "facebook";
+
+// ─── Phase 4/5: Render Job DB Record ─────────────────────────────────────────
+export interface RenderJobRecord {
+  id: string;
+  scriptPlanId: string;
+  videoType: VideoType;
+  language: string;
+  subtitleLanguage: string;
+  orientation: OrientationEnum;
+  category: string;
+  status: RenderJobStatus;
+  attemptCount: number;
+  outputPath: string | null;
+  namingKey: string;
+  error: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Phase 5: Publish Job DB Record ──────────────────────────────────────────
+export interface PublishJobRecord {
+  id: string;
+  renderOutputPath: string;
+  platform: PlatformType;
+  channelId: string;
+  title: string;
+  description: string;
+  tags: string[];
+  category: string;
+  language: string;
+  thumbnailPath?: string;
+  scheduleAt: string | null;
+  status: PublishJobStatus;
+  attemptCount: number;
+  externalId: string | null;
+  publishedUrl: string | null;
+  error: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublishAttemptRecord {
+  id: string;
+  publishJobId: string;
+  attemptNumber: number;
+  status: "success" | "failed";
+  responseCode: number | null;
+  responseBody: string | null;
+  attemptedAt: string;
+}
+
+// ─── Phase 5: Channel Config ──────────────────────────────────────────────────
+export interface ChannelConfig {
+  id: string;
+  platform: PlatformType;
+  channelName: string;
+  credentialsKey: string;
+  categories: string[];
+  languageProfiles: LanguageProfile[];
+  active: boolean;
+}
+
+export interface LanguageProfile {
+  audio: string;
+  subtitle: string;
+  voice: string;
+  whisperModel: string;
+}
+
+// ─── Phase 6: Category Rules ──────────────────────────────────────────────────
+export interface CategoryRule {
+  id: string;
+  category: string;
+  channels: string[];
+  languageProfiles: LanguageProfile[];
+  videoTypes: VideoType[];
+  maxDurationShortSec: number;
+  maxDurationLongSec: number;
+  active: boolean;
+}
+
+export type whisperModels = "tiny" | "tiny.en" | "base" | "base.en" | "small" | "small.en" | "medium" | "medium.en" | "large-v1" | "large-v2" | "large-v3" | "large-v3-turbo";

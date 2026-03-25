@@ -89,10 +89,3 @@ function formatZodError(error: ZodError): ValidationErrorResult {
     fieldErrors,
   };
 }
-  message += errorPaths.join(", ");
-
-  return {
-    message,
-    missingFields,
-  };
-}
