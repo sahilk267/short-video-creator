@@ -25,9 +25,27 @@ export const logger = isRunningInDocker
   ? pino({
       level: process.env.LOG_LEVEL || defaultLogLevel,
       timestamp: pino.stdTimeFunctions.isoTime,
+      redact: [
+        "youtubeClientSecret",
+        "youtubeRefreshToken",
+        "telegramBotToken",
+        "instagramAccessToken",
+        "facebookAccessToken",
+        "slackWebhookUrl",
+        "pagerDutyRoutingKey",
+      ],
     })
   : pino({
       timestamp: pino.stdTimeFunctions.isoTime,
+      redact: [
+        "youtubeClientSecret",
+        "youtubeRefreshToken",
+        "telegramBotToken",
+        "instagramAccessToken",
+        "facebookAccessToken",
+        "slackWebhookUrl",
+        "pagerDutyRoutingKey",
+      ],
       formatters: {
         level: (label: string) => {
           return { level: label };
@@ -101,6 +119,9 @@ export class Config {
   public telegramChannelId: string = "";
   public instagramAccessToken: string = "";
   public facebookAccessToken: string = "";
+  public slackWebhookUrl: string = "";
+  public pagerDutyRoutingKey: string = "";
+  public alertEmailTo: string = "";
 
   // Phase 6: Scheduling
   public cronInterval: string = "*/30 * * * *";
@@ -180,6 +201,9 @@ export class Config {
   this.telegramChannelId = process.env.TELEGRAM_CHANNEL_ID || "";
   this.instagramAccessToken = process.env.INSTAGRAM_ACCESS_TOKEN || "";
   this.facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN || "";
+  this.slackWebhookUrl = process.env.SLACK_WEBHOOK_URL || "";
+  this.pagerDutyRoutingKey = process.env.PAGERDUTY_ROUTING_KEY || "";
+  this.alertEmailTo = process.env.ALERT_EMAIL_TO || "";
 
   // Phase 6: Scheduling
   this.cronInterval = process.env.CRON_INTERVAL || "*/30 * * * *";

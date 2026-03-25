@@ -9,6 +9,7 @@ import { Config } from "../config";
 import { PublishJobStore } from "../db/PublishJobStore";
 import { RenderJobStore } from "../db/RenderJobStore";
 import { logger } from "../logger";
+import { AlertingService } from "../services/AlertingService";
 import { getRedisConnection, QUEUE_NAMES } from "./QueueManager";
 
 export interface DeadLetterPayload {
@@ -24,10 +25,12 @@ export class DeadLetterWorker {
   private worker: Worker;
   private publishJobStore: PublishJobStore;
   private renderJobStore: RenderJobStore;
+  private alertingService: AlertingService;
 
   constructor(private config: Config) {
     this.publishJobStore = new PublishJobStore(config.dataDirPath);
     this.renderJobStore = new RenderJobStore(config.dataDirPath);
+    this.alertingService = new AlertingService(config);
 
     this.worker = new Worker(
       QUEUE_NAMES.DEADLETTER,
@@ -69,7 +72,11 @@ export class DeadLetterWorker {
       });
     }
 
-    // Future: send Slack/email alert here
+    await this.alertingService.notify({
+      summary: `Dead-letter job detected: ${type} ${jobId}`,
+      severity: "critical",
+      details: { type, jobId, failReason, attemptsMade, originalJobData },
+    });
   }
 
   async close(): Promise<void> {

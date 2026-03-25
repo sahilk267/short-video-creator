@@ -2,10 +2,14 @@ process.env.LOG_LEVEL = "debug";
 
 import nock from "nock";
 import { PexelsAPI } from "./Pexels";
-import { test, assert, expect } from "vitest";
+import { test, assert, expect, afterEach, vi } from "vitest";
 import fs from "fs-extra";
 import path from "path";
 import { OrientationEnum } from "../../types/shorts";
+
+afterEach(() => {
+  nock.cleanAll();
+});
 
 test("test pexels", async () => {
   const mockResponse = fs.readFileSync(
@@ -17,20 +21,23 @@ test("test pexels", async () => {
     .reply(200, mockResponse);
   const pexels = new PexelsAPI("asdf");
   const video = await pexels.findVideo(["dog"], 2.4, []);
-  console.log(video);
   assert.isObject(video, "Video should be an object");
+  expect(video.id).toBeTruthy();
+  expect(video.url).toContain("http");
+  expect(video.width).toBeGreaterThan(0);
+  expect(video.height).toBeGreaterThan(0);
 });
 
 test("should time out", async () => {
   nock("https://api.pexels.com")
     .get(/videos\/search/)
     .delay(1000)
-    .times(30)
+    .times(4)
     .reply(200, {});
-  expect(async () => {
-    const pexels = new PexelsAPI("asdf");
-    await pexels.findVideo(["dog"], 2.4, [], OrientationEnum.portrait, 100);
-  }).rejects.toThrow(
+  const pexels = new PexelsAPI("asdf");
+  await expect(
+    pexels.findVideo(["dog"], 2.4, [], OrientationEnum.portrait, 100),
+  ).rejects.toThrow(
     expect.objectContaining({
       name: "TimeoutError",
     }),
@@ -38,21 +45,30 @@ test("should time out", async () => {
 });
 
 test("should retry 3 times", async () => {
-  nock("https://api.pexels.com")
-    .get(/videos\/search/)
-    .delay(1000)
-    .times(2)
-    .reply(200, {});
-  const mockResponse = fs.readFileSync(
-    path.resolve("__mocks__/pexels-response.json"),
-    "utf-8",
-  );
-  nock("https://api.pexels.com")
-    .get(/videos\/search/)
-    .reply(200, mockResponse);
-
   const pexels = new PexelsAPI("asdf");
+  const mockResponse = JSON.parse(
+    fs.readFileSync(path.resolve("__mocks__/pexels-response.json"), "utf-8"),
+  );
+  let callCount = 0;
+  const findVideoSpy = vi
+    .spyOn(pexels as never, "_findVideo" as never)
+    .mockImplementation(async () => {
+      callCount += 1;
+      if (callCount <= 3) {
+        throw new DOMException("timed out", "TimeoutError");
+      }
+      const selectedVideo = mockResponse.videos[0];
+      const selectedFile = selectedVideo.video_files[0];
+      return {
+        id: selectedVideo.id,
+        url: selectedFile.link,
+        width: selectedFile.width,
+        height: selectedFile.height,
+      };
+    });
+
   const video = await pexels.findVideo(["dog"], 2.4, []);
-  console.log(video);
   assert.isObject(video, "Video should be an object");
+  expect(video.id).toBeTruthy();
+  expect(findVideoSpy).toHaveBeenCalledTimes(4);
 });

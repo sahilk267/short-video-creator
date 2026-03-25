@@ -15,6 +15,7 @@ import { TenantRouter } from "./routers/tenants";
 import { MarketingRouter } from "./routers/marketing";
 import { AiRouter } from "./routers/ai";
 import { ContentRouter } from "./routers/content";
+import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
 
@@ -25,6 +26,7 @@ export class Server {
   constructor(config: Config, shortCreator: ShortCreator) {
     this.config = config;
     this.app = express();
+    this.app.set("trust proxy", 1);
 
     const apiRouter = new APIRouter(config, shortCreator);
     const mcpRouter = new MCPRouter(shortCreator);
@@ -36,6 +38,7 @@ export class Server {
     const aiRouter = new AiRouter(config);
     const contentRouter = new ContentRouter();
 
+    this.app.use("/api", apiRateLimiter);
     this.app.use("/api", apiRouter.router);
     this.app.use("/mcp", mcpRouter.router);
     this.app.use("/api/health", healthRouter.router);

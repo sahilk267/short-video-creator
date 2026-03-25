@@ -23,7 +23,10 @@ jobs:
           version: 10
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm exec eslint src --ext .ts,.tsx
 
       - name: Type check
         run: npx tsc -p tsconfig.build.json --noEmit

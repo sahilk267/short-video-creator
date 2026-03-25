@@ -13,48 +13,69 @@ import { Config } from "../config";
 import { MusicManager } from "./music";
 
 // mock fs-extra
-vi.mock("fs-extra", async () => {
-  const { createFsFromVolume, Volume } = await import("memfs");
-  const vol = Volume.fromJSON({
-    "/Users/gyoridavid/.ai-agents-az-video-generator/videos/video-1.mp4":
-      "mock video content 1",
-    "/Users/gyoridavid/.ai-agents-az-video-generator/videos/video-2.mp4":
-      "mock video content 2",
-    "/Users/gyoridavid/.ai-agents-az-video-generator/temp": null,
-    "/Users/gyoridavid/.ai-agents-az-video-generator/libs": null,
-    "/static/music/happy-music.mp3": "mock music content",
-    "/static/music/sad-music.mp3": "mock music content",
-    "/static/music/chill-music.mp3": "mock music content",
-  });
-  const memfs = createFsFromVolume(vol);
+vi.mock("fs-extra", () => {
+  const files = new Map<string, string | Buffer>([
+    ["/static/music/happy-music.mp3", "mock music content"],
+    ["/static/music/sad-music.mp3", "mock music content"],
+    ["/static/music/chill-music.mp3", "mock music content"],
+  ]);
+  const directories = new Set<string>([
+    "/Users/gyoridavid/.ai-agents-az-video-generator/videos",
+    "/Users/gyoridavid/.ai-agents-az-video-generator/temp",
+    "/Users/gyoridavid/.ai-agents-az-video-generator/libs",
+    "/static",
+    "/static/music",
+  ]);
+
+  const normalizePath = (filePath: string) => filePath.replace(/\\/g, "/");
 
   const fsExtra = {
-    ...memfs,
-    // fs-extra specific methods
-    ensureDirSync: vi.fn((path) => {
-      try {
-        memfs.mkdirSync(path, { recursive: true });
-      } catch (error) {}
+    ensureDirSync: vi.fn((dirPath: string) => {
+      directories.add(normalizePath(dirPath));
     }),
-    removeSync: vi.fn((path) => {
-      try {
-        const stats = memfs.statSync(path);
-        if (stats.isDirectory()) {
-          // This is simplified and won't handle nested directories
-          memfs.rmdirSync(path);
-        } else {
-          memfs.unlinkSync(path);
-        }
-      } catch (error) {}
+    existsSync: vi.fn((targetPath: string) => {
+      const normalizedPath = normalizePath(targetPath);
+      return files.has(normalizedPath) || directories.has(normalizedPath);
+    }),
+    writeFileSync: vi.fn((targetPath: string, content: string | Buffer) => {
+      const normalizedPath = normalizePath(targetPath);
+      files.set(normalizedPath, content);
+      const lastSlash = normalizedPath.lastIndexOf("/");
+      if (lastSlash > 0) {
+        directories.add(normalizedPath.slice(0, lastSlash));
+      }
+    }),
+    readFileSync: vi.fn((targetPath: string) => {
+      const normalizedPath = normalizePath(targetPath);
+      const content = files.get(normalizedPath);
+      if (content === undefined) {
+        throw new Error(`File not found: ${normalizedPath}`);
+      }
+      return content;
+    }),
+    readdirSync: vi.fn((dirPath: string) => {
+      const normalizedPath = normalizePath(dirPath);
+      const prefix = normalizedPath.endsWith("/")
+        ? normalizedPath
+        : `${normalizedPath}/`;
+      return Array.from(files.keys())
+        .filter((filePath) => filePath.startsWith(prefix))
+        .map((filePath) => filePath.slice(prefix.length))
+        .filter((fileName) => !fileName.includes("/"));
+    }),
+    unlink: vi.fn((_targetPath: string, callback?: (error?: Error | null) => void) => {
+      callback?.(null);
+    }),
+    removeSync: vi.fn((targetPath: string) => {
+      const normalizedPath = normalizePath(targetPath);
+      files.delete(normalizedPath);
+      directories.delete(normalizedPath);
     }),
     createWriteStream: vi.fn(() => ({
       on: vi.fn(),
       write: vi.fn(),
       end: vi.fn(),
     })),
-    readFileSync: vi.fn((path) => {
-      return memfs.readFileSync(path);
-    }),
   };
   return {
     ...fsExtra,
@@ -87,16 +108,26 @@ vi.mock("fluent-ffmpeg", () => {
 
 // mock kokoro-js
 vi.mock("kokoro-js", () => {
+  class MockTextSplitterStream {
+    push() {}
+    close() {}
+  }
+
   return {
     KokoroTTS: {
       from_pretrained: vi.fn().mockResolvedValue({
-        generate: vi.fn().mockResolvedValue({
-          toWav: vi.fn().mockReturnValue(new ArrayBuffer(8)),
-          audio: new ArrayBuffer(8),
-          sampling_rate: 44100,
+        stream: vi.fn(async function* () {
+          yield {
+            audio: {
+              toWav: vi.fn().mockReturnValue(new ArrayBuffer(52)),
+              audio: new Float32Array(44100),
+              sampling_rate: 44100,
+            },
+          };
         }),
       }),
     },
+    TextSplitterStream: MockTextSplitterStream,
   };
 });
 
@@ -142,7 +173,7 @@ vi.mock("@remotion/install-whisper-cpp", () => {
   };
 });
 
-test("test me", async () => {
+test("ShortCreator basic current behavior", async () => {
   const kokoro = await Kokoro.init("fp16");
   const ffmpeg = await FFMpeg.init();
 
