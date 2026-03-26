@@ -1,0 +1,15 @@
+{
+  "updatedAt": "2026-03-26T17:34:36.545Z",
+  "version": 1,
+  "weights": {
+    "successRate": 0.5,
+    "engagementRate": 0.3,
+    "speedScore": 0.2
+  },
+  "samples": 0,
+  "metrics": {
+    "accuracy": 0.5,
+    "drift": 0,
+    "biasRisk": "low"
+  }
+}

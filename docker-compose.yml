@@ -11,12 +11,14 @@ services:
   short-creator:
     build:
       context: .
-      dockerfile: main.Dockerfile
+      dockerfile: main-tiny.Dockerfile
     env_file:
       - .env
     environment:
       - DEV=false
       - NODE_OPTIONS=--max-old-space-size=4096
+      - KOKORO_MODEL_PRECISION=fp32
+      - SKIP_RUNTIME_INSTALL=true
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_ENABLED=true

@@ -29,7 +29,12 @@ async function main() {
   }
 
   logger.info("Initializing applications...");
-  await install();
+  const skipRuntimeInstall = process.env.SKIP_RUNTIME_INSTALL === "true";
+  if (skipRuntimeInstall) {
+    logger.info("Skipping runtime install because SKIP_RUNTIME_INSTALL=true");
+  } else {
+    await install();
+  }
 
   const musicManager = new MusicManager(config);
   try {
