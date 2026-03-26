@@ -1,46 +1,25 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Alert,
   Box,
   Button,
-  TextField,
-  Typography,
-  Paper,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   CircularProgress,
-  Alert,
-  IconButton,
   Divider,
-  FormControlLabel,
-  Switch,
-  Chip,
+  Paper,
   Stack,
-  InputAdornment,
+  Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import {
-  SceneInput,
-  RenderConfig,
-  MusicMoodEnum,
-  CaptionPositionEnum,
-  VoiceEnum,
-  OrientationEnum,
-  MusicVolumeEnum,
-} from "../../types/shorts";
+import { RenderConfig, SceneInput, MusicMoodEnum, CaptionPositionEnum, VoiceEnum, OrientationEnum, MusicVolumeEnum } from "../../types/shorts";
+import type { NewsSourceOption } from "../components/video-creator/AutoScriptPanel";
+import type { SceneFormData } from "../components/video-creator/SceneEditorList";
+import LoadingSpinner from "../components/shared/LoadingSpinner";
+import apiClient from "../services/apiClient";
 
-interface SceneFormData {
-  text: string;
-  searchTerms: string;
-  headline: string;
-  visualPrompt: string;
-}
+const AutoScriptPanel = lazy(() => import("../components/video-creator/AutoScriptPanel"));
+const SceneEditorList = lazy(() => import("../components/video-creator/SceneEditorList"));
+const VideoConfigPanel = lazy(() => import("../components/video-creator/VideoConfigPanel"));
+const http = apiClient.getAxiosInstance();
 
 const VideoCreator: React.FC = () => {
   const navigate = useNavigate();
@@ -56,24 +35,24 @@ const VideoCreator: React.FC = () => {
     orientation: OrientationEnum.portrait,
     musicVolume: MusicVolumeEnum.high,
   });
-
   const [loading, setLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sources, setSources] = useState<{ id: string; name: string; category: string }[]>([]);
+  const [sources, setSources] = useState<NewsSourceOption[]>([]);
   const [selectedSource, setSelectedSource] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("World");
-  const [voices, setVoices] = useState<VoiceEnum[]>([]);
-  const [musicTags, setMusicTags] = useState<MusicMoodEnum[]>([]);
+  const [, setVoices] = useState<VoiceEnum[]>([]);
+  const [, setMusicTags] = useState<MusicMoodEnum[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
+  const selectedSourceLabel = sources.find((source) => source.id === selectedSource)?.name ?? "No source selected";
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         const [voicesResponse, musicResponse, newsResponse] = await Promise.all([
-          axios.get("/api/voices"),
-          axios.get("/api/music-tags"),
-          axios.get("/api/news-sources"),
+          http.get("/api/voices"),
+          http.get("/api/music-tags"),
+          http.get("/api/news-sources"),
         ]);
 
         setVoices(voicesResponse.data);
@@ -81,27 +60,25 @@ const VideoCreator: React.FC = () => {
         setSources(newsResponse.data);
       } catch (err) {
         console.error("Failed to fetch options:", err);
-        setError(
-          "Failed to load voices and music options. Please refresh the page.",
-        );
+        setError("Failed to load voices and music options. Please refresh the page.");
       } finally {
         setLoadingOptions(false);
       }
     };
 
-    fetchOptions();
+    void fetchOptions();
   }, []);
 
   const handleAddScene = () => {
-    setScenes([...scenes, { text: "", searchTerms: "", headline: "", visualPrompt: "" }]);
+    setScenes((current) => [...current, { text: "", searchTerms: "", headline: "", visualPrompt: "" }]);
   };
 
   const handleRemoveScene = (index: number) => {
-    if (scenes.length > 1) {
-      const newScenes = [...scenes];
-      newScenes.splice(index, 1);
-      setScenes(newScenes);
+    if (scenes.length <= 1) {
+      return;
     }
+
+    setScenes((current) => current.filter((_, currentIndex) => currentIndex !== index));
   };
 
   const handleAutoScript = async () => {
@@ -109,46 +86,43 @@ const VideoCreator: React.FC = () => {
     setAutoLoading(true);
     setError(null);
     try {
-      const res = await axios.post("/api/auto-script", { sourceId: selectedSource });
+      const res = await http.post("/api/auto-script", { sourceId: selectedSource });
       if (res.data.scenes) {
-        setScenes(res.data.scenes.map((s: any) => ({
-          text: s.text,
-          searchTerms: Array.isArray(s.searchTerms) ? s.searchTerms.join(", ") : s.searchTerms,
-          headline: s.headline || "",
-          visualPrompt: s.visualPrompt || ""
+        setScenes(res.data.scenes.map((scene: any) => ({
+          text: scene.text,
+          searchTerms: Array.isArray(scene.searchTerms) ? scene.searchTerms.join(", ") : scene.searchTerms,
+          headline: scene.headline || "",
+          visualPrompt: scene.visualPrompt || "",
         })));
       }
     } catch (err: any) {
       console.error("AI LLM auto-script error:", err);
-      const msg = err.response?.data?.message || err.message || "Failed to generate script";
-      const raw = err.response?.data?.rawAI_LLMOutput;
-      setError(`${msg}${raw ? ` | RAW OUTPUT: ${JSON.stringify(raw)}` : ""}`);
+      const message = err.response?.data?.message || err.message || "Failed to generate script";
+      const rawOutput = err.response?.data?.rawAI_LLMOutput;
+      setError(`${message}${rawOutput ? ` | RAW OUTPUT: ${JSON.stringify(rawOutput)}` : ""}`);
     } finally {
       setAutoLoading(false);
     }
   };
 
-  const handleSceneChange = (
-    index: number,
-    field: keyof SceneFormData,
-    value: string,
-  ) => {
-    const newScenes = [...scenes];
-    newScenes[index] = { ...newScenes[index], [field]: value };
-    setScenes(newScenes);
+  const handleSceneChange = (index: number, field: keyof SceneFormData, value: string) => {
+    setScenes((current) => current.map((scene, currentIndex) => (
+      currentIndex === index
+        ? { ...scene, [field]: value }
+        : scene
+    )));
   };
 
-  const handleConfigChange = (field: keyof RenderConfig, value: any) => {
-    setConfig({ ...config, [field]: value });
+  const handleConfigChange = <K extends keyof RenderConfig>(field: K, value: RenderConfig[K]) => {
+    setConfig((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      // Convert scenes to the expected API format
       const apiScenes: SceneInput[] = scenes.map((scene) => ({
         text: scene.text,
         headline: scene.headline.trim() || undefined,
@@ -159,15 +133,15 @@ const VideoCreator: React.FC = () => {
           .filter((term) => term.length > 0),
       }));
 
-      const response = await axios.post("/api/short-video", {
+      const response = await http.post("/api/short-video", {
         scenes: apiScenes,
         config,
       });
 
       navigate(`/video/${response.data.videoId}`);
     } catch (err) {
-      setError("Failed to create video. Please try again.");
       console.error(err);
+      setError("Failed to create video. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -175,12 +149,7 @@ const VideoCreator: React.FC = () => {
 
   if (loadingOptions) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="80vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
         <CircularProgress />
       </Box>
     );
@@ -192,77 +161,20 @@ const VideoCreator: React.FC = () => {
         Create New Video
       </Typography>
 
-      <Paper sx={{ p: 4, mb: 4, bgcolor: "rgba(25, 118, 210, 0.04)", border: "1px dashed #1976d2" }}>
-        <Typography variant="h6" sx={{ display: "flex", alignItems: "center", mb: 2, color: "#1976d2" }}>
-          <AutoFixHighIcon sx={{ mr: 1 }} /> Magic Auto-Scripting (with Ollama)
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 3, opacity: 0.8 }}>
-          Select a global news category and source. Ollama will fetch the latest headlines and automatically create a 5-scene script for you.
-        </Typography>
-
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>Select Category:</Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
-            {[
-              { id: "General", label: "🌍 General" },
-              { id: "World", label: "🌐 World" },
-              { id: "Technology", label: "💻 Tech" },
-              { id: "Business", label: "📈 Business" },
-              { id: "Cricket", label: "🏏 Cricket" },
-              { id: "NBA", label: "🏀 NBA" },
-              { id: "Sports", label: "🏆 Sports" },
-              { id: "Science", label: "🔬 Science" }
-            ].map((cat) => (
-              <Chip
-                key={cat.id}
-                label={cat.label}
-                clickable
-                color={selectedCategory === cat.id ? "primary" : "default"}
-                variant={selectedCategory === cat.id ? "filled" : "outlined"}
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setSelectedSource(""); // Reset source when category changes
-                }}
-              />
-            ))}
-          </Stack>
-        </Box>
-
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={8}>
-            <FormControl fullWidth>
-              <InputLabel id="news-source-label">Select News Source</InputLabel>
-              <Select
-                labelId="news-source-label"
-                value={selectedSource}
-                label="Select News Source"
-                onChange={(e) => setSelectedSource(e.target.value)}
-              >
-                {sources
-                  .filter((s) => s.category === selectedCategory)
-                  .map((source: any) => (
-                    <MenuItem key={source.id} value={source.id}>
-                      {source.name} {source.subCategory ? `(${source.subCategory})` : ""}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              onClick={handleAutoScript}
-              disabled={autoLoading || !selectedSource}
-              startIcon={autoLoading ? <CircularProgress size={20} color="inherit" /> : <AutoFixHighIcon />}
-              sx={{ height: "56px" }}
-            >
-              {autoLoading ? "Generating..." : "Generate Script"}
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+      <Suspense fallback={<LoadingSpinner message="Loading creator tools..." />}>
+        <AutoScriptPanel
+          autoLoading={autoLoading}
+          selectedCategory={selectedCategory}
+          selectedSource={selectedSource}
+          sources={sources}
+          onCategoryChange={(category) => {
+            setSelectedCategory(category);
+            setSelectedSource("");
+          }}
+          onSourceChange={setSelectedSource}
+          onGenerate={() => void handleAutoScript()}
+        />
+      </Suspense>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -270,261 +182,47 @@ const VideoCreator: React.FC = () => {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Scenes
+      <Paper sx={{ p: 2.5, mb: 3, bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}>
+        <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          Quick Summary
         </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap flexWrap="wrap">
+          <Typography variant="body2">
+            Scenes: <strong>{scenes.length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Orientation: <strong>{config.orientation}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Voice: <strong>{config.voice}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Source: <strong>{selectedSourceLabel}</strong>
+          </Typography>
+          <Typography variant="body2">
+            AI images: <strong>{config.useAiImages ? "On" : "Off"}</strong>
+          </Typography>
+        </Stack>
+      </Paper>
 
-        {scenes.map((scene, index) => (
-          <Paper key={index} sx={{ p: 3, mb: 3 }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography variant="h6">Scene {index + 1}</Typography>
-              {scenes.length > 1 && (
-                <IconButton
-                  onClick={() => handleRemoveScene(index)}
-                  color="error"
-                  size="small"
-                >
-                  <DeleteIcon />
-                </IconButton>
-              )}
-            </Box>
-
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Text"
-                  multiline
-                  rows={4}
-                  value={scene.text}
-                  onChange={(e) =>
-                    handleSceneChange(index, "text", e.target.value)
-                  }
-                  required
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Headline (Optional)"
-                  value={scene.headline}
-                  onChange={(e) =>
-                    handleSceneChange(index, "headline", e.target.value)
-                  }
-                  placeholder="e.g. BREAKING NEWS: MARKET CRASHES"
-                  helperText="Short catchy headline for the top banner. If empty, it will be auto-generated."
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Visual Prompt (for AI Images)"
-                  value={scene.visualPrompt}
-                  onChange={(e) =>
-                    handleSceneChange(index, "visualPrompt", e.target.value)
-                  }
-                  helperText="Detailed description for AI image generation. Leave empty to use scene text."
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Search Terms (comma-separated)"
-                  value={scene.searchTerms}
-                  onChange={(e) =>
-                    handleSceneChange(index, "searchTerms", e.target.value)
-                  }
-                  helperText="Enter keywords for background video, separated by commas"
-                  required
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-        ))}
-
-        <Box display="flex" justifyContent="center" mb={4}>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={handleAddScene}
-          >
-            Add Scene
-          </Button>
-        </Box>
+      <form onSubmit={(event) => void handleSubmit(event)}>
+        <Suspense fallback={<LoadingSpinner message="Loading scene editor..." />}>
+          <SceneEditorList
+            scenes={scenes}
+            onAddScene={handleAddScene}
+            onRemoveScene={handleRemoveScene}
+            onSceneChange={handleSceneChange}
+          />
+        </Suspense>
 
         <Divider sx={{ mb: 4 }} />
 
-        <Typography variant="h5" component="h2" gutterBottom>
-          Video Configuration
-        </Typography>
-
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="End Screen Padding (ms)"
-                value={config.paddingBack}
-                onChange={(e) =>
-                  handleConfigChange("paddingBack", parseInt(e.target.value))
-                }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">ms</InputAdornment>
-                  ),
-                }}
-                helperText="Duration to keep playing after narration ends"
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Music Mood</InputLabel>
-                <Select
-                  value={config.music}
-                  onChange={(e) => handleConfigChange("music", e.target.value)}
-                  label="Music Mood"
-                  required
-                >
-                  {Object.values(MusicMoodEnum).map((tag) => (
-                    <MenuItem key={tag} value={tag}>
-                      {tag}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Caption Position</InputLabel>
-                <Select
-                  value={config.captionPosition}
-                  onChange={(e) =>
-                    handleConfigChange("captionPosition", e.target.value)
-                  }
-                  label="Caption Position"
-                  required
-                >
-                  {Object.values(CaptionPositionEnum).map((position) => (
-                    <MenuItem key={position} value={position}>
-                      {position}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Caption Background Color"
-                value={config.captionBackgroundColor}
-                onChange={(e) =>
-                  handleConfigChange("captionBackgroundColor", e.target.value)
-                }
-                helperText="Any valid CSS color (name, hex, rgba)"
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Default Voice</InputLabel>
-                <Select
-                  value={config.voice}
-                  onChange={(e) => handleConfigChange("voice", e.target.value)}
-                  label="Default Voice"
-                  required
-                >
-                  {Object.values(VoiceEnum).map((voice) => (
-                    <MenuItem key={voice} value={voice}>
-                      {voice}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Orientation</InputLabel>
-                <Select
-                  value={config.orientation}
-                  onChange={(e) =>
-                    handleConfigChange("orientation", e.target.value)
-                  }
-                  label="Orientation"
-                  required
-                >
-                  {Object.values(OrientationEnum).map((orientation) => (
-                    <MenuItem key={orientation} value={orientation}>
-                      {orientation}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Volume of the background audio</InputLabel>
-                <Select
-                  value={config.musicVolume}
-                  onChange={(e) =>
-                    handleConfigChange("musicVolume", e.target.value)
-                  }
-                  label="Volume of the background audio"
-                  required
-                >
-                  {Object.values(MusicVolumeEnum).map((voice) => (
-                    <MenuItem key={voice} value={voice}>
-                      {voice}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 2, bgcolor: "rgba(0,0,0,0.05)", borderRadius: 1 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={config.useAiImages || false}
-                      onChange={(e) =>
-                        handleConfigChange("useAiImages", e.target.checked)
-                      }
-                      color="primary"
-                    />
-                  }
-                  label={
-                    <Box display="flex" alignItems="center">
-                      <AutoFixHighIcon sx={{ mr: 1, color: "primary.main" }} />
-                      <Typography variant="body1" fontWeight="bold">
-                        Use AI Generated Images (Pollinations.ai)
-                      </Typography>
-                    </Box>
-                  }
-                />
-                <Typography variant="caption" display="block" sx={{ ml: 7 }}>
-                  Replaces stock videos with highly accurate AI-generated images matching your text.
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
+        <Suspense fallback={<LoadingSpinner message="Loading video settings..." />}>
+        <VideoConfigPanel
+          config={config}
+          onConfigChange={handleConfigChange}
+        />
+        </Suspense>
 
         <Box display="flex" justifyContent="center">
           <Button
@@ -535,11 +233,7 @@ const VideoCreator: React.FC = () => {
             disabled={loading}
             sx={{ minWidth: 200 }}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Create Video"
-            )}
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Create Video"}
           </Button>
         </Box>
       </form>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Box,
   Typography,
@@ -11,8 +10,10 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
+import apiClient from "../services/apiClient";
 
 const orientations = ["portrait", "landscape"];
+const http = apiClient.getAxiosInstance();
 
 const BulkQueue: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ const BulkQueue: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get("/api/health/queue/states");
+      const res = await http.get("/api/health/queue/states");
       setQueueStates(res.data.renderStates || {});
     } catch (err: any) {
       setError(err?.response?.data?.error || "Failed to load queue states");
@@ -60,7 +61,7 @@ const BulkQueue: React.FC = () => {
         videoType: "short",
         subtitleLanguage: language,
       };
-      const res = await axios.post("/api/queue/bulk", payload);
+      const res = await http.post("/api/queue/bulk", payload);
       setSuccess(`Queued render job: ${res.data.renderJobId}`);
       await loadStates();
     } catch (err: any) {

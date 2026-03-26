@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Box,
   Typography,
@@ -9,6 +8,7 @@ import {
   Button,
   Alert,
 } from "@mui/material";
+import { api } from "../services/apiClient";
 
 interface MappingRecord {
   id: string;
@@ -26,8 +26,8 @@ const CategoryMapping: React.FC = () => {
 
   const fetchMappings = async () => {
     try {
-      const res = await axios.get("/api/channel-configs");
-      setMappings(res.data || []);
+      const mappingsResponse = await api.channels.list<MappingRecord[]>();
+      setMappings(mappingsResponse || []);
     } catch {
       setMappings([]);
     }
@@ -40,7 +40,7 @@ const CategoryMapping: React.FC = () => {
   const saveMapping = async () => {
     setError(null);
     try {
-      await axios.post("/api/channel-configs", {
+      await api.channels.create({
         category,
         platform,
         channelId,

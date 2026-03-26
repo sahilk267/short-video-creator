@@ -219,6 +219,7 @@ test("ShortCreator basic current behavior", async () => {
     pexelsAPI,
     musicManager,
   );
+  vi.spyOn(shortCreator as any, "downloadFile").mockResolvedValue(undefined);
 
   const videoId = shortCreator.addToQueue(
     [
@@ -228,6 +229,8 @@ test("ShortCreator basic current behavior", async () => {
       },
     ],
     {},
+    "short",
+    "en",
   );
 
   // list videos while the video is being processed
@@ -241,8 +244,14 @@ test("ShortCreator basic current behavior", async () => {
 
   // resolve the render promise to simulate the video being processed, and check the status again
   resolveRenderPromise();
-  await new Promise((resolve) => setTimeout(resolve, 100)); // let the queue process the video
-  videos = shortCreator.listAllVideos();
+
+  let attempts = 0;
+  do {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    videos = shortCreator.listAllVideos();
+    attempts += 1;
+  } while (videos.find((v) => v.id === videoId)?.status !== "ready" && attempts < 20);
+
   expect(videos.find((v) => v.id === videoId)?.status).toBe("ready");
 
   // check the status of the video directly

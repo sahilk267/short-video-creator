@@ -13,10 +13,29 @@ import {
 } from '@mui/material';
 import VideoIcon from '@mui/icons-material/VideoLibrary';
 import AddIcon from '@mui/icons-material/Add';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import PublishIcon from '@mui/icons-material/Publish';
+import ScienceIcon from '@mui/icons-material/Science';
+import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
+import BusinessIcon from '@mui/icons-material/Business';
+import BuildIcon from '@mui/icons-material/Build';
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
+
+const routePreloaders: Record<string, () => Promise<unknown>> = {
+  "/publish": () => import("../pages/PublishDashboard"),
+  "/analytics": () => import("../pages/AnalyticsDashboard"),
+  "/scheduler": () => import("../pages/SchedulerDashboard"),
+  "/ab-testing": () => import("../pages/ABTestingDashboard"),
+  "/ai": () => import("../pages/AIDashboard"),
+  "/health": () => import("../pages/HealthDashboard"),
+  "/tenants": () => import("../pages/TenantConsole"),
+  "/content-tools": () => import("../pages/ContentTools"),
+};
 
 const theme = createTheme({
   palette: {
@@ -35,6 +54,19 @@ const theme = createTheme({
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
+
+  const preloadRoute = (path: string) => {
+    const preload = routePreloaders[path];
+    if (preload) {
+      void preload();
+    }
+  };
+
+  const navButtonProps = (path: string) => ({
+    onClick: () => navigate(path),
+    onMouseEnter: () => preloadRoute(path),
+    onFocus: () => preloadRoute(path),
+  });
 
   return (
     <ThemeProvider theme={theme}>
@@ -57,6 +89,62 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               onClick={() => navigate('/create')}
             >
               Create Video
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<PublishIcon />}
+              {...navButtonProps('/publish')}
+            >
+              Publish
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<BarChartIcon />}
+              {...navButtonProps('/analytics')}
+            >
+              Analytics
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<ScheduleIcon />}
+              {...navButtonProps('/scheduler')}
+            >
+              Scheduler
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<ScienceIcon />}
+              {...navButtonProps('/ab-testing')}
+            >
+              A/B Tests
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<PsychologyAltIcon />}
+              {...navButtonProps('/ai')}
+            >
+              AI Monitor
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<MonitorHeartIcon />}
+              {...navButtonProps('/health')}
+            >
+              Health
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<BusinessIcon />}
+              {...navButtonProps('/tenants')}
+            >
+              Tenants
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<BuildIcon />}
+              {...navButtonProps('/content-tools')}
+            >
+              Content Tools
             </Button>
           </Toolbar>
         </AppBar>

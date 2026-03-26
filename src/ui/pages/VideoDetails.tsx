@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { 
   Box, 
   Typography, 
@@ -13,6 +12,9 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
 import { VideoStatus } from '../../types/shorts';
+import apiClient from '../services/apiClient';
+
+const http = apiClient.getAxiosInstance();
 
 const VideoDetails: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
@@ -25,19 +27,13 @@ const VideoDetails: React.FC = () => {
 
   const checkVideoStatus = async () => {
     try {
-      const response = await axios.get(`/api/short-video/${videoId}/status`);
+      const response = await http.get(`/api/short-video/${videoId}/status`);
       const videoStatus = response.data.status;
 
       if (isMounted.current) {
         setStatus(videoStatus || 'unknown');
-        console.log("videoStatus", videoStatus);
-        
         if (videoStatus !== 'processing') {
-          console.log("video is not processing");
-          console.log("interval", intervalRef.current);
-          
           if (intervalRef.current) {
-            console.log("clearing interval");
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
@@ -61,10 +57,10 @@ const VideoDetails: React.FC = () => {
   };
 
   useEffect(() => {
-    checkVideoStatus();
+    void checkVideoStatus();
     
     intervalRef.current = setInterval(() => {
-      checkVideoStatus();
+      void checkVideoStatus();
     }, 5000);
     
     return () => {

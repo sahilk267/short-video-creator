@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { 
   Box, 
   Typography, 
@@ -18,6 +17,9 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import DeleteIcon from '@mui/icons-material/Delete';
+import apiClient from '../services/apiClient';
+
+const http = apiClient.getAxiosInstance();
 
 interface VideoItem {
   id: string;
@@ -32,7 +34,7 @@ const VideoList: React.FC = () => {
 
   const fetchVideos = async () => {
     try {
-      const response = await axios.get('/api/short-videos');
+      const response = await http.get('/api/short-videos');
       setVideos(response.data.videos || []);
       setLoading(false);
     } catch (err) {
@@ -58,7 +60,7 @@ const VideoList: React.FC = () => {
     event.stopPropagation();
     
     try {
-      await axios.delete(`/api/short-video/${id}`);
+      await http.delete(`/api/short-video/${id}`);
       fetchVideos();
     } catch (err) {
       setError('Failed to delete video');

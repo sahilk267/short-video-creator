@@ -185,7 +185,7 @@
 | 11.7 | Backup recovery | Dev | done | Backup automation script added | 
 | 11.8 | API automation | Dev | done | Rate limiting and API support added | 
 | 11.9 | Deployment strategies | Dev | done | CI/ops workflow foundation updated | 
-| 11.10 | Alerting | Dev | done | Slack/PagerDuty service wiring implemented via AlertingService + dead-letter integration | 
+| 11.10 | Alerting | Dev | open | Slack/PagerDuty | 
 | 4.9 | Horizontal scaling | Dev | done | Configurable worker concurrency added | 
 | 5.7 | Platform metadata | Dev | done | Captions/tags per platform implemented | 
 | 6.6 | CI/CD pipeline | Dev | done | Automated build/test pipeline present | 

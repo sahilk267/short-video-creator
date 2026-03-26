@@ -5,6 +5,8 @@ import { LanguageEnum } from "../../types/shorts";
 
 vi.mock("@remotion/install-whisper-cpp", () => {
   return {
+    installWhisperCpp: vi.fn().mockResolvedValue(undefined),
+    downloadWhisperModel: vi.fn().mockResolvedValue(undefined),
     transcribe: vi.fn().mockResolvedValue({
       transcription: [
         {

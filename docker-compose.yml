@@ -1,4 +1,3 @@
-
 services:
   redis:
     image: redis:7-alpine
@@ -28,14 +27,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: ["node", "dist/index.js"]
-    shm_size: '2gb'
+    shm_size: "2gb"
     restart: unless-stopped
     depends_on:
       - redis
     deploy:
-
-      volumes:
-        redis_data:
       resources:
         limits:
           memory: 6g
+
+volumes:
+  redis_data:

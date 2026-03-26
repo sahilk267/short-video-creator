@@ -29,7 +29,7 @@ test("TtsAdapter should translate text when translationTarget differs from langu
   const result = await adapter.synthesize(scene);
 
   expect(result.audioLength).toBe(2);
-  expect(kokoro.generate).toHaveBeenCalledWith("Translated text", "af_heart");
+  expect(kokoro.generate).toHaveBeenCalledWith("Translated text", "af_nova");
 });
 
 test("TtsAdapter should fallback to source text when translation target matches language", async () => {
