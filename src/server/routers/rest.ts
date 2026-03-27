@@ -12,9 +12,11 @@ import { logger } from "../../logger";
 import { Config } from "../../config";
 import { ReportStore } from "../../db/ReportStore";
 import { ScriptPlanStore } from "../../db/ScriptPlanStore";
+import { VideoMetadataStore } from "../../db/VideoMetadataStore";
+import { CustomNewsSourceStore } from "../../db/CustomNewsSourceStore";
 import { ReportMerger } from "../../aggregator/ReportMerger";
-import { NEWS_SOURCES, RssFetcher } from "../../news-fetcher/RssFetcher";
-import { AiLlmGenerator } from "../../script-generator/AiLlmGenerator";
+import { RssFetcher } from "../../news-fetcher/RssFetcher";
+import { AiLlmGenerator, type AutoScriptStyle } from "../../script-generator/AiLlmGenerator";
 
 // todo abstract class
 export class APIRouter {
@@ -23,6 +25,8 @@ export class APIRouter {
   private config: Config;
   private reportStore: ReportStore;
   private scriptPlanStore: ScriptPlanStore;
+  private videoMetadataStore: VideoMetadataStore;
+  private customNewsSourceStore: CustomNewsSourceStore;
 
   constructor(config: Config, shortCreator: ShortCreator) {
     this.config = config;
@@ -30,6 +34,8 @@ export class APIRouter {
     this.shortCreator = shortCreator;
     this.reportStore = new ReportStore(config.dataDirPath);
     this.scriptPlanStore = new ScriptPlanStore(config.dataDirPath);
+    this.videoMetadataStore = new VideoMetadataStore(config.dataDirPath);
+    this.customNewsSourceStore = new CustomNewsSourceStore(config.dataDirPath);
 
     this.router.use(express.json());
 
@@ -108,6 +114,26 @@ export class APIRouter {
     this.router.get("/voices", (req: ExpressRequest, res: ExpressResponse) => {
       res.status(200).json(this.shortCreator.ListAvailableVoices());
     });
+
+    this.router.get(
+      "/short-video/:videoId/metadata",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const videoId = validateVideoId(req.params.videoId);
+          const metadata = await this.videoMetadataStore.get(videoId);
+          if (!metadata) {
+            res.status(404).json({ error: "Video metadata not found" });
+            return;
+          }
+          res.status(200).json(metadata);
+        } catch (error: unknown) {
+          logger.error(error, "Error fetching video metadata");
+          res.status(400).json({
+            error: error instanceof Error ? error.message : "Invalid video ID",
+          });
+        }
+      },
+    );
 
     this.router.get(
       "/short-videos",
@@ -240,8 +266,47 @@ export class APIRouter {
 
     this.router.get(
       "/news-sources",
-      (req: ExpressRequest, res: ExpressResponse) => {
-        res.status(200).json(NEWS_SOURCES);
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        const rssFetcher = new RssFetcher(this.config.dataDirPath);
+        res.status(200).json(rssFetcher.listSourcesSync());
+      },
+    );
+
+    this.router.post(
+      "/news-sources/custom",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const { name, url, category, subCategory } = req.body;
+          if (!name || !url || !category) {
+            res.status(400).json({ error: "name, url, and category are required" });
+            return;
+          }
+
+          let parsedUrl: URL;
+          try {
+            parsedUrl = new URL(String(url));
+          } catch {
+            res.status(400).json({ error: "Invalid source URL" });
+            return;
+          }
+
+          if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+            res.status(400).json({ error: "Source URL must use http or https" });
+            return;
+          }
+
+          const record = await this.customNewsSourceStore.add({
+            name: String(name),
+            url: parsedUrl.toString(),
+            category: String(category),
+            subCategory: subCategory ? String(subCategory) : undefined,
+          });
+
+          res.status(201).json({ source: record });
+        } catch (error: unknown) {
+          logger.error(error, "Error adding custom news source");
+          res.status(500).json({ error: "Failed to add custom news source" });
+        }
       },
     );
 
@@ -279,19 +344,20 @@ export class APIRouter {
       "/reports/fetch",
       async (req: ExpressRequest, res: ExpressResponse) => {
         try {
-          const sourceId = req.body.sourceId || NEWS_SOURCES[0]?.id;
+          const rssFetcher = new RssFetcher(this.config.dataDirPath);
+          const availableSources = rssFetcher.listSourcesSync();
+          const sourceId = req.body.sourceId || availableSources[0]?.id;
           if (!sourceId) {
             res.status(400).json({ error: "No sourceId provided and no default source available" });
             return;
           }
 
-          const source = NEWS_SOURCES.find((item) => item.id === sourceId);
+          const source = availableSources.find((item) => item.id === sourceId);
           if (!source) {
             res.status(404).json({ error: "Source not found" });
             return;
           }
 
-          const rssFetcher = new RssFetcher();
           const stories = await rssFetcher.fetchStories(sourceId);
 
           const insertedReports = [];
@@ -363,19 +429,137 @@ export class APIRouter {
     );
 
     this.router.post(
-      "/auto-script",
+      "/auto-script/topics",
       async (req: ExpressRequest, res: ExpressResponse) => {
         try {
-          const { sourceId } = req.body;
-          if (!sourceId) {
-            res.status(400).json({ error: "sourceId is required" });
+          const {
+            sourceId,
+            sourceIds,
+            category,
+            keywords = [],
+          }: {
+            sourceId?: string;
+            sourceIds?: string[];
+            category?: string;
+            keywords?: string[];
+          } = req.body;
+          const selectedSourceIds = Array.from(new Set(
+            (Array.isArray(sourceIds) ? sourceIds : [])
+              .concat(sourceId ? [sourceId] : [])
+              .filter(Boolean),
+          ));
+          if (selectedSourceIds.length === 0) {
+            res.status(400).json({ error: "sourceId or sourceIds is required" });
             return;
           }
 
-          logger.info({ sourceId }, "Auto-generating script from news");
+          const rssFetcher = new RssFetcher();
+          const stories = await rssFetcher.fetchStoriesFromSources(selectedSourceIds);
+          if (stories.length === 0) {
+            res.status(404).json({ error: "No news stories found for this source" });
+            return;
+          }
+
+          const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
+          const topics = await aiLlm.suggestTopics(stories, { category, keywords });
+
+          res.status(200).json({ topics });
+        } catch (error: any) {
+          logger.error({ err: error, body: req.body }, "Error in auto-script topic generation");
+          res.status(500).json({
+            error: "Failed to generate topics",
+            message: error.message || "Unknown error",
+          });
+        }
+      },
+    );
+
+    this.router.post(
+      "/auto-script/hooks",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const {
+            sourceId,
+            sourceIds,
+            category,
+            topic,
+            style = "News",
+            keywords = [],
+          }: {
+            sourceId?: string;
+            sourceIds?: string[];
+            category?: string;
+            topic?: string;
+            style?: AutoScriptStyle;
+            keywords?: string[];
+          } = req.body;
+
+          const selectedSourceIds = Array.from(new Set(
+            (Array.isArray(sourceIds) ? sourceIds : [])
+              .concat(sourceId ? [sourceId] : [])
+              .filter(Boolean),
+          ));
+          if (selectedSourceIds.length === 0) {
+            res.status(400).json({ error: "sourceId or sourceIds is required" });
+            return;
+          }
 
           const rssFetcher = new RssFetcher();
-          const stories = await rssFetcher.fetchStories(sourceId);
+          const stories = await rssFetcher.fetchStoriesFromSources(selectedSourceIds);
+          if (stories.length === 0) {
+            res.status(404).json({ error: "No news stories found for this source" });
+            return;
+          }
+
+          const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
+          const hooks = await aiLlm.suggestHooks(stories, { category, topic, style, keywords });
+
+          res.status(200).json({ hooks });
+        } catch (error: any) {
+          logger.error({ err: error, body: req.body }, "Error in auto-script hook generation");
+          res.status(500).json({
+            error: "Failed to generate hooks",
+            message: error.message || "Unknown error",
+          });
+        }
+      },
+    );
+
+    this.router.post(
+      "/auto-script",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const {
+            sourceId,
+            sourceIds,
+            category,
+            topic,
+            style = "News",
+            hook,
+            keywords = [],
+          }: {
+            sourceId?: string;
+            sourceIds?: string[];
+            category?: string;
+            topic?: string;
+            style?: AutoScriptStyle;
+            hook?: string;
+            keywords?: string[];
+          } = req.body;
+          const selectedSourceIds = Array.from(new Set(
+            (Array.isArray(sourceIds) ? sourceIds : [])
+              .concat(sourceId ? [sourceId] : [])
+              .filter(Boolean),
+          ));
+          if (selectedSourceIds.length === 0) {
+            res.status(400).json({ error: "sourceId or sourceIds is required" });
+            return;
+          }
+
+          logger.info({ selectedSourceIds }, "Auto-generating script from news");
+
+          const rssFetcher = new RssFetcher();
+          const stories = await rssFetcher.fetchStoriesFromSources(selectedSourceIds);
 
           if (stories.length === 0) {
             res.status(404).json({ error: "No news stories found for this source" });
@@ -383,7 +567,13 @@ export class APIRouter {
           }
 
           const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
-          const scenes = await aiLlm.generateScript(stories);
+          const scenes = await aiLlm.generateScript(stories, {
+            category,
+            topic,
+            style,
+            hook,
+            keywords,
+          });
 
           res.status(200).json({ scenes });
         } catch (error: any) {

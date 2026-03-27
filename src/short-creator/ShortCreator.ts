@@ -5,6 +5,7 @@ import cuid from "cuid";
 import path from "path";
 import https from "https";
 import http from "http";
+import crypto from "crypto";
 
 import { Kokoro } from "./libraries/Kokoro";
 import { Remotion } from "./libraries/Remotion";
@@ -16,22 +17,18 @@ import { SubtitleBuilder } from "./libraries/SubtitleBuilder";
 import { Config } from "../config";
 import { logger } from "../logger";
 import { MusicManager } from "./music";
+import { VideoMetadataStore } from "../db/VideoMetadataStore";
 import type {
   SceneInput,
   RenderConfig,
   Scene,
+  Caption,
   VideoStatus,
   MusicMoodEnum,
   MusicTag,
   MusicForVideo,
 } from "../types/shorts";
 import { LanguageEnum } from "../types/shorts";
-
-type VariantSpec = {
-  audioLanguage: LanguageEnum;
-  subtitleLanguage: "en" | "hi" | "es";
-  suffix: string;
-};
 
 export class ShortCreator {
   private queue: {
@@ -42,6 +39,7 @@ export class ShortCreator {
     subtitleLanguage?: string;
   }[] = [];
   private ttsAdapter: TtsAdapter;
+  private videoMetadataStore: VideoMetadataStore;
 
   constructor(
     private config: Config,
@@ -53,6 +51,46 @@ export class ShortCreator {
     private musicManager: MusicManager,
   ) {
     this.ttsAdapter = new TtsAdapter(kokoro);
+    this.videoMetadataStore = new VideoMetadataStore(config.dataDirPath);
+  }
+
+  private buildMediaSearchTerms(scene: SceneInput): string[] {
+    const mergedTerms = [
+      ...(scene.searchTerms || []),
+      ...(scene.keywords || []),
+      ...(scene.subcategory ? [scene.subcategory] : []),
+    ]
+      .map((term) => term.trim())
+      .filter(Boolean);
+
+    return Array.from(new Set(mergedTerms)).slice(0, 12);
+  }
+
+  private buildVideoSignature(
+    sceneInput: SceneInput[],
+    config: RenderConfig,
+    videoType: "short" | "long",
+    subtitleLanguage?: string,
+  ): string {
+    const normalizedScenes = sceneInput.map((scene) => ({
+      text: scene.text.trim(),
+      searchTerms: [...(scene.searchTerms || [])].map((term) => term.trim().toLowerCase()).sort(),
+      keywords: [...(scene.keywords || [])].map((term) => term.trim().toLowerCase()).sort(),
+      subcategory: scene.subcategory?.trim().toLowerCase() || "",
+      headline: scene.headline?.trim().toLowerCase() || "",
+      visualPrompt: scene.visualPrompt?.trim().toLowerCase() || "",
+      language: scene.language || LanguageEnum.en,
+      translationTarget: scene.translationTarget || null,
+    }));
+
+    const payload = {
+      scenes: normalizedScenes,
+      config,
+      videoType,
+      subtitleLanguage: subtitleLanguage || null,
+    };
+
+    return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
   }
 
   public status(id: string): VideoStatus {
@@ -72,8 +110,24 @@ export class ShortCreator {
     videoType: "short" | "long" = "short",
     subtitleLanguage?: string,
   ): string {
-    // todo add mutex lock
+    const signature = this.buildVideoSignature(sceneInput, config, videoType, subtitleLanguage);
+    const queuedMatch = this.queue.find((item) =>
+      this.buildVideoSignature(item.sceneInput, item.config, item.videoType, item.subtitleLanguage) === signature);
+    if (queuedMatch) {
+      return queuedMatch.id;
+    }
+
+    const existingRecord = this.videoMetadataStore.findBySignatureSync(signature);
+    if (existingRecord && fs.existsSync(this.getVideoPath(existingRecord.videoId))) {
+      return existingRecord.videoId;
+    }
+
     const id = cuid();
+    this.videoMetadataStore.upsertFromScenesSync({
+      videoId: id,
+      scenes: sceneInput,
+      signature,
+    });
     this.queue.push({
       sceneInput,
       config,
@@ -117,29 +171,8 @@ export class ShortCreator {
     videoType: "short" | "long" = "short",
     subtitleLanguage?: string,
   ): Promise<string> {
-    // Phase 2.6: when subtitle language is not explicitly set, auto-generate
-    // three configured language variants from the same input.
     if (!subtitleLanguage) {
-      const variants: VariantSpec[] = [
-        { audioLanguage: LanguageEnum.en, subtitleLanguage: "es", suffix: "en_es" },
-        { audioLanguage: LanguageEnum.hi, subtitleLanguage: "hi", suffix: "hi_hinglish" },
-        { audioLanguage: LanguageEnum.es, subtitleLanguage: "en", suffix: "es_en" },
-      ];
-      for (const variant of variants) {
-        const variantId = `${videoId}_${variant.suffix}`;
-        const variantScenes = inputScenes.map((scene) => ({
-          ...scene,
-          language: variant.audioLanguage,
-        }));
-        await this.createShort(
-          variantId,
-          variantScenes,
-          config,
-          videoType,
-          variant.subtitleLanguage,
-        );
-      }
-      return videoId;
+      subtitleLanguage = inputScenes[0]?.language ?? LanguageEnum.en;
     }
 
     // Phase 3.3: split long scripts into chunks by duration limit.
@@ -208,7 +241,15 @@ export class ShortCreator {
       await this.ffmpeg.saveNormalizedAudio(audioStream, tempWavPath);
       
       console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Transcribing with Whisper...`);
-      const captions = await this.whisper.CreateCaption(tempWavPath, scene.language);
+      let captions: Caption[] = [];
+      try {
+        captions = await this.whisper.CreateCaption(tempWavPath, scene.language);
+      } catch (captionErr) {
+        logger.warn(
+          { captionErr, sceneNum, tempWavPath, language: scene.language },
+          "Caption generation failed, continuing without captions",
+        );
+      }
 
       // Build and save subtitle files if subtitleLanguage specified (Phase 2.5)
       if (subtitleLanguage && captions.length > 0) {
@@ -227,6 +268,7 @@ export class ShortCreator {
       await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
 
       const isAiImage = config.useAiImages || this.config.useAiImages;
+      const mediaSearchTerms = this.buildMediaSearchTerms(scene);
       let mediaExt = ".mp4"; // Default generic extension, will be updated
       if (isAiImage) {
         mediaExt = ".jpg"; 
@@ -243,7 +285,11 @@ export class ShortCreator {
         }
         
         // Use AI image from Pollinations.ai if key is available
-        const aiPrompt = scene.visualPrompt || scene.text.slice(0, 150);
+        const aiPrompt = scene.visualPrompt
+          || [scene.headline, scene.subcategory, ...(scene.keywords || []), scene.text]
+            .filter(Boolean)
+            .join(", ")
+            .slice(0, 200);
         const apiKeyParam = this.config.pollinationsApiKey ? `&key=${this.config.pollinationsApiKey}` : '';
         const pollinationsUrl = `https://gen.pollinations.ai/image/${encodeURIComponent(aiPrompt)}?width=${orientation === OrientationEnum.landscape ? 1920 : 1080}&height=${orientation === OrientationEnum.landscape ? 1080 : 1920}&nologo=true${apiKeyParam}`;
         
@@ -256,7 +302,7 @@ export class ShortCreator {
           logger.error(err, `Error downloading AI image for scene ${sceneNum}`);
           // If AI image fails, we fallback to Pexels video
           const video = await this.pexelsApi.findVideo(
-            scene.searchTerms,
+            mediaSearchTerms,
             audioLength,
             excludeVideoIds,
             orientation,
@@ -276,9 +322,9 @@ export class ShortCreator {
           mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
         }
       } else {
-        console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Searching Pexels for: ${scene.searchTerms.join(", ")}`);
+        console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Searching Pexels for: ${mediaSearchTerms.join(", ")}`);
         const video = await this.pexelsApi.findVideo(
-          scene.searchTerms,
+          mediaSearchTerms,
           audioLength,
           excludeVideoIds,
           orientation,
