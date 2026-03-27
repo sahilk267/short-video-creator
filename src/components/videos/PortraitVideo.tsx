@@ -18,7 +18,7 @@ import {
 } from "../utils";
 import { NewsOverlay } from "./NewsOverlay";
 
-const { fontFamily } = loadFont(); // "Barlow Condensed"
+const { fontFamily } = loadFont();
 
 export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   scenes,
@@ -32,28 +32,29 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
 
   const activeStyle = {
     backgroundColor: captionBackgroundColor,
-    padding: "10px",
+    padding: "10px 14px",
     marginLeft: "-10px",
     marginRight: "-10px",
-    borderRadius: "10px",
+    borderRadius: "14px",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.24)",
   };
 
   const captionPosition = config.captionPosition ?? "center";
   let captionStyle = {};
   if (captionPosition === "top") {
-    captionStyle = { top: 100 };
+    captionStyle = { top: 210 };
   }
   if (captionPosition === "center") {
-    captionStyle = { top: "50%", transform: "translateY(-50%)" };
+    captionStyle = { top: "52%", transform: "translateY(-50%)" };
   }
   if (captionPosition === "bottom") {
-    captionStyle = { bottom: 100 };
+    captionStyle = { bottom: 130 };
   }
 
   const [musicVolume, musicMuted] = calculateVolume(config.musicVolume);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "white" }}>
+    <AbsoluteFill style={{ backgroundColor: "#071018" }}>
       <Audio
         loop
         src={music.url}
@@ -64,7 +65,7 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
       />
 
       {scenes.map((scene, i) => {
-        const { captions, audio, video } = scene;
+        const { captions, audio } = scene;
         const pages = createCaptionPages({
           captions,
           lineMaxLength: 20,
@@ -72,15 +73,10 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
           maxDistanceMs: 1000,
         });
 
-        // Calculate the start and end time of the scene
         const startFrame =
-          scenes.slice(0, i).reduce((acc, curr) => {
-            return acc + curr.audio.duration;
-          }, 0) * fps;
+          scenes.slice(0, i).reduce((acc, curr) => acc + curr.audio.duration, 0) * fps;
         let durationInFrames =
-          scenes.slice(0, i + 1).reduce((acc, curr) => {
-            return acc + curr.audio.duration;
-          }, 0) * fps;
+          scenes.slice(0, i + 1).reduce((acc, curr) => acc + curr.audio.duration, 0) * fps;
         if (config.paddingBack && i === scenes.length - 1) {
           durationInFrames += (config.paddingBack / 1000) * fps;
         }
@@ -91,91 +87,107 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
             durationInFrames={durationInFrames}
             key={`scene-${i}`}
           >
-            {scene.video ? (
-              <OffthreadVideo src={scene.video} muted />
-            ) : (
-              <Img
-                src={scene.imageUrl as string}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transform: `scale(${interpolate(
-                    frame,
-                    [startFrame, startFrame + durationInFrames],
-                    [1, 1.1],
-                    { extrapolateRight: "clamp" }
-                  )})`,
-                }}
-              />
-            )}
-            <NewsOverlay headline={scene.headline} />
+            <SceneMedia scene={scene} durationInFrames={durationInFrames} />
+            <NewsOverlay
+              headline={scene.headline}
+              sceneIndex={i}
+              totalScenes={scenes.length}
+            />
             <Audio src={audio.url} />
-            {pages.map((page, j) => {
-              return (
-                <Sequence
-                  key={`scene-${i}-page-${j}`}
-                  from={Math.round((page.startMs / 1000) * fps)}
-                  durationInFrames={Math.round(
-                    ((page.endMs - page.startMs) / 1000) * fps,
-                  )}
+            {pages.map((page, j) => (
+              <Sequence
+                key={`scene-${i}-page-${j}`}
+                from={Math.round((page.startMs / 1000) * fps)}
+                durationInFrames={Math.round(
+                  ((page.endMs - page.startMs) / 1000) * fps,
+                )}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    width: "100%",
+                    ...captionStyle,
+                  }}
                 >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      width: "100%",
-                      ...captionStyle,
-                    }}
-                  >
-                    {page.lines.map((line, k) => {
-                      return (
-                        <p
-                          style={{
-                            fontSize: "6em",
-                            fontFamily: fontFamily,
-                            fontWeight: "black",
-                            color: "white",
-                            WebkitTextStroke: "2px black",
-                            WebkitTextFillColor: "white",
-                            textShadow: "0px 0px 10px black",
-                            textAlign: "center",
-                            width: "100%",
-                            // uppercase
-                            textTransform: "uppercase",
-                          }}
-                          key={`scene-${i}-page-${j}-line-${k}`}
-                        >
-                          {line.texts.map((text, l) => {
-                            const active =
-                              frame >=
-                                startFrame + (text.startMs / 1000) * fps &&
-                              frame <= startFrame + (text.endMs / 1000) * fps;
-                            return (
-                              <>
-                                <span
-                                  style={{
-                                    fontWeight: "bold",
-                                    ...(active ? activeStyle : {}),
-                                  }}
-                                  key={`scene-${i}-page-${j}-line-${k}-text-${l}`}
-                                >
-                                  {text.text}
-                                </span>
-                                {l < line.texts.length - 1 ? " " : ""}
-                              </>
-                            );
-                          })}
-                        </p>
-                      );
-                    })}
-                  </div>
-                </Sequence>
-              );
-            })}
+                  {page.lines.map((line, k) => (
+                    <p
+                      style={{
+                        fontSize: "5.8em",
+                        fontFamily,
+                        fontWeight: 800,
+                        color: "white",
+                        WebkitTextStroke: "2px rgba(5,8,14,0.9)",
+                        WebkitTextFillColor: "white",
+                        textShadow: "0px 10px 22px rgba(0,0,0,0.42)",
+                        textAlign: "center",
+                        width: "100%",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
+                      key={`scene-${i}-page-${j}-line-${k}`}
+                    >
+                      {line.texts.map((text, l) => {
+                        const active =
+                          frame >= startFrame + (text.startMs / 1000) * fps &&
+                          frame <= startFrame + (text.endMs / 1000) * fps;
+                        return (
+                          <>
+                            <span
+                              style={{
+                                fontWeight: 800,
+                                ...(active ? activeStyle : {}),
+                              }}
+                              key={`scene-${i}-page-${j}-line-${k}-text-${l}`}
+                            >
+                              {text.text}
+                            </span>
+                            {l < line.texts.length - 1 ? " " : ""}
+                          </>
+                        );
+                      })}
+                    </p>
+                  ))}
+                </div>
+              </Sequence>
+            ))}
           </Sequence>
         );
       })}
     </AbsoluteFill>
+  );
+};
+
+const SceneMedia: React.FC<{
+  scene: z.infer<typeof shortVideoSchema>["scenes"][number];
+  durationInFrames: number;
+}> = ({ scene, durationInFrames }) => {
+  const relativeFrame = useCurrentFrame();
+  const scale = interpolate(relativeFrame, [0, durationInFrames], [1.02, 1.1], {
+    extrapolateRight: "clamp",
+  });
+  const opacity = interpolate(
+    relativeFrame,
+    [0, 8, Math.max(10, durationInFrames - 10), durationInFrames],
+    [0.72, 1, 1, 0.86],
+    { extrapolateRight: "clamp" },
+  );
+
+  const mediaStyle: React.CSSProperties = {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    transform: `scale(${scale})`,
+    opacity,
+  };
+
+  return (
+    <>
+      {scene.video ? (
+        <OffthreadVideo src={scene.video} muted style={mediaStyle} />
+      ) : (
+        <Img src={scene.imageUrl as string} style={mediaStyle} />
+      )}
+    </>
   );
 };

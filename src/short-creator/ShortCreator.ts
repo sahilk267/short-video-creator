@@ -55,15 +55,26 @@ export class ShortCreator {
   }
 
   private buildMediaSearchTerms(scene: SceneInput): string[] {
-    const mergedTerms = [
-      ...(scene.searchTerms || []),
-      ...(scene.keywords || []),
-      ...(scene.subcategory ? [scene.subcategory] : []),
-    ]
-      .map((term) => term.trim())
-      .filter(Boolean);
+    const uniqueTerms = Array.from(new Set(
+      [
+        ...(scene.subcategory ? [scene.subcategory] : []),
+        ...(scene.searchTerms || []),
+        ...(scene.keywords || []),
+        ...(scene.headline ? [scene.headline] : []),
+      ]
+        .map((term) => term.trim())
+        .filter(Boolean),
+    ));
 
-    return Array.from(new Set(mergedTerms)).slice(0, 12);
+    const specificityScore = (term: string): number => {
+      const normalized = term.trim();
+      const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+      return (wordCount * 100) + normalized.length;
+    };
+
+    return uniqueTerms
+      .sort((a, b) => specificityScore(b) - specificityScore(a))
+      .slice(0, 12);
   }
 
   private buildVideoSignature(

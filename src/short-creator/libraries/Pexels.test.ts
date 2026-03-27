@@ -72,3 +72,24 @@ test("should retry 3 times", async () => {
   expect(video.id).toBeTruthy();
   expect(findVideoSpy).toHaveBeenCalledTimes(4);
 });
+
+test("should prioritize specific multi-word search terms before generic ones", async () => {
+  const pexels = new PexelsAPI("asdf");
+  const findVideoSpy = vi
+    .spyOn(pexels as never, "_findVideo" as never)
+    .mockResolvedValue({
+      id: "video-1",
+      url: "https://example.com/video.mp4",
+      width: 1080,
+      height: 1920,
+    });
+
+  await pexels.findVideo(
+    ["news", "cricket controversy", "Moeen Ali", "sports"],
+    2.4,
+    [],
+  );
+
+  expect(findVideoSpy).toHaveBeenCalled();
+  expect(findVideoSpy.mock.calls[0]?.[0]).toBe("cricket controversy");
+});
