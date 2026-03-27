@@ -52,6 +52,16 @@ export const sceneInput = z.object({
     .describe(
       "Search terms for video content. Provide 2-5 relevant keywords that match the scene's context and visual theme.",
     ),
+  subcategory: z.string()
+    .min(2, "Subcategory must be at least 2 characters")
+    .max(60, "Subcategory must not exceed 60 characters")
+    .optional()
+    .describe("Optional finer-grained classification under the selected category"),
+  keywords: z
+    .array(z.string().min(1).max(50))
+    .max(12, "Maximum 12 keywords allowed per scene")
+    .optional()
+    .describe("Optional keyword metadata used for media selection, prompt enrichment, and SEO"),
   headline: z.string()
     .min(5, "Headline must be at least 5 characters")
     .max(100, "Headline must not exceed 100 characters")
@@ -324,6 +334,19 @@ export interface PublishAttemptRecord {
   responseCode: number | null;
   responseBody: string | null;
   attemptedAt: string;
+}
+
+export interface VideoMetadataRecord {
+  videoId: string;
+  signature?: string | null;
+  topic: string;
+  summary: string;
+  category: string | null;
+  subcategory: string | null;
+  keywords: string[];
+  headlines: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Phase 5: Channel Config ──────────────────────────────────────────────────

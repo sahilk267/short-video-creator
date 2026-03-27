@@ -2,6 +2,7 @@ process.env.LOG_LEVEL = "debug";
 
 import { test, expect, vi } from "vitest";
 import fs from "fs-extra";
+import path from "path";
 
 import { ShortCreator } from "./ShortCreator";
 import { Kokoro } from "./libraries/Kokoro";
@@ -33,6 +34,16 @@ vi.mock("fs-extra", () => {
     ensureDirSync: vi.fn((dirPath: string) => {
       directories.add(normalizePath(dirPath));
     }),
+    ensureFileSync: vi.fn((targetPath: string) => {
+      const normalizedPath = normalizePath(targetPath);
+      const lastSlash = normalizedPath.lastIndexOf("/");
+      if (lastSlash > 0) {
+        directories.add(normalizedPath.slice(0, lastSlash));
+      }
+      if (!files.has(normalizedPath)) {
+        files.set(normalizedPath, "");
+      }
+    }),
     existsSync: vi.fn((targetPath: string) => {
       const normalizedPath = normalizePath(targetPath);
       return files.has(normalizedPath) || directories.has(normalizedPath);
@@ -52,6 +63,22 @@ vi.mock("fs-extra", () => {
         throw new Error(`File not found: ${normalizedPath}`);
       }
       return content;
+    }),
+    readFile: vi.fn(async (targetPath: string) => {
+      const normalizedPath = normalizePath(targetPath);
+      const content = files.get(normalizedPath);
+      if (content === undefined) {
+        throw new Error(`File not found: ${normalizedPath}`);
+      }
+      return content;
+    }),
+    writeFile: vi.fn(async (targetPath: string, content: string | Buffer) => {
+      const normalizedPath = normalizePath(targetPath);
+      files.set(normalizedPath, content);
+      const lastSlash = normalizedPath.lastIndexOf("/");
+      if (lastSlash > 0) {
+        directories.add(normalizedPath.slice(0, lastSlash));
+      }
     }),
     readdirSync: vi.fn((dirPath: string) => {
       const normalizedPath = normalizePath(dirPath);
@@ -257,4 +284,194 @@ test("ShortCreator basic current behavior", async () => {
   // check the status of the video directly
   const status = shortCreator.status(videoId);
   expect(status).toBe("ready");
+});
+
+test("ShortCreator renders the requested base video id when subtitleLanguage is omitted", async () => {
+  const kokoro = await Kokoro.init("fp16");
+  const ffmpeg = await FFMpeg.init();
+
+  vi.spyOn(ffmpeg, "saveNormalizedAudio").mockResolvedValue("mocked-path.wav");
+  vi.spyOn(ffmpeg, "saveToMp3").mockResolvedValue("mocked-path.mp3");
+
+  const pexelsAPI = new PexelsAPI("mock-api-key");
+  vi.spyOn(pexelsAPI, "findVideo").mockResolvedValue({
+    id: "mock-video-id-2",
+    url: "https://example.com/mock-video-2.mp4",
+    width: 1080,
+    height: 1920,
+  });
+
+  const config = new Config();
+  const remotion = await Remotion.init(config);
+  const renderSpy = vi.spyOn(remotion, "render").mockImplementation(async (_data, id) => {
+    fs.writeFileSync(path.normalize(`${config.videosDirPath}/${id}.mp4`), "mock video content");
+  });
+
+  const whisper = await Whisper.init(config);
+  vi.spyOn(whisper, "CreateCaption").mockResolvedValue([
+    { text: "This", startMs: 0, endMs: 500 },
+    { text: " is", startMs: 500, endMs: 800 },
+  ]);
+
+  const musicManager = new MusicManager(config);
+
+  const shortCreator = new ShortCreator(
+    config,
+    remotion,
+    kokoro,
+    whisper,
+    ffmpeg,
+    pexelsAPI,
+    musicManager,
+  );
+  vi.spyOn(shortCreator as any, "downloadFile").mockResolvedValue(undefined);
+
+  const videoId = shortCreator.addToQueue(
+    [
+      {
+        text: "This scene has enough content to pass validation.",
+        searchTerms: ["markets", "economy"],
+      },
+    ],
+    {},
+    "short",
+  );
+
+  let attempts = 0;
+  let status = shortCreator.status(videoId);
+  while (status === "processing" && attempts < 20) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    status = shortCreator.status(videoId);
+    attempts += 1;
+  }
+
+  expect(renderSpy).toHaveBeenCalledTimes(1);
+  expect(renderSpy.mock.calls[0]?.[1]).toBe(videoId);
+  expect(status).toBe("ready");
+});
+
+test("ShortCreator continues rendering when Whisper transcription fails", async () => {
+  const kokoro = await Kokoro.init("fp16");
+  const ffmpeg = await FFMpeg.init();
+
+  vi.spyOn(ffmpeg, "saveNormalizedAudio").mockResolvedValue("mocked-path.wav");
+  vi.spyOn(ffmpeg, "saveToMp3").mockResolvedValue("mocked-path.mp3");
+
+  const pexelsAPI = new PexelsAPI("mock-api-key");
+  vi.spyOn(pexelsAPI, "findVideo").mockResolvedValue({
+    id: "mock-video-id-3",
+    url: "https://example.com/mock-video-3.mp4",
+    width: 1080,
+    height: 1920,
+  });
+
+  const config = new Config();
+  const remotion = await Remotion.init(config);
+  const renderSpy = vi.spyOn(remotion, "render").mockImplementation(async (_data, id) => {
+    fs.writeFileSync(path.normalize(`${config.videosDirPath}/${id}.mp4`), "mock video content");
+  });
+
+  const whisper = await Whisper.init(config);
+  vi.spyOn(whisper, "CreateCaption").mockRejectedValue(new Error("Whisper unavailable"));
+
+  const musicManager = new MusicManager(config);
+  const shortCreator = new ShortCreator(
+    config,
+    remotion,
+    kokoro,
+    whisper,
+    ffmpeg,
+    pexelsAPI,
+    musicManager,
+  );
+  vi.spyOn(shortCreator as any, "downloadFile").mockResolvedValue(undefined);
+
+  const videoId = shortCreator.addToQueue(
+    [
+      {
+        text: "This render should still complete even without captions.",
+        searchTerms: ["news", "studio"],
+      },
+    ],
+    {},
+    "short",
+    "en",
+  );
+
+  let attempts = 0;
+  let status = shortCreator.status(videoId);
+  while (status === "processing" && attempts < 20) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    status = shortCreator.status(videoId);
+    attempts += 1;
+  }
+
+  expect(renderSpy).toHaveBeenCalledTimes(1);
+  expect(status).toBe("ready");
+});
+
+test("ShortCreator returns the existing video id for duplicate ready videos", async () => {
+  const kokoro = await Kokoro.init("fp16");
+  const ffmpeg = await FFMpeg.init();
+
+  vi.spyOn(ffmpeg, "saveNormalizedAudio").mockResolvedValue("mocked-path.wav");
+  vi.spyOn(ffmpeg, "saveToMp3").mockResolvedValue("mocked-path.mp3");
+
+  const pexelsAPI = new PexelsAPI("mock-api-key");
+  vi.spyOn(pexelsAPI, "findVideo").mockResolvedValue({
+    id: "mock-video-id-4",
+    url: "https://example.com/mock-video-4.mp4",
+    width: 1080,
+    height: 1920,
+  });
+
+  const config = new Config();
+  const remotion = await Remotion.init(config);
+  const renderSpy = vi.spyOn(remotion, "render").mockImplementation(async (_data, id) => {
+    fs.writeFileSync(path.normalize(`${config.videosDirPath}/${id}.mp4`), "mock video content");
+  });
+
+  const whisper = await Whisper.init(config);
+  vi.spyOn(whisper, "CreateCaption").mockResolvedValue([
+    { text: "This", startMs: 0, endMs: 500 },
+    { text: " story", startMs: 500, endMs: 900 },
+  ]);
+
+  const musicManager = new MusicManager(config);
+  const shortCreator = new ShortCreator(
+    config,
+    remotion,
+    kokoro,
+    whisper,
+    ffmpeg,
+    pexelsAPI,
+    musicManager,
+  );
+  vi.spyOn(shortCreator as any, "downloadFile").mockResolvedValue(undefined);
+
+  const inputScenes = [
+    {
+      text: "This duplicate story should resolve to the same already rendered video.",
+      searchTerms: ["markets", "earnings"],
+      keywords: ["stocks", "quarterly"],
+      subcategory: "Markets",
+    },
+  ];
+
+  const firstVideoId = shortCreator.addToQueue(inputScenes, {}, "short", "en");
+
+  let attempts = 0;
+  let status = shortCreator.status(firstVideoId);
+  while (status === "processing" && attempts < 20) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    status = shortCreator.status(firstVideoId);
+    attempts += 1;
+  }
+
+  expect(status).toBe("ready");
+
+  const duplicateVideoId = shortCreator.addToQueue(inputScenes, {}, "short", "en");
+
+  expect(duplicateVideoId).toBe(firstVideoId);
+  expect(renderSpy).toHaveBeenCalledTimes(1);
 });

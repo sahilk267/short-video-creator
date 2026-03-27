@@ -14,23 +14,40 @@ import DeleteIcon from "@mui/icons-material/Delete";
 export interface SceneFormData {
   text: string;
   searchTerms: string;
+  keywords: string;
+  subcategory: string;
   headline: string;
   visualPrompt: string;
 }
 
 interface SceneEditorListProps {
   scenes: SceneFormData[];
+  category?: string;
   onAddScene: () => void;
   onRemoveScene: (index: number) => void;
   onSceneChange: (index: number, field: keyof SceneFormData, value: string) => void;
 }
 
+const subcategorySuggestions: Record<string, string[]> = {
+  General: ["Breaking", "Explainer", "Trending"],
+  World: ["Geopolitics", "Diplomacy", "Conflict", "Global Economy"],
+  Technology: ["AI", "Startups", "Cybersecurity", "Gadgets"],
+  Business: ["Markets", "Policy", "Corporate", "Earnings"],
+  Cricket: ["Match Analysis", "Transfers", "Tournament", "Player Form"],
+  NBA: ["Playoffs", "Trades", "Player Form", "Team Strategy"],
+  Sports: ["Highlights", "Transfers", "Injuries", "Tournament"],
+  Science: ["Space", "Health Research", "Climate", "Innovation"],
+};
+
 const SceneEditorList: React.FC<SceneEditorListProps> = ({
   scenes,
+  category,
   onAddScene,
   onRemoveScene,
   onSceneChange,
 }) => {
+  const suggestedSubcategories = subcategorySuggestions[category || ""] || [];
+
   return (
     <>
       <Typography variant="h5" component="h2" gutterBottom>
@@ -58,6 +75,29 @@ const SceneEditorList: React.FC<SceneEditorListProps> = ({
                 value={scene.text}
                 onChange={(e) => onSceneChange(index, "text", e.target.value)}
                 required
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Subcategory (Optional)"
+                value={scene.subcategory}
+                onChange={(e) => onSceneChange(index, "subcategory", e.target.value)}
+                placeholder="e.g. Geopolitics, Startups, Electric Vehicles"
+                helperText={suggestedSubcategories.length > 0
+                  ? `Suggested: ${suggestedSubcategories.join(", ")}`
+                  : "Use a finer classification under the main category."}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Keywords (comma-separated)"
+                value={scene.keywords}
+                onChange={(e) => onSceneChange(index, "keywords", e.target.value)}
+                helperText="Extra metadata keywords used for relevance, prompts, and publishing."
               />
             </Grid>
 

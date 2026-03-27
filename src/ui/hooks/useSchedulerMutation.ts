@@ -12,6 +12,8 @@ export interface EnqueueJobRequest {
   videoType: "short" | "long";
   subtitleLanguage: string;
   sceneText: string;
+  subcategory: string;
+  keywords: string;
   searchTerms: string;
 }
 
@@ -40,6 +42,8 @@ export function useEnqueueJob() {
         const sceneInput = [
           {
             text: request.sceneText || `Auto content for ${request.category}`,
+            subcategory: request.subcategory || undefined,
+            keywords: request.keywords.split(",").map((s) => s.trim()).filter(Boolean),
             searchTerms: request.searchTerms.split(",").map((s) => s.trim()).filter(Boolean),
             language: request.subtitleLanguage || "en",
           },

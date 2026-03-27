@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { RenderConfig, SceneInput, MusicMoodEnum, CaptionPositionEnum, VoiceEnum, OrientationEnum, MusicVolumeEnum } from "../../types/shorts";
-import type { NewsSourceOption } from "../components/video-creator/AutoScriptPanel";
+import type { AutoScriptStyle, NewsSourceOption } from "../components/video-creator/AutoScriptPanel";
 import type { SceneFormData } from "../components/video-creator/SceneEditorList";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import apiClient from "../services/apiClient";
@@ -24,7 +24,7 @@ const http = apiClient.getAxiosInstance();
 const VideoCreator: React.FC = () => {
   const navigate = useNavigate();
   const [scenes, setScenes] = useState<SceneFormData[]>([
-    { text: "", searchTerms: "", headline: "", visualPrompt: "" },
+    { text: "", searchTerms: "", keywords: "", subcategory: "", headline: "", visualPrompt: "" },
   ]);
   const [config, setConfig] = useState<RenderConfig>({
     paddingBack: 1500,
@@ -39,12 +39,24 @@ const VideoCreator: React.FC = () => {
   const [autoLoading, setAutoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<NewsSourceOption[]>([]);
-  const [selectedSource, setSelectedSource] = useState("");
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("World");
+  const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState("");
+  const [selectedStyle, setSelectedStyle] = useState<AutoScriptStyle>("News");
+  const [hookOptions, setHookOptions] = useState<string[]>([]);
+  const [selectedHook, setSelectedHook] = useState("");
+  const [keywordQuery, setKeywordQuery] = useState("");
+  const [sourceSaving, setSourceSaving] = useState(false);
+  const [topicsLoading, setTopicsLoading] = useState(false);
+  const [hooksLoading, setHooksLoading] = useState(false);
   const [, setVoices] = useState<VoiceEnum[]>([]);
   const [, setMusicTags] = useState<MusicMoodEnum[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
-  const selectedSourceLabel = sources.find((source) => source.id === selectedSource)?.name ?? "No source selected";
+  const selectedSourceLabel = selectedSources.length > 0
+    ? sources.filter((source) => selectedSources.includes(source.id)).map((source) => source.name).join(", ")
+    : "No source selected";
+  const keywordList = keywordQuery.split(",").map((keyword) => keyword.trim()).filter(Boolean);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -69,8 +81,125 @@ const VideoCreator: React.FC = () => {
     void fetchOptions();
   }, []);
 
+  const reloadSources = async () => {
+    const newsResponse = await http.get("/api/news-sources");
+    setSources(newsResponse.data);
+  };
+
+  const fetchTrendingTopics = async (sourceIds: string[], category: string): Promise<string[]> => {
+    setTopicsLoading(true);
+    try {
+      const res = await http.post("/api/auto-script/topics", { sourceIds, category, keywords: keywordList });
+      const topics = Array.isArray(res.data?.topics) ? res.data.topics : [];
+      setTrendingTopics(topics);
+      setSelectedTopic((current) => (current && topics.includes(current) ? current : (topics[0] || "")));
+      return topics;
+    } finally {
+      setTopicsLoading(false);
+    }
+  };
+
+  const fetchHookOptions = async (
+    sourceIds: string[],
+    category: string,
+    topic: string,
+    style: AutoScriptStyle,
+  ) => {
+    if (sourceIds.length === 0) {
+      setHookOptions([]);
+      setSelectedHook("");
+      return;
+    }
+
+    setHooksLoading(true);
+    try {
+      const res = await http.post("/api/auto-script/hooks", {
+        sourceIds,
+        category,
+        topic,
+        style,
+        keywords: keywordList,
+      });
+      const hooks = Array.isArray(res.data?.hooks) ? res.data.hooks : [];
+      setHookOptions(hooks);
+      setSelectedHook((current) => (current && hooks.includes(current) ? current : (hooks[0] || "")));
+    } finally {
+      setHooksLoading(false);
+    }
+  };
+
+  const refreshAutomationOptions = async () => {
+    if (selectedSources.length === 0) {
+      return;
+    }
+
+    setError(null);
+    try {
+      const topics = await fetchTrendingTopics(selectedSources, selectedCategory);
+      await fetchHookOptions(
+        selectedSources,
+        selectedCategory,
+        selectedTopic || topics[0] || "",
+        selectedStyle,
+      );
+    } catch (err) {
+      console.error("Failed to fetch topics:", err);
+      setError("Failed to load trending topics for this source.");
+    }
+  };
+
+  useEffect(() => {
+    if (selectedSources.length === 0) {
+      setTrendingTopics([]);
+      setSelectedTopic("");
+      setHookOptions([]);
+      setSelectedHook("");
+      return;
+    }
+
+    void refreshAutomationOptions();
+  }, [selectedSources, selectedCategory]);
+
+  useEffect(() => {
+    if (selectedSources.length === 0) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        await fetchHookOptions(selectedSources, selectedCategory, selectedTopic, selectedStyle);
+      } catch (err) {
+        console.error("Failed to fetch hooks:", err);
+        setError("Failed to load hook options.");
+      }
+    })();
+  }, [selectedSources, selectedCategory, selectedTopic, selectedStyle]);
+
   const handleAddScene = () => {
-    setScenes((current) => [...current, { text: "", searchTerms: "", headline: "", visualPrompt: "" }]);
+    setScenes((current) => [...current, { text: "", searchTerms: "", keywords: "", subcategory: "", headline: "", visualPrompt: "" }]);
+  };
+
+  const handleCreateCustomSource = async (payload: {
+    name: string;
+    url: string;
+    category: string;
+    subCategory?: string;
+  }) => {
+    setSourceSaving(true);
+    setError(null);
+    try {
+      const response = await http.post("/api/news-sources/custom", payload);
+      await reloadSources();
+      if (response.data?.source?.id) {
+        setSelectedSources((current) => Array.from(new Set([...current, response.data.source.id])));
+      }
+    } catch (err: any) {
+      console.error("Failed to create custom source:", err);
+      setError(err.response?.data?.error || err.message || "Failed to add custom source");
+      throw err;
+    } finally {
+      setSourceSaving(false);
+    }
   };
 
   const handleRemoveScene = (index: number) => {
@@ -82,15 +211,24 @@ const VideoCreator: React.FC = () => {
   };
 
   const handleAutoScript = async () => {
-    if (!selectedSource) return;
+    if (selectedSources.length === 0) return;
     setAutoLoading(true);
     setError(null);
     try {
-      const res = await http.post("/api/auto-script", { sourceId: selectedSource });
+      const res = await http.post("/api/auto-script", {
+        sourceIds: selectedSources,
+        category: selectedCategory,
+        topic: selectedTopic || undefined,
+        style: selectedStyle,
+        hook: selectedHook || undefined,
+        keywords: keywordList,
+      });
       if (res.data.scenes) {
         setScenes(res.data.scenes.map((scene: any) => ({
           text: scene.text,
           searchTerms: Array.isArray(scene.searchTerms) ? scene.searchTerms.join(", ") : scene.searchTerms,
+          keywords: Array.isArray(scene.keywords) ? scene.keywords.join(", ") : "",
+          subcategory: scene.subcategory || "",
           headline: scene.headline || "",
           visualPrompt: scene.visualPrompt || "",
         })));
@@ -125,6 +263,11 @@ const VideoCreator: React.FC = () => {
     try {
       const apiScenes: SceneInput[] = scenes.map((scene) => ({
         text: scene.text,
+        subcategory: scene.subcategory.trim() || undefined,
+        keywords: scene.keywords
+          .split(",")
+          .map((term) => term.trim())
+          .filter((term) => term.length > 0),
         headline: scene.headline.trim() || undefined,
         visualPrompt: scene.visualPrompt.trim() || undefined,
         searchTerms: scene.searchTerms
@@ -164,15 +307,34 @@ const VideoCreator: React.FC = () => {
       <Suspense fallback={<LoadingSpinner message="Loading creator tools..." />}>
         <AutoScriptPanel
           autoLoading={autoLoading}
+          topicsLoading={topicsLoading}
+          hooksLoading={hooksLoading}
+          sourceSaving={sourceSaving}
           selectedCategory={selectedCategory}
-          selectedSource={selectedSource}
+          selectedSources={selectedSources}
+          selectedTopic={selectedTopic}
+          selectedStyle={selectedStyle}
+          selectedHook={selectedHook}
+          keywordQuery={keywordQuery}
           sources={sources}
+          trendingTopics={trendingTopics}
+          hookOptions={hookOptions}
           onCategoryChange={(category) => {
             setSelectedCategory(category);
-            setSelectedSource("");
+            setSelectedSources([]);
+            setTrendingTopics([]);
+            setSelectedTopic("");
+            setHookOptions([]);
+            setSelectedHook("");
           }}
-          onSourceChange={setSelectedSource}
+          onSourceChange={setSelectedSources}
+          onTopicChange={setSelectedTopic}
+          onStyleChange={setSelectedStyle}
+          onHookChange={setSelectedHook}
+          onKeywordChange={setKeywordQuery}
+          onAutoRefresh={() => void refreshAutomationOptions()}
           onGenerate={() => void handleAutoScript()}
+          onCreateSource={handleCreateCustomSource}
         />
       </Suspense>
 
@@ -209,6 +371,7 @@ const VideoCreator: React.FC = () => {
         <Suspense fallback={<LoadingSpinner message="Loading scene editor..." />}>
           <SceneEditorList
             scenes={scenes}
+            category={selectedCategory}
             onAddScene={handleAddScene}
             onRemoveScene={handleRemoveScene}
             onSceneChange={handleSceneChange}

@@ -46,10 +46,24 @@ class ApiClientService {
   private cache: Map<string, CacheEntry<unknown>> = new Map();
   private requestCache: Map<string, Promise<unknown>> = new Map();
   private readonly DEFAULT_CACHE_TTL = 60000; // 1 minute
-  private readonly DEFAULT_REQUEST_TIMEOUT = 30000; // 30 seconds
+  private readonly DEFAULT_REQUEST_TIMEOUT = 900000; // 15 minutes
 
   constructor() {
-    const baseURL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+    const viteEnv =
+      typeof import.meta !== "undefined"
+        ? (import.meta as ImportMeta & {
+            env?: {
+              VITE_API_URL?: string;
+              VITE_API_BASE_URL?: string;
+            };
+          }).env
+        : undefined;
+
+    const baseURL =
+      viteEnv?.VITE_API_URL ||
+      viteEnv?.VITE_API_BASE_URL ||
+      process.env.REACT_APP_API_URL ||
+      "http://localhost:3123";
 
     this.axiosInstance = axios.create({
       baseURL,
@@ -230,6 +244,8 @@ export const api = {
     create: (data: unknown) => apiClient.post("/api/short-video", data),
     getStatus: (videoId: string) =>
       apiClient.get(`/api/short-video/${videoId}/status`),
+    getMetadata: (videoId: string) =>
+      apiClient.get(`/api/short-video/${videoId}/metadata`),
     download: (videoId: string) =>
       apiClient.get(`/api/short-video/${videoId}`, { responseType: "blob" }),
     list: () => apiClient.get("/api/short-videos"),
@@ -276,6 +292,8 @@ export const api = {
   publish: {
     enqueue: (data: unknown) =>
       apiClient.post("/api/publish/enqueue", data),
+    getMetadataSuggestions: (data: unknown) =>
+      apiClient.post("/api/publish/metadata-suggestions", data),
     list: () => apiClient.get("/api/publish"),
     getJob: (jobId: string) =>
       apiClient.get(`/api/publish/${jobId}`),

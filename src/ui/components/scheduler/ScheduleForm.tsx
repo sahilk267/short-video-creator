@@ -46,6 +46,8 @@ const DEFAULT_FORM: EnqueueJobRequest = {
   videoType: "short",
   subtitleLanguage: "en",
   sceneText: "",
+  subcategory: "",
+  keywords: "",
   searchTerms: "",
 };
 
@@ -151,6 +153,28 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({ onSuccess }) => {
             placeholder="Describe the video content..."
             multiline
             minRows={2}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Subcategory"
+            value={form.subcategory}
+            onChange={handleChange("subcategory")}
+            placeholder="e.g. Geopolitics"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Keywords (comma-separated)"
+            value={form.keywords}
+            onChange={handleChange("keywords")}
+            placeholder="e.g. defense, diplomacy, sanctions"
           />
         </Grid>
 

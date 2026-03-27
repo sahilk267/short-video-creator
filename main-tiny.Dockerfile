@@ -1,14 +1,18 @@
 FROM ubuntu:22.04 AS install-whisper
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt update
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # whisper install dependencies
-RUN apt install -y \
-    git \
-    build-essential \
-    wget \
-    cmake \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    apt-get update -o Acquire::Retries=5; \
+    apt-get install -y --no-install-recommends --fix-missing \
+      ca-certificates \
+      git \
+      build-essential \
+      wget \
+      cmake; \
+    update-ca-certificates; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /whisper
 RUN git clone https://github.com/ggml-org/whisper.cpp.git .
 RUN git checkout v1.7.1
@@ -19,9 +23,9 @@ RUN sh ./download-ggml-model.sh tiny.en
 FROM node:22-bookworm-slim AS base
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
-RUN apt update
-RUN apt install -y \
-      # whisper dependencies
+RUN set -eux; \
+    apt-get update -o Acquire::Retries=5; \
+    apt-get install -y --no-install-recommends --fix-missing \
       git \
       wget \
       cmake \
@@ -29,7 +33,6 @@ RUN apt install -y \
       curl \
       make \
       libsdl2-dev \
-      # remotion dependencies
       libnss3 \
       libdbus-1-3 \
       libatk1.0-0 \
@@ -43,9 +46,9 @@ RUN apt install -y \
       libatk-bridge2.0-0 \
       libpango-1.0-0 \
       libcairo2 \
-      libcups2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+      libcups2; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 # setup pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -67,7 +70,7 @@ RUN pnpm build
 
 FROM base
 COPY static /app/static
-COPY --from=install-whisper /whisper /app/data/libs/whisper
+COPY --from=install-whisper /whisper /app/libs/whisper
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 COPY package.json /app/
@@ -76,6 +79,7 @@ COPY package.json /app/
 ENV DATA_DIR_PATH=/app/data
 ENV DOCKER=true
 ENV WHISPER_MODEL=tiny.en
+ENV WHISPER_INSTALL_PATH=/app/libs/whisper
 ENV KOKORO_MODEL_PRECISION=q4
 # number of chrome tabs to use for rendering
 ENV CONCURRENCY=1

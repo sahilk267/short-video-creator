@@ -15,6 +15,7 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  Chip,
 } from "@mui/material";
 import {
   Send as SendIcon,
@@ -58,6 +59,21 @@ export interface PlatformMetadata {
   };
 }
 
+interface GeneratedMetadataPayload {
+  metadata: {
+    title: string;
+    description: string;
+    tags: string[];
+    hashtags: string;
+  };
+  source: {
+    topic: string;
+    category: string | null;
+    subcategory: string | null;
+    keywords: string[];
+  };
+}
+
 export interface ScheduleConfig {
   publishImmediately: boolean;
   scheduledDate?: string;
@@ -74,6 +90,8 @@ export const PublishDashboard: React.FC = () => {
   const [selectedVideos, setSelectedVideos] = useState<SelectedVideo[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<PlatformMetadata>({});
+  const [metadataContext, setMetadataContext] = useState<GeneratedMetadataPayload["source"] | null>(null);
+  const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleConfig>({
     publishImmediately: true,
     timezone: "UTC",
@@ -103,6 +121,74 @@ export const PublishDashboard: React.FC = () => {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [activeStep, isPublishing]);
+
+  useEffect(() => {
+    const autofillMetadata = async () => {
+      if (activeStep !== 2 || selectedVideos.length !== 1 || selectedPlatforms.length === 0) {
+        return;
+      }
+
+      setIsGeneratingMetadata(true);
+      try {
+        const videoId = selectedVideos[0]?.id;
+        if (!videoId) return;
+
+        const generatedEntries = await Promise.all(
+          selectedPlatforms.map(async (platform) => {
+            const result = await api.publish.getMetadataSuggestions({
+              videoId,
+              platform,
+              language: "en",
+            }) as GeneratedMetadataPayload;
+            return { platform, result };
+          }),
+        );
+
+        setMetadata((current) => {
+          const next = { ...current };
+
+          for (const { platform, result } of generatedEntries) {
+            const generated = result.metadata;
+            if (platform === "youtube" && !next.youtube) {
+              next.youtube = {
+                title: generated.title,
+                description: generated.description,
+                tags: generated.tags,
+              };
+            }
+            if (platform === "telegram" && !next.telegram) {
+              next.telegram = {
+                caption: `${generated.title}\n\n${generated.description}`.trim(),
+              };
+            }
+            if (platform === "instagram" && !next.instagram) {
+              next.instagram = {
+                caption: `${generated.title}\n\n${generated.description}`.trim(),
+                hashtags: generated.hashtags.split(/\s+/).filter(Boolean),
+              };
+            }
+            if (platform === "facebook" && !next.facebook) {
+              next.facebook = {
+                title: generated.title,
+                description: generated.description,
+                hashtags: generated.hashtags.split(/\s+/).filter(Boolean),
+              };
+            }
+          }
+
+          return next;
+        });
+
+        setMetadataContext(generatedEntries[0]?.result.source ?? null);
+      } catch (error) {
+        console.error("Metadata autofill failed:", error);
+      } finally {
+        setIsGeneratingMetadata(false);
+      }
+    };
+
+    void autofillMetadata();
+  }, [activeStep, selectedPlatforms, selectedVideos]);
 
   // Validation
   const isVideoStepValid = selectedVideos.length > 0;
@@ -199,11 +285,30 @@ export const PublishDashboard: React.FC = () => {
         );
       case 2:
         return (
-          <MetadataEditor
-            platforms={selectedPlatforms}
-            metadata={metadata}
-            onMetadataChange={setMetadata}
-          />
+          <>
+            {metadataContext && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Metadata seeded from video context:
+                <Box sx={{ display: "inline-flex", gap: 1, flexWrap: "wrap", ml: 1 }}>
+                  {metadataContext.category && <Chip size="small" label={`Category: ${metadataContext.category}`} />}
+                  {metadataContext.subcategory && <Chip size="small" label={`Subcategory: ${metadataContext.subcategory}`} />}
+                  {metadataContext.keywords.slice(0, 5).map((keyword) => (
+                    <Chip key={keyword} size="small" variant="outlined" label={keyword} />
+                  ))}
+                </Box>
+              </Alert>
+            )}
+            {isGeneratingMetadata && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Generating metadata suggestions from saved video keywords and subcategory...
+              </Alert>
+            )}
+            <MetadataEditor
+              platforms={selectedPlatforms}
+              metadata={metadata}
+              onMetadataChange={setMetadata}
+            />
+          </>
         );
       case 3:
         return (
