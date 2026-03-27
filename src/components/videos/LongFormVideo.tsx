@@ -75,12 +75,24 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
               {video ? (
                 <OffthreadVideo
                   src={video}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    transform: `scale(${interpolate(frame - Math.round(startFrame), [0, durationInFrames], [1.01, 1.05], { extrapolateRight: "clamp" })})`,
+                    opacity: interpolate(frame - Math.round(startFrame), [0, 8, durationInFrames], [0.78, 1, 0.92], { extrapolateRight: "clamp" }),
+                  }}
                 />
               ) : imageUrl ? (
                 <Img
                   src={imageUrl}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    transform: `scale(${interpolate(frame - Math.round(startFrame), [0, durationInFrames], [1.01, 1.06], { extrapolateRight: "clamp" })})`,
+                    opacity: interpolate(frame - Math.round(startFrame), [0, 8, durationInFrames], [0.78, 1, 0.92], { extrapolateRight: "clamp" }),
+                  }}
                 />
               ) : null}
             </AbsoluteFill>
@@ -103,9 +115,15 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                   color: "#ffffff",
                   fontSize: 22,
                   fontFamily,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
+                  background: "rgba(8,12,18,0.58)",
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  padding: "10px 16px",
+                  borderRadius: 999,
+                  backdropFilter: "blur(12px)",
+                  boxShadow: "0 16px 32px rgba(0,0,0,0.24)",
                   opacity: interpolate(
                     frame - Math.round(startFrame),
                     [0, 15, durationInFrames - 15, durationInFrames],
