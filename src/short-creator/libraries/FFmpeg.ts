@@ -90,4 +90,23 @@ export class FFMpeg {
         });
     });
   }
+
+  async getAudioDuration(filePath: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(filePath, (error, metadata) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        const duration = metadata.format.duration;
+        if (!duration || Number.isNaN(duration) || duration <= 0) {
+          reject(new Error(`Invalid audio duration for ${filePath}`));
+          return;
+        }
+
+        resolve(duration);
+      });
+    });
+  }
 }

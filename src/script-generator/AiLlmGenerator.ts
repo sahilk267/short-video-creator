@@ -274,6 +274,36 @@ export class AiLlmGenerator {
     return result.trim();
   }
 
+  async transliterateText(text: string, sourceLanguage: string): Promise<string> {
+    if (!text?.trim()) {
+      return text;
+    }
+
+    const prompt = `You are preparing text for a text-to-speech engine that reads Latin characters more reliably than native script.
+Convert the following ${sourceLanguage} text into natural Latin-script transliteration that preserves pronunciation as closely as possible.
+Output only the transliterated text with no commentary.
+
+Text:
+${text}`;
+    const response = await axios.post(`${this.apiUrl}/api/generate`, {
+      model: this.model,
+      prompt,
+      stream: false,
+      format: "text",
+    });
+
+    if (!response?.data?.response) {
+      throw new Error("Transliteration API returned no response");
+    }
+
+    let result = response.data.response;
+    if (typeof result !== "string") {
+      result = String(result);
+    }
+
+    return result.trim();
+  }
+
   async suggestTopics(
     newsStories: PromptStory[],
     options: Pick<ScriptGenerationOptions, "category" | "keywords"> = {},

@@ -95,14 +95,29 @@ Primary code paths reflected in this tracking:
 | Scene keywords | Yes | Yes | Yes | Indirect | `Implemented` | Used in media search, metadata, and prompt enrichment |
 | Orientation | Yes | Yes | Yes | Visible | `Verified` | Portrait vs landscape composition |
 | Voice | Yes | Yes | Yes | Indirect | `Verified` | Changes narration voice |
+| Script/source language | Yes | Yes | Yes | Indirect | `Implemented` | Controls the language of the written script before narration/subtitle translation |
+| Audio language | Yes | Yes | Yes | Indirect | `Implemented` | Controls the narration language independently from overlay/caption language |
+| Render-time audio duration probe | No direct field | Yes | Yes | Operational | `Implemented` | Encoded MP3 duration is probed with ffprobe so scene timing does not trust unstable model-reported lengths |
+| Non-English narration runtime dependency | No direct field | Yes | Yes | Operational | `Implemented` | Docker runtime now installs `espeak-ng` + language data needed by multilingual phonemization |
+| eSpeak Hindi dictionary path compatibility | No direct field | Yes | Yes | Operational | `Implemented` | Docker image and entrypoint now map Debian's `/usr/lib/.../espeak-ng-data` path to the `/usr/share/...` path expected by Hindi phonemization |
+| Overlay text language | Yes | Yes | Yes | Visible | `Implemented` | Controls the language of headline, ticker, and editorial overlay text independently from narration/captions |
+| Caption language | Yes | Yes | Yes | Visible | `Implemented` | Controls the language of on-screen spoken captions independently from narration/overlays |
+| Text mode (`overlay` / `captions` / `hybrid`) | Yes | Yes | Yes | Visible | `Implemented` | Lets creators choose overlay-only, captions-only, or disciplined hybrid text presentation |
 | Music mood | Yes | Yes | Yes | Indirect | `Implemented` | Selects background music track |
 | Music volume | Yes | Yes | Yes | Indirect | `Implemented` | Changes background audio level |
 | Caption position | Yes | Yes | Yes | Visible | `Implemented` | Changes caption placement |
 | Caption background color | Yes | Yes | Yes | Visible | `Implemented` | Changes caption highlight/background |
+| Subtitle language (legacy alias) | Backend compatibility | Yes | Yes | Indirect | `Implemented` | Retained as compatibility alias so older create/render flows still map to caption language |
+| Subtitle line count | Yes | Yes | Yes | Visible | `Implemented` | Changes how many subtitle lines can appear at once |
+| Subtitle font scale | Yes | Yes | Yes | Visible | `Implemented` | Changes subtitle size in preview and rendered MP4 |
 | Padding back | Yes | Yes | Yes | Indirect | `Implemented` | Extends final scene hold duration |
 | AI images toggle | Yes | Yes | Yes | Visible | `Implemented` | Switches stock-video vs AI-image path |
+| Video type (`short` / `long`) | Yes | Yes | Yes | Visible | `Implemented` | Create page now exposes short-form vs long-form mode |
+| Duration limit | Yes | Yes | Yes | Indirect | `Implemented` | Create page now controls split/length target |
+| Fast create-to-queue redirect | Yes | Yes | Yes | Operational | `Implemented` | Create request now queues immediately instead of waiting for per-scene translation before redirect |
 | Auto-generated captions | No direct field | Yes | Yes | Visible | `Verified` | Generated through Whisper |
 | Subtitle sidecar files | No direct field | Yes | Yes | Indirect | `Implemented` | `.srt/.vtt` files generated separately |
+| Docker cache seeding entrypoint | No direct field | Yes | Yes | Operational | `Implemented` | Compose now respects cache-seeding entrypoint so browser/model caches can be reused across restarts |
 | Modern headline overlay card | No direct field | Yes | Yes | Visible | `Verified` | New glass-card style top story treatment is present in rendered output |
 | `Live` badge / scene index | No direct field | Yes | Yes | Visible | `Verified` | `Live` and `Scene x/y` labels appear in rendered video |
 | Top progress bar | No direct field | Yes | Yes | Visible | `Verified` | Scene progress treatment visible at top edge |
@@ -126,9 +141,12 @@ Primary code paths reflected in this tracking:
 | Custom feed validation | No direct field | Yes | Yes | Indirect | `Implemented` | Feed URL is validated before saving; empty or malformed feeds are rejected |
 | Custom feed duplicate blocking | No direct field | Yes | Yes | Operational | `Implemented` | Same feed URL cannot be added multiple times |
 | Keyword bias field | Yes | Yes | Yes | Indirect | `Implemented` | Biases topic discovery, hooks, and script generation |
-| Scene audio preview | Yes | Browser-side | No | Operational | `Implemented` | `/create` now includes a browser narration preview per scene |
-| Scene subtitle preview | Yes | Frontend derived | No | Visible | `Implemented` | `/create` now shows subtitle layout preview before render |
+| Scene audio preview | Yes | Yes | Partial | Operational | `Implemented` | `/create` now includes browser narration preview per scene and translates preview text toward the selected narration language |
+| Scene subtitle preview | Yes | Yes | Partial | Visible | `Implemented` | `/create` now shows subtitle layout preview using translated caption-preview text when languages differ |
 | Render readiness summary | Yes | Frontend derived | No | Operational | `Implemented` | `/create` now shows audio/subtitle/media readiness by scene count |
+| Creator audio control panel | Yes | Yes | Yes | Indirect | `Implemented` | Create page now exposes narration voice, music mix, and duration/type controls in one panel |
+| Creator language control panel | Yes | Yes | Yes | Indirect | `Implemented` | Create page now supports script, narration, overlay, and caption language as separate controls |
+| Creator text control panel | Yes | Yes | Yes | Visible | `Implemented` | Create page now exposes text mode, caption position, line count, size, and highlight color |
 | Priority keyword promotion | No direct field | Yes | Yes | Indirect | `Implemented` | Top-level keywords are now promoted into scene keywords, search terms, and AI prompts |
 | Trending topic suggestions | Yes | Yes | Yes | Indirect | `Implemented` | Generated from merged source stories |
 | Topic prompt ranking | No direct field | Yes | Yes | Indirect | `Implemented` | Stories are ranked before prompting using keyword relevance, freshness, source weight, and coverage |
@@ -189,12 +207,10 @@ Primary code paths reflected in this tracking:
 
 | Feature | Frontend | Backend | Pipeline use | Class | Status | Notes |
 |---|---:|---:|---:|---|---|---|
-| Video type (`short` / `long`) | No direct create-page control | Yes | Yes | Visible | `Backend Only` | Long-form exists but not exposed in normal create UI |
-| Duration limit | No direct create-page control | Yes | Yes | Indirect | `Backend Only` | Controls auto-splitting logic |
-| Scene language | Not exposed in normal create form | Yes | Yes | Indirect | `Backend Only` | Used for TTS/Whisper language selection |
-| Translation target | Not exposed in normal create form | Yes | Partial | Indirect | `Backend Only` | Present in types/TTS path |
+| Scene language | Derived from create language controls | Yes | Yes | Indirect | `Implemented` | Scene audio language is now driven from create-page audio language |
+| Translation target | Legacy compatibility field | Yes | Partial | Indirect | `Partial` | Older field remains, but primary create flow now uses script/audio language controls instead |
 | Scene cues | Not exposed in normal create form | Yes | Partial | Indirect | `Backend Only` | Present in schema, limited consumption |
-| Long-form chaptering | No direct create-page control | Yes | Yes | Visible | `Partial` | Exists in long-form template, not standard create path |
+| Long-form chaptering | Yes via video mode | Yes | Yes | Visible | `Partial` | Long-form render path exists, but chapter authoring remains mostly automatic |
 
 ---
 
@@ -275,10 +291,19 @@ Observed weakness in the same video:
 - Lower ticker strip -> overlay
 - Orientation -> composition selection
 - Voice -> narration change
+- Subtitle line count -> visible layout change
+- Subtitle font scale -> visible layout change
+- Script/source language -> translation source
+- Audio language -> narration language
+- Overlay text language -> headline/ticker translation path
+- Caption language -> on-screen caption translation path
+- Text mode -> overlay-only / captions-only / hybrid render behavior
 - Base output video ID path
 - Whisper caption path
 - Caption failure fallback
 - Docker render success
+- Create-page video mode toggle
+- Create-page duration limit control
 - Multi-source story merge path
 - Source trust weighting for oversized source selections
 - Freshness-biased multi-source story ranking
@@ -338,6 +363,8 @@ Observed weakness in the same video:
 ### Phase P1: Frontend Presence
 - [x] Scene fields
 - [x] Render config fields
+- [x] Video mode / duration controls
+- [x] Script/audio/overlay/caption language controls
 - [x] Multi-source controls
 - [x] `All Sources`
 - [x] Keyword bias field
@@ -358,6 +385,8 @@ Observed weakness in the same video:
 - [x] Custom feed validation before save
 - [x] Topic prompt ranking before AI generation
 - [x] Hook quality scoring before selection
+- [x] Create route passes video type and caption language compatibility alias
+- [x] Create route passes script language and audio language
 - [x] Metadata persistence
 - [x] Duplicate signature path
 - [x] Signature normalization for whitespace/case variants
@@ -375,6 +404,9 @@ Observed weakness in the same video:
 - [x] Category-aware overlay theming
 - [x] Refined ticker entrance and badge pulse
 - [x] Audio + music composition
+- [x] Subtitle size / line-count render wiring
+- [x] Independent script/audio/overlay/caption language wiring
+- [x] Text mode wiring across portrait, landscape, and long-form templates
 - [x] AI image / stock media switch
 - [x] Keyword prompt enrichment
 - [x] Source trust weighting
@@ -399,6 +431,10 @@ Observed weakness in the same video:
 - [x] Duplicate ready-video returns existing ID
 - [ ] AI image output visually verified
 - [ ] Long-form output visually verified
+- [ ] Audio language translation flow manually verified
+- [ ] Caption language translation flow manually verified
+- [ ] Overlay text language translation flow manually verified
+- [ ] Text mode render behavior manually verified
 - [ ] Custom RSS source output visually verified
 - [ ] Media relevance quality visually verified across categories
 
@@ -409,6 +445,12 @@ Observed weakness in the same video:
 - [x] Multi-source UI visible and working
 - [x] `All Sources` UI visible and selectable
 - [x] Custom source add UI visible and persists
+- [x] Create-page preview layer visible in browser
+- [x] Create-page audio/subtitle control panel visible in browser
+- [ ] Verify English -> French audio render
+- [ ] Verify English -> Spanish caption render
+- [ ] Verify vice-versa language split (for example English script -> French audio -> Spanish captions)
+- [ ] Verify overlay-only and captions-only modes on real renders
 - [x] New overlay/ticker/progress visuals observed in a live rendered video
 - [ ] Verify music mood manually
 - [ ] Verify caption position manually
@@ -422,9 +464,12 @@ Observed weakness in the same video:
 - [x] Captions work in Docker
 - [x] MP4 writes into `/app/data/videos`
 - [x] Updated overlay visuals appear in Docker-rendered output
+- [ ] Repeat verify with long-form mode from create UI
+- [ ] Repeat verify with French audio in Docker
+- [ ] Repeat verify with Spanish captions in Docker
+- [ ] Repeat verify overlay-only / captions-only text modes in Docker
 - [ ] Repeat verify with AI images enabled
 - [ ] Repeat verify with landscape
-- [ ] Repeat verify with long-form
 - [ ] Repeat verify with custom RSS source
 - [ ] Repeat verify media relevance improvements in Docker
 
@@ -449,9 +494,11 @@ Observed weakness in the same video:
 6. Verify `captionBackgroundColor` with multiple contrasting colors.
 7. Verify `musicVolume` with muted, low, high.
 8. Verify AI images with targeted prompt-sensitive scenes.
-9. Expose and verify `videoType` in create UI.
-10. Expose and verify `durationLimit` in create UI.
-11. Decide whether subtitle sidecar files should remain separate or be muxed into final output.
+9. Verify short-form vs long-form mode from the create UI and compare actual output length behavior.
+10. Verify script/audio/overlay/caption language splits using English, Hindi, French, and Spanish.
+11. Verify overlay-only, captions-only, and hybrid text modes against real creator use-cases.
+12. Verify subtitle layout changes using `subtitleLineCount` and `subtitleFontScale`.
+13. Decide whether subtitle sidecar files should remain separate or be muxed into final output.
 
 ---
 
@@ -463,6 +510,8 @@ Current project reality:
 - Source intelligence is now materially stronger than before.
 - Auto-script flow now supports multi-source aggregation, category-scoped `All Sources`, keyword biasing, style, and hook selection.
 - The create page now includes pre-render scene previews for narration, subtitles, and render readiness instead of being form-only.
+- The create page now also includes a real creator control surface for video mode, duration target, narration voice, text mode, caption sizing, and caption layout.
+- The create page now also separates script language, narration language, overlay text language, and caption language so each visible/audible layer can diverge intentionally.
 - `All Sources` aggregation is now quality-controlled with source trust weighting, freshness bias, and category-specific source caps.
 - Keyword-to-visual alignment is now stronger because top-level keywords are promoted into scene metadata, stock-search terms, and AI-image prompts.
 - Custom RSS/feed sources are now part of the workflow.
@@ -476,7 +525,9 @@ Current project reality:
 - Final rendered video presentation has materially improved through a modern overlay card, live badge, scene index, progress bar, ticker strip, and stronger caption treatment.
 - Visual identity polish now includes category-aware overlay accents, refined ticker motion, and smoother media drift across portrait, landscape, and long-form templates.
 - Media relevance logic is now significantly smarter than before, but still needs category-by-category manual validation.
-- Some render capabilities still exist only in backend/types and should later be exposed in the create UI.
+- Some render capabilities still exist only in backend/types, especially scene-level language/translation/cue authoring, and should later be exposed in the create UI.
+- The core language workflow is now scalable for English, Hindi, French, and Spanish, but still needs runtime verification for each cross-language combination.
+- Hindi runtime reliability now includes an explicit eSpeak data-path compatibility fix, because Debian places `hi_dict` under `/usr/lib/...` while the phonemizer expected `/usr/share/...`.
 - Some features improve quality or efficiency without appearing inside final video, and this document now tracks that explicitly.
 
 Use this file when asking:

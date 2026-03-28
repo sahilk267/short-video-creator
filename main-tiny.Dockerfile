@@ -29,6 +29,8 @@ RUN set -eux; \
       git \
       wget \
       cmake \
+      espeak-ng \
+      espeak-ng-data \
       ffmpeg \
       curl \
       make \
@@ -49,6 +51,11 @@ RUN set -eux; \
       libcups2; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    mkdir -p /usr/share; \
+    if [ ! -e /usr/share/espeak-ng-data ] && [ -d /usr/lib/x86_64-linux-gnu/espeak-ng-data ]; then \
+      ln -s /usr/lib/x86_64-linux-gnu/espeak-ng-data /usr/share/espeak-ng-data; \
+    fi
 # setup pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -70,6 +77,7 @@ RUN pnpm build
 
 FROM base
 COPY static /app/static
+COPY docker-entrypoint.js /app/docker-entrypoint.js
 COPY --from=install-whisper /whisper /app/libs/whisper
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
@@ -81,6 +89,8 @@ ENV DOCKER=true
 ENV WHISPER_MODEL=tiny.en
 ENV WHISPER_INSTALL_PATH=/app/libs/whisper
 ENV KOKORO_MODEL_PRECISION=q4
+ENV PUPPETEER_CACHE_DIR=/app/cache/puppeteer
+ENV HF_HOME=/app/cache/huggingface
 # number of chrome tabs to use for rendering
 ENV CONCURRENCY=1
 # video cache - 2000MB
@@ -89,4 +99,4 @@ ENV VIDEO_CACHE_SIZE_IN_BYTES=2097152000
 # install kokoro, headless chrome and ensure music files are present
 RUN node dist/scripts/install.js
 
-CMD ["pnpm", "start"]
+CMD ["node", "/app/docker-entrypoint.js"]

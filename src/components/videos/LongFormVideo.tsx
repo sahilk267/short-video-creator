@@ -15,11 +15,10 @@ import {
   interpolate,
 } from "remotion";
 import { z } from "zod";
-import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { calculateVolume, createCaptionPages, shortVideoSchema } from "../utils";
 import { NewsOverlay } from "./NewsOverlay";
-
-const { fontFamily } = loadFont(); // "Barlow Condensed"
+import { TextModeEnum } from "../../types/shorts";
+import { videoUiFontFamily } from "./fontStacks";
 
 /** Same schema as shortVideoSchema – reused for compatibility */
 export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
@@ -29,6 +28,11 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const subtitleLineCount = Math.max(1, Math.min(3, config.subtitleLineCount ?? 2));
+  const subtitleFontScale = config.subtitleFontScale ?? 1;
+  const textMode = config.textMode ?? TextModeEnum.hybrid;
+  const showOverlay = textMode !== TextModeEnum.captions;
+  const showCaptions = textMode !== TextModeEnum.overlay;
 
   const captionBackgroundColor = config.captionBackgroundColor ?? "#111111";
   const [musicVolume, musicMuted] = calculateVolume(config.musicVolume);
@@ -57,13 +61,13 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
         const pages = createCaptionPages({
           captions,
           lineMaxLength: 32, // wider for 16:9
-          lineCount: 2,
+          lineCount: subtitleLineCount,
           maxDistanceMs: 1200,
         });
 
         const startFrame =
           scenes.slice(0, i).reduce((acc, curr) => acc + curr.audio.duration, 0) * fps;
-        const durationInFrames = Math.ceil(audio.duration * fps);
+        const durationInFrames = Math.max(1, Math.ceil(audio.duration * fps));
         const relativeFrame = frame - Math.round(startFrame);
 
         return (
@@ -99,12 +103,14 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
               ) : null}
             </AbsoluteFill>
 
-            <NewsOverlay
-              headline={headline}
-              tickerText={buildChapterLabel(headline, i)}
-              sceneIndex={i}
-              totalScenes={scenes.length}
-            />
+            {showOverlay ? (
+              <NewsOverlay
+                headline={headline}
+                tickerText={buildChapterLabel(headline, i)}
+                sceneIndex={i}
+                totalScenes={scenes.length}
+              />
+            ) : null}
 
             {/* Dark gradient overlay for readability */}
             <AbsoluteFill
@@ -115,7 +121,7 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
             />
 
             {/* Chapter label – top-left */}
-            {i === 0 || true ? (
+            {showOverlay ? (
               <AbsoluteFill
                 style={{
                   top: 40,
@@ -123,7 +129,7 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                   position: "absolute",
                   color: "#ffffff",
                   fontSize: 22,
-                  fontFamily,
+                  fontFamily: videoUiFontFamily,
                   fontWeight: 800,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
@@ -149,73 +155,75 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
             <Audio src={audio.url} />
 
             {/* Bottom captions */}
-            <AbsoluteFill
-              style={{
-                justifyContent: "flex-end",
-                alignItems: "center",
-                paddingBottom: 60,
-              }}
-            >
-              {pages.map((page, pageIdx) => {
-                const pageStart = page.startMs / 1000;
-                const pageEnd = page.endMs / 1000;
-                const sceneFrame = frame - Math.round(startFrame);
-                const isVisible =
-                  sceneFrame >= pageStart * fps && sceneFrame <= pageEnd * fps;
+            {showCaptions ? (
+              <AbsoluteFill
+                style={{
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  paddingBottom: 60,
+                }}
+              >
+                {pages.map((page, pageIdx) => {
+                  const pageStart = page.startMs / 1000;
+                  const pageEnd = page.endMs / 1000;
+                  const sceneFrame = frame - Math.round(startFrame);
+                  const isVisible =
+                    sceneFrame >= pageStart * fps && sceneFrame <= pageEnd * fps;
 
-                if (!isVisible) return null;
+                  if (!isVisible) return null;
 
-                return (
-                  <div
-                    key={pageIdx}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    {page.lines.map((line, lineIdx) => (
-                      <div
-                        key={lineIdx}
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          gap: 4,
-                          flexWrap: "wrap",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {line.texts.map((word, wordIdx) => {
-                          const wordFrameStart = word.startMs / 1000;
-                          const isActiveWord = sceneFrame / fps >= wordFrameStart;
-                          return (
-                            <span
-                              key={wordIdx}
-                              style={{
-                                fontSize: 34,
-                                fontFamily,
-                                fontWeight: isActiveWord ? 800 : 600,
-                                color: isActiveWord ? "#FFFFFF" : "rgba(255,255,255,0.7)",
-                                backgroundColor: isActiveWord
-                                  ? captionBackgroundColor
-                                  : "transparent",
-                                padding: isActiveWord ? "4px 8px" : "4px 4px",
-                                borderRadius: 6,
-                                transition: "all 0.1s",
-                                textShadow: "0 1px 4px rgba(0,0,0,0.8)",
-                              }}
-                            >
-                              {word.text}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </AbsoluteFill>
+                  return (
+                    <div
+                      key={pageIdx}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {page.lines.map((line, lineIdx) => (
+                        <div
+                          key={lineIdx}
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            gap: 4,
+                            flexWrap: "wrap",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {line.texts.map((word, wordIdx) => {
+                            const wordFrameStart = word.startMs / 1000;
+                            const isActiveWord = sceneFrame / fps >= wordFrameStart;
+                            return (
+                              <span
+                                key={wordIdx}
+                                style={{
+                                  fontSize: 34 * subtitleFontScale,
+                                  fontFamily: videoUiFontFamily,
+                                  fontWeight: isActiveWord ? 800 : 600,
+                                  color: isActiveWord ? "#FFFFFF" : "rgba(255,255,255,0.7)",
+                                  backgroundColor: isActiveWord
+                                    ? captionBackgroundColor
+                                    : "transparent",
+                                  padding: isActiveWord ? "4px 8px" : "4px 4px",
+                                  borderRadius: 6,
+                                  transition: "all 0.1s",
+                                  textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+                                }}
+                              >
+                                {word.text}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </AbsoluteFill>
+            ) : null}
           </Sequence>
         );
       })}

@@ -10,12 +10,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { RenderConfig, SceneInput, MusicMoodEnum, CaptionPositionEnum, VoiceEnum, OrientationEnum, MusicVolumeEnum } from "../../types/shorts";
+import { RenderConfig, SceneInput, MusicMoodEnum, CaptionPositionEnum, VoiceEnum, OrientationEnum, MusicVolumeEnum, LanguageEnum, VideoTypeEnum, TextModeEnum } from "../../types/shorts";
 import type { AutoScriptStyle, NewsSourceOption } from "../components/video-creator/AutoScriptPanel";
 import type { SceneFormData } from "../components/video-creator/SceneEditorList";
 import type { HookOption } from "../../script-generator/AiLlmGenerator";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import apiClient from "../services/apiClient";
+import { defaultVoiceForLanguage, labelForLanguage } from "../../config/languageSupport";
 
 const AutoScriptPanel = lazy(() => import("../components/video-creator/AutoScriptPanel"));
 const SceneEditorList = lazy(() => import("../components/video-creator/SceneEditorList"));
@@ -33,8 +34,18 @@ const VideoCreator: React.FC = () => {
     captionPosition: CaptionPositionEnum.bottom,
     captionBackgroundColor: "blue",
     voice: VoiceEnum.af_heart,
+    scriptLanguage: LanguageEnum.en,
+    audioLanguage: LanguageEnum.en,
+    overlayLanguage: LanguageEnum.en,
+    captionLanguage: LanguageEnum.en,
+    subtitleLanguage: LanguageEnum.en,
+    textMode: TextModeEnum.hybrid,
+    subtitleLineCount: 1,
+    subtitleFontScale: 1,
     orientation: OrientationEnum.portrait,
     musicVolume: MusicVolumeEnum.high,
+    videoType: VideoTypeEnum.short,
+    durationLimit: 180,
   });
   const [loading, setLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
@@ -264,7 +275,16 @@ const VideoCreator: React.FC = () => {
   };
 
   const handleConfigChange = <K extends keyof RenderConfig>(field: K, value: RenderConfig[K]) => {
-    setConfig((current) => ({ ...current, [field]: value }));
+    setConfig((current) => {
+      const next = { ...current, [field]: value };
+      if (field === "audioLanguage") {
+        next.voice = defaultVoiceForLanguage(value as LanguageEnum) as RenderConfig["voice"];
+      }
+      if (field === "captionLanguage") {
+        next.subtitleLanguage = value as RenderConfig["subtitleLanguage"];
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -282,6 +302,8 @@ const VideoCreator: React.FC = () => {
           .filter((term) => term.length > 0),
         headline: scene.headline.trim() || undefined,
         visualPrompt: scene.visualPrompt.trim() || undefined,
+        sourceLanguage: config.scriptLanguage,
+        language: config.audioLanguage,
         searchTerms: scene.searchTerms
           .split(",")
           .map((term) => term.trim())
@@ -365,10 +387,31 @@ const VideoCreator: React.FC = () => {
             Scenes: <strong>{scenes.length}</strong>
           </Typography>
           <Typography variant="body2">
+            Type: <strong>{config.videoType}</strong>
+          </Typography>
+          <Typography variant="body2">
             Orientation: <strong>{config.orientation}</strong>
           </Typography>
           <Typography variant="body2">
+            Script: <strong>{labelForLanguage(config.scriptLanguage)}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Audio: <strong>{labelForLanguage(config.audioLanguage)}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Overlay: <strong>{labelForLanguage(config.overlayLanguage)}</strong>
+          </Typography>
+          <Typography variant="body2">
             Voice: <strong>{config.voice}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Captions: <strong>{labelForLanguage(config.captionLanguage)}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Text mode: <strong>{config.textMode}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Target duration: <strong>{config.durationLimit}s</strong>
           </Typography>
           <Typography variant="body2">
             Source: <strong>{selectedSourceLabel}</strong>
@@ -404,9 +447,16 @@ const VideoCreator: React.FC = () => {
           <SceneEditorList
             scenes={scenes}
             category={selectedCategory}
+            scriptLanguage={config.scriptLanguage}
             voice={config.voice}
+            audioLanguage={config.audioLanguage}
+            overlayLanguage={config.overlayLanguage}
+            subtitleLanguage={config.captionLanguage}
+            textMode={config.textMode}
             captionPosition={config.captionPosition}
             captionBackgroundColor={config.captionBackgroundColor}
+            subtitleLineCount={config.subtitleLineCount}
+            subtitleFontScale={config.subtitleFontScale}
             onAddScene={handleAddScene}
             onRemoveScene={handleRemoveScene}
             onSceneChange={handleSceneChange}

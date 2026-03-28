@@ -24,8 +24,11 @@ import {
   MusicVolumeEnum,
   OrientationEnum,
   RenderConfig,
+  TextModeEnum,
+  VideoTypeEnum,
   VoiceEnum,
 } from "../../../types/shorts";
+import { supportedCreateLanguages } from "../../../config/languageSupport";
 
 interface VideoConfigPanelProps {
   config: RenderConfig;
@@ -50,6 +53,24 @@ const VideoConfigPanel: React.FC<VideoConfigPanelProps> = ({
         <Grid container spacing={3} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
+              <InputLabel>Video Type</InputLabel>
+              <Select
+                value={config.videoType}
+                onChange={(e) => onConfigChange("videoType", e.target.value as RenderConfig["videoType"])}
+                label="Video Type"
+                required
+              >
+                {Object.values(VideoTypeEnum).map((videoType) => (
+                  <MenuItem key={videoType} value={videoType}>
+                    {videoType === VideoTypeEnum.short ? "Short-form" : "Long-form"}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
               <InputLabel>Orientation</InputLabel>
               <Select
                 value={config.orientation}
@@ -64,6 +85,23 @@ const VideoConfigPanel: React.FC<VideoConfigPanelProps> = ({
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Target Duration Limit (sec)"
+              value={config.durationLimit}
+              onChange={(e) => onConfigChange("durationLimit", Math.max(15, parseInt(e.target.value || "0", 10) || 15))}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">sec</InputAdornment>,
+              }}
+              helperText={config.videoType === VideoTypeEnum.long
+                ? "Use 480-900 seconds for 8-15 minute videos."
+                : "Short-form mode is capped lower automatically."}
+              required
+            />
           </Grid>
 
           <Grid item xs={12} sm={6}>
@@ -131,6 +169,100 @@ const VideoConfigPanel: React.FC<VideoConfigPanelProps> = ({
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                  Text Controls
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Script Language</InputLabel>
+                  <Select
+                    value={config.scriptLanguage}
+                    onChange={(e) => onConfigChange("scriptLanguage", e.target.value as RenderConfig["scriptLanguage"])}
+                    label="Script Language"
+                    required
+                  >
+                    {supportedCreateLanguages.map((language) => (
+                      <MenuItem key={language.code} value={language.code}>
+                        {language.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Audio Language</InputLabel>
+                  <Select
+                    value={config.audioLanguage}
+                    onChange={(e) => onConfigChange("audioLanguage", e.target.value as RenderConfig["audioLanguage"])}
+                    label="Audio Language"
+                    required
+                  >
+                    {supportedCreateLanguages.map((language) => (
+                      <MenuItem key={language.code} value={language.code}>
+                        {language.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Overlay Language</InputLabel>
+                  <Select
+                    value={config.overlayLanguage}
+                    onChange={(e) => onConfigChange("overlayLanguage", e.target.value as RenderConfig["overlayLanguage"])}
+                    label="Overlay Language"
+                    required
+                  >
+                    {supportedCreateLanguages.map((language) => (
+                      <MenuItem key={language.code} value={language.code}>
+                        {language.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Text Mode</InputLabel>
+                  <Select
+                    value={config.textMode}
+                    onChange={(e) => onConfigChange("textMode", e.target.value as RenderConfig["textMode"])}
+                    label="Text Mode"
+                    required
+                  >
+                    <MenuItem value={TextModeEnum.overlay}>Overlay Only</MenuItem>
+                    <MenuItem value={TextModeEnum.captions}>Captions Only</MenuItem>
+                    <MenuItem value={TextModeEnum.hybrid}>Hybrid</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Caption Language</InputLabel>
+                  <Select
+                    value={config.captionLanguage}
+                    onChange={(e) => onConfigChange("captionLanguage", e.target.value as RenderConfig["captionLanguage"])}
+                    label="Caption Language"
+                    required
+                  >
+                    {supportedCreateLanguages.map((language) => (
+                      <MenuItem key={language.code} value={language.code}>
+                        {language.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Caption Position</InputLabel>
@@ -161,6 +293,37 @@ const VideoConfigPanel: React.FC<VideoConfigPanelProps> = ({
               </Grid>
 
               <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Subtitle Lines"
+                  value={config.subtitleLineCount}
+                  onChange={(e) => onConfigChange("subtitleLineCount", Math.min(3, Math.max(1, parseInt(e.target.value || "1", 10) || 1)))}
+                  helperText="How many subtitle lines can appear at once."
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Subtitle Size Scale"
+                  value={config.subtitleFontScale}
+                  onChange={(e) => onConfigChange("subtitleFontScale", Math.min(1.4, Math.max(0.8, Number(e.target.value || "1"))))}
+                  inputProps={{ step: 0.05, min: 0.8, max: 1.4 }}
+                  helperText="1.0 is the current default. Increase for stronger subtitles."
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                  Audio Controls
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Volume of the background audio</InputLabel>
                   <Select
@@ -176,6 +339,16 @@ const VideoConfigPanel: React.FC<VideoConfigPanelProps> = ({
                     ))}
                   </Select>
                 </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  value={config.voice}
+                  label="Narration Voice"
+                  helperText="This voice now drives render narration, not just preview labels."
+                  InputProps={{ readOnly: true }}
+                />
               </Grid>
 
               <Grid item xs={12}>

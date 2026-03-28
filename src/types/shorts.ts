@@ -24,6 +24,7 @@ export enum CaptionPositionEnum {
 export enum LanguageEnum {
   en = "en",
   hi = "hi",
+  fr = "fr",
   es = "es",
   auto = "auto",
 }
@@ -75,11 +76,33 @@ export const sceneInput = z.object({
   language: z
     .nativeEnum(LanguageEnum)
     .default(LanguageEnum.en)
-    .describe("TTS language for the scene"),
+    .describe("Narration/audio language for the scene"),
+  sourceLanguage: z
+    .nativeEnum(LanguageEnum)
+    .optional()
+    .describe("Original script language before optional translation to narration language"),
+  narrationText: z
+    .string()
+    .min(1)
+    .max(1000)
+    .optional()
+    .describe("Precomputed narration text in the target audio language"),
+  captionText: z
+    .string()
+    .min(1)
+    .max(1000)
+    .optional()
+    .describe("Precomputed caption text in the target caption language"),
+  overlayText: z
+    .string()
+    .min(1)
+    .max(200)
+    .optional()
+    .describe("Precomputed editorial overlay text in the target overlay language"),
   translationTarget: z
     .nativeEnum(LanguageEnum)
     .optional()
-    .describe("Optional translation target language for text before TTS"),
+    .describe("Legacy translation target field retained for compatibility"),
   cues: z
     .array(
       z.object({
@@ -130,6 +153,12 @@ export enum OrientationEnum {
   portrait = "portrait",
 }
 
+export enum TextModeEnum {
+  overlay = "overlay",
+  captions = "captions",
+  hybrid = "hybrid",
+}
+
 export enum VideoTypeEnum {
   short = "short",
   long = "long",
@@ -170,6 +199,43 @@ export const renderConfig = z.object({
     .nativeEnum(VoiceEnum)
     .default(VoiceEnum.af_heart)
     .describe("Voice actor for natural speech synthesis"),
+  scriptLanguage: z
+    .nativeEnum(LanguageEnum)
+    .default(LanguageEnum.en)
+    .describe("Language used for the written script before audio/subtitle translation"),
+  audioLanguage: z
+    .nativeEnum(LanguageEnum)
+    .default(LanguageEnum.en)
+    .describe("Target language used for narration audio generation"),
+  overlayLanguage: z
+    .nativeEnum(LanguageEnum)
+    .default(LanguageEnum.en)
+    .describe("Target language used for headline, ticker, and editorial overlay text"),
+  captionLanguage: z
+    .nativeEnum(LanguageEnum)
+    .default(LanguageEnum.en)
+    .describe("Target language used for on-screen caption text"),
+  textMode: z
+    .nativeEnum(TextModeEnum)
+    .default(TextModeEnum.hybrid)
+    .describe("Determines whether the video shows overlays, captions, or both"),
+  subtitleLanguage: z
+    .nativeEnum(LanguageEnum)
+    .default(LanguageEnum.en)
+    .describe("Legacy compatibility alias for caption language"),
+  subtitleLineCount: z
+    .number()
+    .int()
+    .min(1)
+    .max(3)
+    .default(1)
+    .describe("Maximum subtitle lines shown at once"),
+  subtitleFontScale: z
+    .number()
+    .min(0.8)
+    .max(1.4)
+    .default(1)
+    .describe("Scale factor for subtitle size in the rendered video"),
   orientation: z
     .nativeEnum(OrientationEnum)
     .default(OrientationEnum.portrait)
@@ -221,21 +287,25 @@ export type CaptionPage = {
 export const createShortInput = z.object({
   scenes: z.array(sceneInput)
     .min(1, "At least 1 scene required")
-    .max(20, "Maximum 20 scenes allowed for video length constraints")
+    .max(32, "Maximum 32 scenes allowed for current video length constraints")
     .describe("Video scenes in sequential order - each scene should flow naturally to the next"),
   config: renderConfig.describe("Video rendering configuration - affects style, audio, and presentation"),
 }).refine((data) => {
   // Business logic validation: ensure total text length is reasonable for video duration
   const totalTextLength = data.scenes.reduce((sum, scene) => sum + scene.text.length, 0);
   const estimatedDuration = totalTextLength * 0.05; // Rough estimate: 50ms per character for speech
-  
-  if (estimatedDuration > 120) { // 2 minutes max
+
+  const effectiveLimit = data.config.videoType === VideoTypeEnum.long
+    ? Math.max(data.config.durationLimit, 300)
+    : Math.min(data.config.durationLimit, 180);
+
+  if (estimatedDuration > effectiveLimit) {
     return false;
   }
-  
+
   return true;
 }, {
-  message: "Total video content too long - estimated duration exceeds 2 minutes. Reduce scene count or text length.",
+  message: "Total video content is too long for the selected video mode and duration limit. Reduce scene count, shorten scene text, or raise the duration target.",
 });
 export type CreateShortInput = z.infer<typeof createShortInput>;
 

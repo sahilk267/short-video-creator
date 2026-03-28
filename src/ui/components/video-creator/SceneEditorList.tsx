@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { CaptionPositionEnum, VoiceEnum } from "../../../types/shorts";
+import type { CaptionPositionEnum, LanguageEnum, RenderConfig, TextModeEnum, VoiceEnum } from "../../../types/shorts";
 import ScenePreviewPanel from "./ScenePreviewPanel";
 
 export interface SceneFormData {
@@ -25,9 +25,16 @@ export interface SceneFormData {
 interface SceneEditorListProps {
   scenes: SceneFormData[];
   category?: string;
+  scriptLanguage: LanguageEnum;
   voice: VoiceEnum;
+  audioLanguage: LanguageEnum;
+  overlayLanguage: LanguageEnum;
+  subtitleLanguage: LanguageEnum;
+  textMode: TextModeEnum;
   captionPosition: CaptionPositionEnum;
   captionBackgroundColor: string;
+  subtitleLineCount: RenderConfig["subtitleLineCount"];
+  subtitleFontScale: RenderConfig["subtitleFontScale"];
   onAddScene: () => void;
   onRemoveScene: (index: number) => void;
   onSceneChange: (index: number, field: keyof SceneFormData, value: string) => void;
@@ -47,9 +54,16 @@ const subcategorySuggestions: Record<string, string[]> = {
 const SceneEditorList: React.FC<SceneEditorListProps> = ({
   scenes,
   category,
+  scriptLanguage,
   voice,
+  audioLanguage,
+  overlayLanguage,
+  subtitleLanguage,
+  textMode,
   captionPosition,
   captionBackgroundColor,
+  subtitleLineCount,
+  subtitleFontScale,
   onAddScene,
   onRemoveScene,
   onSceneChange,
@@ -145,9 +159,16 @@ const SceneEditorList: React.FC<SceneEditorListProps> = ({
               <ScenePreviewPanel
                 scene={scene}
                 sceneIndex={index}
+                scriptLanguage={scriptLanguage}
                 voice={voice}
+                audioLanguage={audioLanguage}
+                overlayLanguage={overlayLanguage}
+                subtitleLanguage={subtitleLanguage}
+                textMode={textMode}
                 captionPosition={captionPosition}
                 captionBackgroundColor={captionBackgroundColor}
+                subtitleLineCount={subtitleLineCount}
+                subtitleFontScale={subtitleFontScale}
               />
             </Grid>
           </Grid>
