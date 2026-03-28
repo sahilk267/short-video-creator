@@ -71,6 +71,7 @@ interface GeneratedMetadataPayload {
     category: string | null;
     subcategory: string | null;
     keywords: string[];
+    headlines: string[];
   };
 }
 
@@ -294,6 +295,9 @@ export const PublishDashboard: React.FC = () => {
                   {metadataContext.subcategory && <Chip size="small" label={`Subcategory: ${metadataContext.subcategory}`} />}
                   {metadataContext.keywords.slice(0, 5).map((keyword) => (
                     <Chip key={keyword} size="small" variant="outlined" label={keyword} />
+                  ))}
+                  {metadataContext.headlines.slice(0, 2).map((headline) => (
+                    <Chip key={headline} size="small" color="primary" variant="outlined" label={headline} />
                   ))}
                 </Box>
               </Alert>

@@ -1,110 +1,139 @@
 # Manual Verification Log
 
 ## Purpose
-This file stores the actual results of manual browser verification.
+This file records actual browser/runtime verification results.
 
 Use it together with:
-- `MANUAL_VERIFICATION_CHECKLIST.md`
-- `PROGRESS_STATUS.md`
-
-Checklist batati hai kya verify karna hai.
-This log records what was actually checked, what passed, and what still needs attention.
+- [`MANUAL_VERIFICATION_CHECKLIST.md`](/d:/short-video-maker_1/short-video-creator/MANUAL_VERIFICATION_CHECKLIST.md)
+- [`PRODUCTION_VERIFICATION_CHECKLIST.md`](/d:/short-video-maker_1/short-video-creator/PRODUCTION_VERIFICATION_CHECKLIST.md)
+- [`PHASE_WISE_RENDER_TRACKING.md`](/d:/short-video-maker_1/short-video-creator/PHASE_WISE_RENDER_TRACKING.md)
 
 ---
 
 ## Current Status
-- Manual verification execution has not been performed yet in-browser
-- Automated verification is passing
-- This log is ready for real verification entries
+- Manual verification structure updated for the latest pipeline
+- No new browser session recorded yet after latest automation/source/render/publish changes
 
 ---
 
 ## Latest Automated Baseline
-- `pnpm test -- --runInBand` passed
-- `pnpm exec tsc -p tsconfig.build.json --noEmit` passed
-- `pnpm run build` passed
+- `npm run verify:baseline`
+- `npm run verify:production` when release-grade confidence is needed
 
-Latest known automated suite result:
-- 31 test files passed
-- 44 tests passed
+Latest known targeted suite result:
+- 7 test files passed
+- 22 tests passed
 
 ---
 
-## Manual Verification Session Template
+## Session Template
 
 ### Session Date
 - Date:
 - Verified by:
 - Environment:
+- Docker image rebuilt:
 - Notes:
 
-### Route Results
+### Automated Baseline
+- `npm run verify:baseline`:
+  Result:
+  Notes:
+
+- `npm run verify:production`:
+  Result:
+  Notes:
+
+### Create Flow
 - `/`:
   Result:
   Notes:
 
-- `/create`:
+- `/create` load:
   Result:
   Notes:
 
-- `/video/:videoId`:
+- Multi-source auto-script:
   Result:
   Notes:
 
-- `/queue`:
+- Custom RSS source:
   Result:
   Notes:
 
-- `/mappings`:
+- Hook scoring UI:
   Result:
   Notes:
 
-- `/publish`:
+- Script generation:
   Result:
   Notes:
 
-- `/analytics`:
+### Render Flow
+- `/video/:videoId` processing -> ready:
   Result:
   Notes:
 
-- `/scheduler`:
+- Overlay/ticker/progress visuals:
   Result:
   Notes:
 
-- `/ab-testing`:
+- Media relevance quality:
   Result:
   Notes:
 
-- `/ai`:
+- Duplicate prevention:
   Result:
   Notes:
 
-- `/health`:
+- AI images variant:
   Result:
   Notes:
 
-- `/tenants`:
+- Landscape variant:
   Result:
   Notes:
 
-- `/content-tools`:
+### Publish Flow
+- `/publish` load:
   Result:
   Notes:
 
-### Cross-Cutting Results
+- Metadata autofill:
+  Result:
+  Notes:
+
+- Metadata context chips:
+  Result:
+  Notes:
+
+- Publish enqueue:
+  Result:
+  Notes:
+
+- Duplicate publish guard:
+  Result:
+  Notes:
+
+### Docker Verification
+- UI reflects latest image:
+  Result:
+  Notes:
+
+- Render output written to `/app/data/videos`:
+  Result:
+  Notes:
+
+- Latest flow reproduced in Docker:
+  Result:
+  Notes:
+
+### Cross-cutting
 - Navigation:
   Result:
   Notes:
 
-- Lazy loading:
-  Result:
-  Notes:
-
-- Empty states:
-  Result:
-  Notes:
-
-- Error states:
+- Loading/error states:
   Result:
   Notes:
 
@@ -115,7 +144,7 @@ Latest known automated suite result:
 ---
 
 ## Result Labels
-Use one of these labels:
+Use one of:
 - Passed
 - Partial
 - Failed
@@ -123,11 +152,5 @@ Use one of these labels:
 
 ---
 
-## Open Issues Found During Manual Verification
+## Open Issues Found During Verification
 - None recorded yet
-
----
-
-## Summary
-- Manual verification not yet executed
-- Tracking structure is now ready

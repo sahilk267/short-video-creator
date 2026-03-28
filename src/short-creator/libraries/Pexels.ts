@@ -21,6 +21,16 @@ const genericTerms = new Set([
   "controversy",
 ]);
 
+const domainAnchors: Array<{ pattern: RegExp; queries: string[] }> = [
+  { pattern: /(cricket|ipl|pcb|icc|wicket|bowler|batsman)/i, queries: ["cricket stadium", "cricket player", "cricket crowd"] },
+  { pattern: /(nba|basketball|playoff|hoops)/i, queries: ["basketball court", "basketball player", "arena crowd"] },
+  { pattern: /(football|soccer|goal|premier league)/i, queries: ["football stadium", "soccer player", "stadium crowd"] },
+  { pattern: /(market|stocks|earnings|economy|trade|business|investor|tariff)/i, queries: ["stock market", "trading floor", "business district"] },
+  { pattern: /(election|parliament|president|prime minister|summit|diplomacy|war|conflict|government)/i, queries: ["press conference", "parliament building", "world leaders"] },
+  { pattern: /(science|laboratory|research|scientist|space|rocket|nasa|climate)/i, queries: ["science laboratory", "space launch", "scientist research"] },
+  { pattern: /(ai|technology|tech|startup|software|robot|chip|semiconductor)/i, queries: ["technology lab", "computer server", "circuit board"] },
+];
+
 type PexelsResult = {
   id: string;
   duration: number;
@@ -37,10 +47,26 @@ type PexelsResult = {
 export class PexelsAPI {
   constructor(private API_KEY: string) {}
 
+  private normalizeTerm(term: string): string {
+    return term
+      .replace(/[^\w\s-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private buildDomainQueryVariants(searchTerms: string[]): string[] {
+    const haystack = searchTerms.join(" ");
+    return Array.from(new Set(
+      domainAnchors
+        .filter((entry) => entry.pattern.test(haystack))
+        .flatMap((entry) => entry.queries),
+    ));
+  }
+
   private buildQueryCandidates(searchTerms: string[]): string[] {
     const normalized = Array.from(new Set(
       searchTerms
-        .map((term) => term.trim())
+        .map((term) => this.normalizeTerm(term))
         .filter(Boolean),
     ));
 
@@ -52,6 +78,7 @@ export class PexelsAPI {
         return (bWords * 100 + b.length) - (aWords * 100 + a.length);
       });
 
+    const domainSpecific = this.buildDomainQueryVariants(specific);
     const phraseCombos: string[] = [];
     for (let i = 0; i < Math.min(3, specific.length); i++) {
       for (let j = i + 1; j < Math.min(4, specific.length); j++) {
@@ -61,6 +88,7 @@ export class PexelsAPI {
 
     return Array.from(new Set([
       ...specific,
+      ...domainSpecific,
       ...phraseCombos,
       ...normalized.filter((term) => !specific.includes(term)),
     ])).slice(0, 10);
@@ -96,7 +124,8 @@ export class PexelsAPI {
               Math.abs(file.width - requiredVideoWidth) +
               Math.abs(file.height - requiredVideoHeight);
             const durationPenalty = Math.abs(normalizedDuration - (minDurationSeconds + durationBufferSeconds));
-            const score = dimensionPenalty + (durationPenalty * 10);
+            const fpsPenalty = Math.abs((file.fps || 25) - 30) * 15;
+            const score = dimensionPenalty + (durationPenalty * 10) + fpsPenalty;
             return {
               score,
               candidate: {

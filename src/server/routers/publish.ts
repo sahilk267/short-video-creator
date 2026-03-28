@@ -72,6 +72,7 @@ export class PublishRouter {
         keywords: record.keywords,
         subcategory: record.subcategory,
         category: record.category,
+        headlines: record.headlines,
       },
     );
 
@@ -84,6 +85,7 @@ export class PublishRouter {
         category: record.category,
         subcategory: record.subcategory,
         keywords: record.keywords,
+        headlines: record.headlines,
       },
     });
   }

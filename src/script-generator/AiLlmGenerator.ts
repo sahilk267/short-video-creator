@@ -2,6 +2,12 @@ import axios from "axios";
 import type { SceneInput } from "../types/shorts";
 
 export type AutoScriptStyle = "News" | "Viral" | "Explainer";
+export interface HookOption {
+  text: string;
+  score: number;
+  scoreLabel: "Strong" | "Good" | "Experimental";
+  rationale: string;
+}
 
 export interface ScriptGenerationOptions {
   category?: string;
@@ -10,6 +16,14 @@ export interface ScriptGenerationOptions {
   hook?: string;
   keywords?: string[];
 }
+
+type PromptStory = {
+  title: string;
+  content?: string;
+  pubDate?: string;
+  sourceWeight?: number;
+  sourceName?: string;
+};
 
 export class AiLlmGenerator {
   private apiUrl: string;
@@ -21,6 +35,218 @@ export class AiLlmGenerator {
   ) {
     this.apiUrl = apiUrl;
     this.model = model;
+  }
+
+  private normalizeKeywordList(keywords?: string[]): string[] {
+    return Array.from(new Set(
+      (keywords || [])
+        .map((keyword) => String(keyword).trim())
+        .filter(Boolean),
+    )).slice(0, 8);
+  }
+
+  private getRelevantPriorityKeywords(
+    optionsKeywords: string[],
+    sceneContext: Array<string | undefined>,
+  ): string[] {
+    const haystack = sceneContext
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matched = optionsKeywords.filter((keyword) => {
+      const tokens = keyword.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2);
+      return tokens.some((token) => haystack.includes(token));
+    });
+
+    if (matched.length > 0) {
+      return this.mergePriorityTerms(matched, optionsKeywords, 4);
+    }
+
+    return optionsKeywords.slice(0, 3);
+  }
+
+  private mergePriorityTerms(primary: string[], secondary: string[], max: number): string[] {
+    return Array.from(new Set(
+      [...primary, ...secondary]
+        .map((item) => String(item).trim())
+        .filter(Boolean),
+    )).slice(0, max);
+  }
+
+  private normalizePromptText(value?: string): string {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^\w\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private storyFingerprint(story: PromptStory): string {
+    return this.normalizePromptText(story.title)
+      .split(/\s+/)
+      .filter((token) => token.length > 2)
+      .slice(0, 8)
+      .join(" ");
+  }
+
+  private keywordRelevanceScore(story: PromptStory, keywords: string[]): number {
+    if (!keywords.length) {
+      return 0;
+    }
+    const haystack = this.normalizePromptText(`${story.title} ${story.content || ""}`);
+    return keywords.reduce((score, keyword) => {
+      const keywordTokens = this.normalizePromptText(keyword).split(/\s+/).filter((token) => token.length > 2);
+      const matchedTokens = keywordTokens.filter((token) => haystack.includes(token)).length;
+      return score + (matchedTokens * 20);
+    }, 0);
+  }
+
+  private freshnessScore(pubDate?: string): number {
+    const timestamp = Date.parse(pubDate || "");
+    if (!timestamp) {
+      return 5;
+    }
+    const hoursOld = Math.max(0, (Date.now() - timestamp) / (1000 * 60 * 60));
+    if (hoursOld <= 6) return 50;
+    if (hoursOld <= 24) return 35;
+    if (hoursOld <= 48) return 20;
+    return 8;
+  }
+
+  private rankStoriesForPrompt(
+    newsStories: PromptStory[],
+    options: Pick<ScriptGenerationOptions, "category" | "topic" | "keywords"> = {},
+  ): PromptStory[] {
+    const normalizedKeywords = this.normalizeKeywordList(options.keywords);
+    const fingerprintCoverage = new Map<string, number>();
+    for (const story of newsStories) {
+      const fingerprint = this.storyFingerprint(story);
+      if (!fingerprint) {
+        continue;
+      }
+      fingerprintCoverage.set(fingerprint, (fingerprintCoverage.get(fingerprint) || 0) + 1);
+    }
+
+    const categoryNeedle = this.normalizePromptText(options.category);
+    const topicNeedle = this.normalizePromptText(options.topic);
+
+    return [...newsStories]
+      .sort((a, b) => {
+        const aFingerprint = this.storyFingerprint(a);
+        const bFingerprint = this.storyFingerprint(b);
+        const aCoverage = fingerprintCoverage.get(aFingerprint) || 1;
+        const bCoverage = fingerprintCoverage.get(bFingerprint) || 1;
+        const aText = this.normalizePromptText(`${a.title} ${a.content || ""}`);
+        const bText = this.normalizePromptText(`${b.title} ${b.content || ""}`);
+        const aCategoryBoost = categoryNeedle && aText.includes(categoryNeedle) ? 15 : 0;
+        const bCategoryBoost = categoryNeedle && bText.includes(categoryNeedle) ? 15 : 0;
+        const aTopicBoost = topicNeedle && aText.includes(topicNeedle) ? 25 : 0;
+        const bTopicBoost = topicNeedle && bText.includes(topicNeedle) ? 25 : 0;
+        const aScore =
+          this.keywordRelevanceScore(a, normalizedKeywords) +
+          this.freshnessScore(a.pubDate) +
+          ((a.sourceWeight || 5) * 8) +
+          (aCoverage * 18) +
+          aCategoryBoost +
+          aTopicBoost;
+        const bScore =
+          this.keywordRelevanceScore(b, normalizedKeywords) +
+          this.freshnessScore(b.pubDate) +
+          ((b.sourceWeight || 5) * 8) +
+          (bCoverage * 18) +
+          bCategoryBoost +
+          bTopicBoost;
+        return bScore - aScore;
+      })
+      .slice(0, 8);
+  }
+
+  private scoreHookOption(
+    hookText: string,
+    options: Pick<ScriptGenerationOptions, "topic" | "style" | "keywords"> = {},
+  ): HookOption {
+    const normalizedHook = this.normalizePromptText(hookText);
+    const topicText = this.normalizePromptText(options.topic);
+    const priorityKeywords = this.normalizeKeywordList(options.keywords);
+    const hookWords = normalizedHook.split(/\s+/).filter(Boolean);
+    const wordCount = hookWords.length;
+
+    let score = 40;
+    const rationale: string[] = [];
+
+    if (wordCount >= 8 && wordCount <= 16) {
+      score += 18;
+      rationale.push("Good spoken length");
+    } else if (wordCount >= 6 && wordCount <= 18) {
+      score += 10;
+      rationale.push("Usable spoken length");
+    } else {
+      rationale.push("Length may feel less punchy");
+    }
+
+    const topicTokens = topicText.split(/\s+/).filter((token) => token.length > 2);
+    const matchedTopicTokens = topicTokens.filter((token) => normalizedHook.includes(token));
+    if (matchedTopicTokens.length > 0) {
+      score += Math.min(20, matchedTopicTokens.length * 8);
+      rationale.push("Aligned with selected topic");
+    }
+
+    const matchedKeywords = priorityKeywords.filter((keyword) => {
+      const keywordTokens = this.normalizePromptText(keyword).split(/\s+/).filter((token) => token.length > 2);
+      return keywordTokens.some((token) => normalizedHook.includes(token));
+    });
+    if (matchedKeywords.length > 0) {
+      score += Math.min(16, matchedKeywords.length * 6);
+      rationale.push("Reflects priority keywords");
+    }
+
+    const curiosityPhrases = ["why", "what", "how", "real reason", "truth", "twist", "secret", "actually"];
+    if (curiosityPhrases.some((phrase) => normalizedHook.includes(phrase))) {
+      score += 8;
+      rationale.push("Curiosity-driven opening");
+    }
+
+    const urgencyPhrases = ["breaking", "right now", "today", "just", "latest"];
+    if (urgencyPhrases.some((phrase) => normalizedHook.includes(phrase))) {
+      score += 6;
+      rationale.push("Urgent news framing");
+    }
+
+    if (options.style === "Explainer" && /break down|understand|what matters|explained/.test(normalizedHook)) {
+      score += 8;
+      rationale.push("Fits explainer style");
+    }
+    if (options.style === "Viral" && /why|twist|blowing up|everyone|change everything/.test(normalizedHook)) {
+      score += 8;
+      rationale.push("Fits viral style");
+    }
+    if (options.style === "News" && /breaking|latest|key update|right now/.test(normalizedHook)) {
+      score += 8;
+      rationale.push("Fits news style");
+    }
+
+    const cappedScore = Math.max(0, Math.min(100, score));
+    const scoreLabel = cappedScore >= 78
+      ? "Strong"
+      : (cappedScore >= 60 ? "Good" : "Experimental");
+
+    return {
+      text: hookText,
+      score: cappedScore,
+      scoreLabel,
+      rationale: rationale.slice(0, 3).join(" | ") || "General fallback hook",
+    };
+  }
+
+  private rankHookOptions(
+    hooks: string[],
+    options: Pick<ScriptGenerationOptions, "topic" | "style" | "keywords"> = {},
+  ): HookOption[] {
+    return hooks
+      .map((hook) => this.scoreHookOption(hook, options))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
   }
 
   async translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string> {
@@ -49,11 +275,12 @@ export class AiLlmGenerator {
   }
 
   async suggestTopics(
-    newsStories: Array<{ title: string; content?: string }>,
+    newsStories: PromptStory[],
     options: Pick<ScriptGenerationOptions, "category" | "keywords"> = {},
   ): Promise<string[]> {
-    const fallback = this.fallbackTopics(newsStories, options.category);
-    const newsContent = this.formatStories(newsStories);
+    const rankedStories = this.rankStoriesForPrompt(newsStories, options);
+    const fallback = this.fallbackTopics(rankedStories, options.category);
+    const newsContent = this.formatStories(rankedStories);
     const categoryLine = options.category ? `Category: ${options.category}` : "";
     const keywordLine = options.keywords?.length ? `Priority keywords: ${options.keywords.join(", ")}` : "";
     const prompt = `
@@ -96,11 +323,12 @@ STRICT INSTRUCTIONS:
   }
 
   async suggestHooks(
-    newsStories: Array<{ title: string; content?: string }>,
+    newsStories: PromptStory[],
     options: Pick<ScriptGenerationOptions, "category" | "topic" | "style" | "keywords"> = {},
-  ): Promise<string[]> {
-    const fallback = this.fallbackHooks(newsStories, options.topic, options.style);
-    const newsContent = this.formatStories(newsStories);
+  ): Promise<HookOption[]> {
+    const rankedStories = this.rankStoriesForPrompt(newsStories, options);
+    const fallback = this.fallbackHooks(rankedStories, options.topic, options.style);
+    const newsContent = this.formatStories(rankedStories);
     const prompt = `
 You are writing opening hooks for short-form videos.
 Generate 3 distinct hook lines for a ${options.style || "News"} style short video.
@@ -129,23 +357,24 @@ STRICT INSTRUCTIONS:
 
       const parsed = this.extractJson(response.data?.response);
       if (Array.isArray(parsed)) {
-        return parsed
+        return this.rankHookOptions(parsed
           .map((item) => String(item).trim())
           .filter(Boolean)
-          .slice(0, 3);
+          .slice(0, 3), options);
       }
     } catch (error) {
       console.warn("[AiLlmGenerator] suggestHooks fallback:", error);
     }
 
-    return fallback;
+    return this.rankHookOptions(fallback, options);
   }
 
   async generateScript(
-    newsStories: Array<{ title: string; content?: string }>,
+    newsStories: PromptStory[],
     options: ScriptGenerationOptions = {},
   ): Promise<SceneInput[]> {
-    const newsContent = this.formatStories(newsStories);
+    const rankedStories = this.rankStoriesForPrompt(newsStories, options);
+    const newsContent = this.formatStories(rankedStories);
     const categoryLine = options.category ? `Category focus: ${options.category}` : "";
     const topicLine = options.topic ? `Topic focus: ${options.topic}` : "";
     const styleLine = options.style ? `Narrative style: ${options.style}` : "";
@@ -243,40 +472,76 @@ JSON Format Example:
         throw error;
       }
 
+      const priorityKeywords = this.normalizeKeywordList(options.keywords);
       const normalizedScenes = scenes.map((scene) => {
         if (typeof scene !== "object" || scene === null) {
           return scene;
         }
 
-        return {
-          text: (scene as Record<string, unknown>).text
-            || (scene as Record<string, unknown>).narration
-            || (scene as Record<string, unknown>).content
-            || (scene as Record<string, unknown>).speech
-            || (scene as Record<string, unknown>).description
+        const sceneRecord = scene as Record<string, unknown>;
+        const baseText = String(
+          sceneRecord.text
+            || sceneRecord.narration
+            || sceneRecord.content
+            || sceneRecord.speech
+            || sceneRecord.description
             || "",
-          subcategory: (scene as Record<string, unknown>).subcategory
-            || (scene as Record<string, unknown>).subCategory
-            || (scene as Record<string, unknown>).topic
+        ).trim();
+        const baseSubcategory = String(
+          sceneRecord.subcategory
+            || sceneRecord.subCategory
+            || sceneRecord.topic
             || options.topic
             || "",
-          keywords: Array.isArray((scene as Record<string, unknown>).keywords)
-            ? (scene as Record<string, unknown>).keywords
-            : (Array.isArray((scene as Record<string, unknown>).tags) ? (scene as Record<string, unknown>).tags : []),
-          headline: (scene as Record<string, unknown>).headline
-            || (scene as Record<string, unknown>).title
-            || (scene as Record<string, unknown>).header
-            || (scene as Record<string, unknown>).banner
+        ).trim();
+        const baseHeadline = String(
+          sceneRecord.headline
+            || sceneRecord.title
+            || sceneRecord.header
+            || sceneRecord.banner
             || "",
-          visualPrompt: (scene as Record<string, unknown>).visualPrompt
-            || (scene as Record<string, unknown>).imagePrompt
-            || (scene as Record<string, unknown>).prompt
-            || (scene as Record<string, unknown>).visual
-            || (scene as Record<string, unknown>).image_prompt
+        ).trim();
+        const scenePriorityKeywords = this.getRelevantPriorityKeywords(priorityKeywords, [
+          baseText,
+          baseSubcategory,
+          baseHeadline,
+          options.topic,
+        ]);
+        const rawKeywords = Array.isArray(sceneRecord.keywords)
+          ? sceneRecord.keywords
+          : (Array.isArray(sceneRecord.tags) ? sceneRecord.tags : []);
+        const rawSearchTerms = Array.isArray(sceneRecord.searchTerms)
+          ? sceneRecord.searchTerms
+          : (sceneRecord.keywords || sceneRecord.tags || sceneRecord.search_terms || []);
+        const mergedKeywords = this.mergePriorityTerms(
+          scenePriorityKeywords,
+          rawKeywords as string[],
+          8,
+        );
+        const mergedSearchTerms = this.mergePriorityTerms(
+          scenePriorityKeywords,
+          rawSearchTerms as string[],
+          6,
+        );
+        const baseVisualPrompt = String(
+          sceneRecord.visualPrompt
+            || sceneRecord.imagePrompt
+            || sceneRecord.prompt
+            || sceneRecord.visual
+            || sceneRecord.image_prompt
             || "",
-          searchTerms: Array.isArray((scene as Record<string, unknown>).searchTerms)
-            ? (scene as Record<string, unknown>).searchTerms
-            : ((scene as Record<string, unknown>).keywords || (scene as Record<string, unknown>).tags || (scene as Record<string, unknown>).search_terms || []),
+        ).trim();
+        const visualFocusClause = scenePriorityKeywords.length
+          ? ` Focus on ${scenePriorityKeywords.join(", ")}.`
+          : "";
+
+        return {
+          text: baseText,
+          subcategory: baseSubcategory,
+          keywords: mergedKeywords,
+          headline: baseHeadline,
+          visualPrompt: `${baseVisualPrompt}${visualFocusClause}`.trim() || scenePriorityKeywords.join(", "),
+          searchTerms: mergedSearchTerms,
         };
       });
 
@@ -302,9 +567,13 @@ JSON Format Example:
     }
   }
 
-  private formatStories(newsStories: Array<{ title: string; content?: string }>): string {
+  private formatStories(newsStories: PromptStory[]): string {
     return newsStories
-      .map((story, index) => `${index + 1}. TITLE: ${story.title}\nCONTENT: ${story.content || ""}`)
+      .map((story, index) => {
+        const sourceLine = story.sourceName ? `\nSOURCE: ${story.sourceName}` : "";
+        const dateLine = story.pubDate ? `\nDATE: ${story.pubDate}` : "";
+        return `${index + 1}. TITLE: ${story.title}${sourceLine}${dateLine}\nCONTENT: ${story.content || ""}`;
+      })
       .join("\n\n");
   }
 

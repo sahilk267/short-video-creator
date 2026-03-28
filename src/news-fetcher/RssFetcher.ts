@@ -42,7 +42,52 @@ export interface NewsStory {
   content: string;
   link: string;
   pubDate: string;
+  sourceId?: string;
+  sourceName?: string;
+  sourceWeight?: number;
 }
+
+const sourceTrustScores: Record<string, number> = {
+  bbc: 10,
+  bbc_gen: 10,
+  reuters: 10,
+  reuters_gen: 10,
+  cnn: 8,
+  aljazeera: 8,
+  googlenews: 6,
+  ft: 9,
+  bloomberg: 9,
+  forbes: 7,
+  theverge: 8,
+  techcrunch: 8,
+  wired: 8,
+  engadget: 7,
+  espncricinfo: 10,
+  icc: 8,
+  nba: 8,
+  espn_nba: 8,
+  espn: 8,
+  bbcsport: 9,
+  nasa: 10,
+  sciencedaily: 8,
+  physorg: 8,
+};
+
+const categorySourceLimits: Record<string, number> = {
+  World: 4,
+  General: 4,
+  Business: 4,
+  Technology: 4,
+  Science: 4,
+  Sports: 4,
+  Cricket: 3,
+  NBA: 3,
+};
+
+const fingerprintStopWords = new Set([
+  "the", "a", "an", "and", "or", "for", "to", "of", "in", "on", "at", "with",
+  "from", "after", "before", "over", "under", "amid", "into", "as", "by",
+]);
 
 export class RssFetcher {
   private parser: Parser;
@@ -74,6 +119,88 @@ export class RssFetcher {
     return this.listSourcesSync().find((source) => source.id === sourceId);
   }
 
+  public async validateFeedUrl(feedUrl: string): Promise<{ ok: true; itemCount: number } | { ok: false; reason: string }> {
+    try {
+      const feed = await this.parser.parseURL(feedUrl);
+      const itemCount = feed.items?.filter((item) => (item.title || item.contentSnippet || item.content || "").trim()).length || 0;
+      if (itemCount === 0) {
+        return { ok: false, reason: "Feed is reachable but contains no usable items" };
+      }
+      return { ok: true, itemCount };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown feed parsing error";
+      return { ok: false, reason: message };
+    }
+  }
+
+  private getSourceTrustScore(source: NewsSourceDefinition): number {
+    if (source.custom) {
+      return 5;
+    }
+    return sourceTrustScores[source.id] || 6;
+  }
+
+  private selectSourcesForAggregation(sourceIds: string[]): NewsSourceDefinition[] {
+    const uniqueSourceIds = Array.from(new Set(sourceIds.filter(Boolean)));
+    const availableSources = uniqueSourceIds
+      .map((sourceId) => this.findSource(sourceId))
+      .filter((source): source is NewsSourceDefinition => Boolean(source));
+
+    if (availableSources.length <= 1) {
+      return availableSources;
+    }
+
+    const categoryCounts = new Map<string, number>();
+    for (const source of availableSources) {
+      categoryCounts.set(source.category, (categoryCounts.get(source.category) || 0) + 1);
+    }
+
+    const dominantCategory = Array.from(categoryCounts.entries())
+      .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    const maxSources = categorySourceLimits[dominantCategory || ""] || 4;
+    return availableSources
+      .sort((a, b) => {
+        const categoryBoostA = a.category === dominantCategory ? 2 : 0;
+        const categoryBoostB = b.category === dominantCategory ? 2 : 0;
+        const scoreA = this.getSourceTrustScore(a) + categoryBoostA;
+        const scoreB = this.getSourceTrustScore(b) + categoryBoostB;
+        return scoreB - scoreA || a.name.localeCompare(b.name);
+      })
+      .slice(0, maxSources);
+  }
+
+  private buildStoryFingerprint(story: NewsStory): string {
+    const title = (story.title || "").toLowerCase().replace(/[^\w\s]/g, " ");
+    const tokens = title
+      .split(/\s+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length > 2 && !fingerprintStopWords.has(token))
+      .slice(0, 10);
+    return tokens.join(" ");
+  }
+
+  private calculateFreshnessScore(pubDate: string): number {
+    const publishedAt = Date.parse(pubDate || "");
+    if (!publishedAt) {
+      return 5;
+    }
+    const hoursOld = Math.max(0, (Date.now() - publishedAt) / (1000 * 60 * 60));
+    if (hoursOld <= 6) {
+      return 60;
+    }
+    if (hoursOld <= 24) {
+      return 45;
+    }
+    if (hoursOld <= 48) {
+      return 30;
+    }
+    if (hoursOld <= 96) {
+      return 15;
+    }
+    return 5;
+  }
+
   async fetchStories(sourceId: string): Promise<NewsStory[]> {
     const source = this.findSource(sourceId);
     if (!source) {
@@ -84,13 +211,21 @@ export class RssFetcher {
       console.log(`[RssFetcher] Parsing feed URL: ${source.url}`);
       const feed = await this.parser.parseURL(source.url);
       console.log(`[RssFetcher] Fetched ${feed.items?.length || 0} stories from ${source.id}`);
-
-      return (feed.items || []).slice(0, 5).map((item) => ({
+      const stories = (feed.items || []).slice(0, 5).map((item) => ({
         title: item.title || "",
         content: item.contentSnippet || item.content || "",
         link: item.link || "",
         pubDate: item.pubDate || "",
-      }));
+        sourceId: source.id,
+        sourceName: source.name,
+        sourceWeight: this.getSourceTrustScore(source),
+      })).filter((story) => (story.title || story.content).trim().length > 0);
+
+      if (stories.length === 0) {
+        throw new Error(`Source ${source.id} returned no usable stories`);
+      }
+
+      return stories;
     } catch (error) {
       console.error(`[RssFetcher] Error fetching from ${source.id}:`, error);
       throw error;
@@ -98,13 +233,13 @@ export class RssFetcher {
   }
 
   async fetchStoriesFromSources(sourceIds: string[]): Promise<NewsStory[]> {
-    const uniqueSourceIds = Array.from(new Set(sourceIds.filter(Boolean)));
-    if (uniqueSourceIds.length === 0) {
+    const selectedSources = this.selectSourcesForAggregation(sourceIds);
+    if (selectedSources.length === 0) {
       return [];
     }
 
     const settled = await Promise.allSettled(
-      uniqueSourceIds.map((sourceId) => this.fetchStories(sourceId)),
+      selectedSources.map((source) => this.fetchStories(source.id)),
     );
 
     const mergedStories = settled.flatMap((result) => (
@@ -118,11 +253,24 @@ export class RssFetcher {
       }),
     ).values());
 
+    const fingerprintCoverage = new Map<string, number>();
+    for (const story of deduped) {
+      const fingerprint = this.buildStoryFingerprint(story);
+      if (!fingerprint) {
+        continue;
+      }
+      fingerprintCoverage.set(fingerprint, (fingerprintCoverage.get(fingerprint) || 0) + 1);
+    }
+
     return deduped
       .sort((a, b) => {
-        const aTime = Date.parse(a.pubDate || "") || 0;
-        const bTime = Date.parse(b.pubDate || "") || 0;
-        return bTime - aTime;
+        const aFingerprint = this.buildStoryFingerprint(a);
+        const bFingerprint = this.buildStoryFingerprint(b);
+        const aCoverage = fingerprintCoverage.get(aFingerprint) || 1;
+        const bCoverage = fingerprintCoverage.get(bFingerprint) || 1;
+        const aScore = this.calculateFreshnessScore(a.pubDate) + ((a.sourceWeight || 5) * 10) + (aCoverage * 20);
+        const bScore = this.calculateFreshnessScore(b.pubDate) + ((b.sourceWeight || 5) * 10) + (bCoverage * 20);
+        return bScore - aScore;
       })
       .slice(0, 12);
   }
