@@ -30,6 +30,17 @@ import type {
 } from "../types/shorts";
 import { LanguageEnum } from "../types/shorts";
 
+const ignoredCapitalizedSearchPhrases = new Set([
+  "this",
+  "that",
+  "these",
+  "those",
+  "here",
+  "there",
+  "breaking",
+  "latest",
+]);
+
 export class ShortCreator {
   private queue: {
     sceneInput: SceneInput[];
@@ -54,22 +65,95 @@ export class ShortCreator {
     this.videoMetadataStore = new VideoMetadataStore(config.dataDirPath);
   }
 
+  private normalizeSearchPhrase(value?: string): string {
+    return (value || "")
+      .replace(/[^\w\s-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private normalizeSignatureValue(value?: string | null): string {
+    return (value || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  private extractCapitalizedPhrases(text?: string): string[] {
+    const source = text || "";
+    const matches = source.match(/\b(?:[A-Z]{2,}|[A-Z][a-z]+)(?:\s+(?:[A-Z]{2,}|[A-Z][a-z]+)){0,3}\b/g) || [];
+    return matches
+      .map((match) => this.normalizeSearchPhrase(match))
+      .filter((match) => match.length >= 4)
+      .filter((match) => !ignoredCapitalizedSearchPhrases.has(match.toLowerCase()));
+  }
+
+  private inferVisualAnchors(scene: SceneInput, terms: string[]): string[] {
+    const haystack = [
+      scene.subcategory,
+      scene.headline,
+      scene.text,
+      ...(scene.searchTerms || []),
+      ...(scene.keywords || []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const anchors = new Set<string>();
+    const addAnchors = (...values: string[]) => values.forEach((value) => anchors.add(value));
+
+    if (/(cricket|ipl|pcb|icc|batsman|bowler|wicket|odi|t20)/.test(haystack)) {
+      addAnchors("cricket stadium", "cricket player", "cricket fans");
+    }
+    if (/(nba|basketball|playoff|hoops)/.test(haystack)) {
+      addAnchors("basketball court", "basketball player", "arena crowd");
+    }
+    if (/(football|soccer|premier league|goal)/.test(haystack)) {
+      addAnchors("football stadium", "soccer player", "match crowd");
+    }
+    if (/(market|stocks|earnings|tariff|economy|business|trade|investor)/.test(haystack)) {
+      addAnchors("stock market", "trading screen", "business district");
+    }
+    if (/(election|president|prime minister|parliament|war|conflict|diplomacy|summit|government|world)/.test(haystack)) {
+      addAnchors("press conference", "parliament building", "world leaders");
+    }
+    if (/(science|research|lab|laboratory|nasa|space|rocket|climate|satellite)/.test(haystack)) {
+      addAnchors("science laboratory", "space launch", "scientist research");
+    }
+    if (/(ai|technology|tech|startup|software|robot|chip|semiconductor)/.test(haystack)) {
+      addAnchors("technology lab", "computer server", "circuit board");
+    }
+
+    return Array.from(anchors).filter((anchor) => !terms.includes(anchor));
+  }
+
   private buildMediaSearchTerms(scene: SceneInput): string[] {
-    const uniqueTerms = Array.from(new Set(
-      [
-        ...(scene.subcategory ? [scene.subcategory] : []),
-        ...(scene.searchTerms || []),
-        ...(scene.keywords || []),
-        ...(scene.headline ? [scene.headline] : []),
-      ]
-        .map((term) => term.trim())
-        .filter(Boolean),
-    ));
+    const keywordTerms = [...(scene.keywords || [])]
+      .map((term) => this.normalizeSearchPhrase(term))
+      .filter(Boolean);
+    const baseTerms = [
+      ...(scene.cues?.flatMap((cue) => cue.brollSearchTerms || []) || []),
+      ...(scene.subcategory ? [scene.subcategory] : []),
+      ...keywordTerms,
+      ...(scene.searchTerms || []),
+      ...(scene.headline ? [scene.headline] : []),
+      ...this.extractCapitalizedPhrases(scene.headline),
+      ...this.extractCapitalizedPhrases(scene.text),
+    ]
+      .map((term) => this.normalizeSearchPhrase(term))
+      .filter(Boolean);
+
+    const anchorTerms = this.inferVisualAnchors(scene, baseTerms);
+    const uniqueTerms = Array.from(new Set([...baseTerms, ...anchorTerms]));
 
     const specificityScore = (term: string): number => {
       const normalized = term.trim();
       const wordCount = normalized.split(/\s+/).filter(Boolean).length;
-      return (wordCount * 100) + normalized.length;
+      const keywordBoost = keywordTerms.includes(normalized) ? 250 : 0;
+      const subcategoryBoost = scene.subcategory && normalized === this.normalizeSearchPhrase(scene.subcategory) ? 180 : 0;
+      const cueBoost = scene.cues?.some((cue) => (cue.brollSearchTerms || []).includes(normalized)) ? 220 : 0;
+      return (wordCount * 100) + normalized.length + keywordBoost + subcategoryBoost + cueBoost;
     };
 
     return uniqueTerms
@@ -84,14 +168,14 @@ export class ShortCreator {
     subtitleLanguage?: string,
   ): string {
     const normalizedScenes = sceneInput.map((scene) => ({
-      text: scene.text.trim(),
-      searchTerms: [...(scene.searchTerms || [])].map((term) => term.trim().toLowerCase()).sort(),
-      keywords: [...(scene.keywords || [])].map((term) => term.trim().toLowerCase()).sort(),
-      subcategory: scene.subcategory?.trim().toLowerCase() || "",
-      headline: scene.headline?.trim().toLowerCase() || "",
-      visualPrompt: scene.visualPrompt?.trim().toLowerCase() || "",
+      text: this.normalizeSignatureValue(scene.text),
+      searchTerms: [...(scene.searchTerms || [])].map((term) => this.normalizeSignatureValue(term)).sort(),
+      keywords: [...(scene.keywords || [])].map((term) => this.normalizeSignatureValue(term)).sort(),
+      subcategory: this.normalizeSignatureValue(scene.subcategory),
+      headline: this.normalizeSignatureValue(scene.headline),
+      visualPrompt: this.normalizeSignatureValue(scene.visualPrompt),
       language: scene.language || LanguageEnum.en,
-      translationTarget: scene.translationTarget || null,
+      translationTarget: this.normalizeSignatureValue(scene.translationTarget || null),
     }));
 
     const payload = {
@@ -296,11 +380,14 @@ export class ShortCreator {
         }
         
         // Use AI image from Pollinations.ai if key is available
-        const aiPrompt = scene.visualPrompt
-          || [scene.headline, scene.subcategory, ...(scene.keywords || []), scene.text]
-            .filter(Boolean)
-            .join(", ")
-            .slice(0, 200);
+        const keywordFocus = (scene.keywords || []).slice(0, 4).join(", ");
+        const aiPrompt = (
+          scene.visualPrompt
+            ? `${scene.visualPrompt}${keywordFocus ? `. Focus on ${keywordFocus}.` : ""}`
+            : [scene.headline, scene.subcategory, ...(scene.keywords || []), scene.text]
+              .filter(Boolean)
+              .join(", ")
+        ).slice(0, 240);
         const apiKeyParam = this.config.pollinationsApiKey ? `&key=${this.config.pollinationsApiKey}` : '';
         const pollinationsUrl = `https://gen.pollinations.ai/image/${encodeURIComponent(aiPrompt)}?width=${orientation === OrientationEnum.landscape ? 1920 : 1080}&height=${orientation === OrientationEnum.landscape ? 1080 : 1920}&nologo=true${apiKeyParam}`;
         

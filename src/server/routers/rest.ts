@@ -16,7 +16,7 @@ import { VideoMetadataStore } from "../../db/VideoMetadataStore";
 import { CustomNewsSourceStore } from "../../db/CustomNewsSourceStore";
 import { ReportMerger } from "../../aggregator/ReportMerger";
 import { RssFetcher } from "../../news-fetcher/RssFetcher";
-import { AiLlmGenerator, type AutoScriptStyle } from "../../script-generator/AiLlmGenerator";
+import { AiLlmGenerator, type AutoScriptStyle, type HookOption } from "../../script-generator/AiLlmGenerator";
 
 // todo abstract class
 export class APIRouter {
@@ -295,6 +295,13 @@ export class APIRouter {
             return;
           }
 
+          const rssFetcher = new RssFetcher(this.config.dataDirPath);
+          const validation = await rssFetcher.validateFeedUrl(parsedUrl.toString());
+          if (!validation.ok) {
+            res.status(400).json({ error: `Feed validation failed: ${validation.reason}` });
+            return;
+          }
+
           const record = await this.customNewsSourceStore.add({
             name: String(name),
             url: parsedUrl.toString(),
@@ -305,7 +312,9 @@ export class APIRouter {
           res.status(201).json({ source: record });
         } catch (error: unknown) {
           logger.error(error, "Error adding custom news source");
-          res.status(500).json({ error: "Failed to add custom news source" });
+          const message = error instanceof Error ? error.message : "Failed to add custom news source";
+          const statusCode = message.includes("already exists") ? 400 : 500;
+          res.status(statusCode).json({ error: message });
         }
       },
     );
@@ -512,7 +521,7 @@ export class APIRouter {
           }
 
           const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
-          const hooks = await aiLlm.suggestHooks(stories, { category, topic, style, keywords });
+          const hooks: HookOption[] = await aiLlm.suggestHooks(stories, { category, topic, style, keywords });
 
           res.status(200).json({ hooks });
         } catch (error: any) {

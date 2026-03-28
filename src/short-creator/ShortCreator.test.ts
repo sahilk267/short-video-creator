@@ -475,3 +475,215 @@ test("ShortCreator returns the existing video id for duplicate ready videos", as
   expect(duplicateVideoId).toBe(firstVideoId);
   expect(renderSpy).toHaveBeenCalledTimes(1);
 });
+
+test("ShortCreator dedupes scenes with only formatting differences", async () => {
+  const kokoro = await Kokoro.init("fp16");
+  const ffmpeg = await FFMpeg.init();
+
+  vi.spyOn(ffmpeg, "saveNormalizedAudio").mockResolvedValue("mocked-path.wav");
+  vi.spyOn(ffmpeg, "saveToMp3").mockResolvedValue("mocked-path.mp3");
+
+  const pexelsAPI = new PexelsAPI("mock-api-key");
+  vi.spyOn(pexelsAPI, "findVideo").mockResolvedValue({
+    id: "mock-video-id-5",
+    url: "https://example.com/mock-video-5.mp4",
+    width: 1080,
+    height: 1920,
+  });
+
+  const config = new Config();
+  const remotion = await Remotion.init(config);
+  const renderSpy = vi.spyOn(remotion, "render").mockImplementation(async (_data, id) => {
+    fs.writeFileSync(path.normalize(`${config.videosDirPath}/${id}.mp4`), "mock video content");
+  });
+
+  const whisper = await Whisper.init(config);
+  vi.spyOn(whisper, "CreateCaption").mockResolvedValue([
+    { text: "This", startMs: 0, endMs: 500 },
+    { text: " story", startMs: 500, endMs: 900 },
+  ]);
+
+  const musicManager = new MusicManager(config);
+  const shortCreator = new ShortCreator(
+    config,
+    remotion,
+    kokoro,
+    whisper,
+    ffmpeg,
+    pexelsAPI,
+    musicManager,
+  );
+  vi.spyOn(shortCreator as any, "downloadFile").mockResolvedValue(undefined);
+
+  const firstVideoId = shortCreator.addToQueue(
+    [
+      {
+        text: "Markets react as investors digest the latest policy decision.",
+        searchTerms: ["market reaction", "policy decision"],
+        keywords: ["Investors", "Policy"],
+        subcategory: "Markets",
+        headline: "MARKETS REACT",
+      },
+    ],
+    {},
+    "short",
+    "en",
+  );
+
+  let attempts = 0;
+  let status = shortCreator.status(firstVideoId);
+  while (status === "processing" && attempts < 20) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    status = shortCreator.status(firstVideoId);
+    attempts += 1;
+  }
+
+  const duplicateVideoId = shortCreator.addToQueue(
+    [
+      {
+        text: "  Markets react as investors digest the latest policy decision.  ",
+        searchTerms: ["Policy Decision", "market reaction"],
+        keywords: ["policy", "investors"],
+        subcategory: "  markets ",
+        headline: "markets react",
+      },
+    ],
+    {},
+    "short",
+    "en",
+  );
+
+  expect(duplicateVideoId).toBe(firstVideoId);
+  expect(renderSpy).toHaveBeenCalledTimes(1);
+});
+
+test("ShortCreator does not dedupe meaningful variants of the same topic", async () => {
+  const kokoro = await Kokoro.init("fp16");
+  const ffmpeg = await FFMpeg.init();
+
+  vi.spyOn(ffmpeg, "saveNormalizedAudio").mockResolvedValue("mocked-path.wav");
+  vi.spyOn(ffmpeg, "saveToMp3").mockResolvedValue("mocked-path.mp3");
+
+  const pexelsAPI = new PexelsAPI("mock-api-key");
+  vi.spyOn(pexelsAPI, "findVideo").mockResolvedValue({
+    id: "mock-video-id-6",
+    url: "https://example.com/mock-video-6.mp4",
+    width: 1080,
+    height: 1920,
+  });
+
+  const config = new Config();
+  const remotion = await Remotion.init(config);
+  const renderSpy = vi.spyOn(remotion, "render").mockImplementation(async (_data, id) => {
+    fs.writeFileSync(path.normalize(`${config.videosDirPath}/${id}.mp4`), "mock video content");
+  });
+
+  const whisper = await Whisper.init(config);
+  vi.spyOn(whisper, "CreateCaption").mockResolvedValue([
+    { text: "This", startMs: 0, endMs: 500 },
+    { text: " story", startMs: 500, endMs: 900 },
+  ]);
+
+  const musicManager = new MusicManager(config);
+  const shortCreator = new ShortCreator(
+    config,
+    remotion,
+    kokoro,
+    whisper,
+    ffmpeg,
+    pexelsAPI,
+    musicManager,
+  );
+  vi.spyOn(shortCreator as any, "downloadFile").mockResolvedValue(undefined);
+
+  const firstVideoId = shortCreator.addToQueue(
+    [
+      {
+        text: "Investors cheer the policy decision as markets rally sharply.",
+        searchTerms: ["market rally", "policy decision"],
+        keywords: ["stocks", "rally"],
+        subcategory: "Markets",
+        headline: "MARKET RELIEF",
+      },
+    ],
+    {},
+    "short",
+    "en",
+  );
+
+  let attempts = 0;
+  let status = shortCreator.status(firstVideoId);
+  while (status === "processing" && attempts < 20) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    status = shortCreator.status(firstVideoId);
+    attempts += 1;
+  }
+
+  const variantVideoId = shortCreator.addToQueue(
+    [
+      {
+        text: "Analysts warn the same policy decision may still trigger a delayed selloff.",
+        searchTerms: ["market selloff", "policy risk"],
+        keywords: ["stocks", "selloff"],
+        subcategory: "Markets",
+        headline: "RALLY MAY FADE",
+      },
+    ],
+    {},
+    "short",
+    "en",
+  );
+
+  attempts = 0;
+  status = shortCreator.status(variantVideoId);
+  while (status === "processing" && attempts < 20) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    status = shortCreator.status(variantVideoId);
+    attempts += 1;
+  }
+
+  expect(variantVideoId).not.toBe(firstVideoId);
+  expect(renderSpy).toHaveBeenCalledTimes(2);
+});
+
+test("ShortCreator builds richer media search terms from cues and domain anchors", async () => {
+  const kokoro = await Kokoro.init("fp16");
+  const ffmpeg = await FFMpeg.init();
+  const pexelsAPI = new PexelsAPI("mock-api-key");
+  const config = new Config();
+  const remotion = await Remotion.init(config);
+  const whisper = await Whisper.init(config);
+  const musicManager = new MusicManager(config);
+
+  const shortCreator = new ShortCreator(
+    config,
+    remotion,
+    kokoro,
+    whisper,
+    ffmpeg,
+    pexelsAPI,
+    musicManager,
+  );
+
+  const terms = (shortCreator as any).buildMediaSearchTerms({
+    text: "PCB confirms Moeen Ali is available for the IPL final after injury concerns eased.",
+    headline: "PCB BACKS MOEEN ALI",
+    searchTerms: ["cricket controversy", "sports"],
+    keywords: ["PCB", "Moeen Ali", "IPL final"],
+    subcategory: "Cricket",
+    cues: [
+      {
+        startMs: 0,
+        endMs: 1000,
+        brollSearchTerms: ["stadium crowd"],
+      },
+    ],
+    language: "en",
+  });
+
+  expect(terms).toContain("stadium crowd");
+  expect(terms).toContain("cricket stadium");
+  expect(terms).toContain("cricket player");
+  expect(terms).toContain("cricket controversy");
+  expect(terms).toContain("PCB");
+});

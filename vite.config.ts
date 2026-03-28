@@ -5,6 +5,19 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   root: 'src/ui',
+  test: {
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'src/**/*.spec.ts',
+      'src/**/*.spec.tsx',
+    ],
+    exclude: [
+      'data/**',
+      'dist/**',
+      'node_modules/**',
+    ],
+  },
   build: {
     outDir: path.resolve(__dirname, 'dist/ui'),
     emptyOutDir: true,

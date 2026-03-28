@@ -163,6 +163,12 @@ const SceneMedia: React.FC<{
   durationInFrames: number;
 }> = ({ scene, durationInFrames }) => {
   const relativeFrame = useCurrentFrame();
+  const driftX = interpolate(relativeFrame, [0, durationInFrames], [-22, 14], {
+    extrapolateRight: "clamp",
+  });
+  const driftY = interpolate(relativeFrame, [0, durationInFrames], [6, -8], {
+    extrapolateRight: "clamp",
+  });
   const scale = interpolate(relativeFrame, [0, durationInFrames], [1.01, 1.06], {
     extrapolateRight: "clamp",
   });
@@ -177,7 +183,7 @@ const SceneMedia: React.FC<{
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    transform: `scale(${scale})`,
+    transform: `translate(${driftX}px, ${driftY}px) scale(${scale})`,
     opacity,
   };
 

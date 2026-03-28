@@ -20,6 +20,7 @@ import {
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import AddIcon from "@mui/icons-material/Add";
 import Modal from "../shared/Modal";
+import type { HookOption } from "../../../script-generator/AiLlmGenerator";
 
 export interface NewsSourceOption {
   id: string;
@@ -50,7 +51,7 @@ interface AutoScriptPanelProps {
   keywordQuery: string;
   sources: NewsSourceOption[];
   trendingTopics: string[];
-  hookOptions: string[];
+  hookOptions: HookOption[];
   onCategoryChange: (category: string) => void;
   onSourceChange: (sourceIds: string[]) => void;
   onTopicChange: (topic: string) => void;
@@ -272,7 +273,19 @@ const AutoScriptPanel: React.FC<AutoScriptPanelProps> = ({
         </Typography>
         <RadioGroup value={selectedHook} onChange={(e) => onHookChange(e.target.value)}>
           {hookOptions.map((hook) => (
-            <FormControlLabel key={hook} value={hook} control={<Radio />} label={hook} />
+            <FormControlLabel
+              key={hook.text}
+              value={hook.text}
+              control={<Radio />}
+              label={(
+                <Box>
+                  <Typography variant="body1">{hook.text}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {hook.scoreLabel} ({hook.score}/100) • {hook.rationale}
+                  </Typography>
+                </Box>
+              )}
+            />
           ))}
         </RadioGroup>
         {!hookOptions.length && (

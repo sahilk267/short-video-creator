@@ -103,6 +103,14 @@ Primary code paths reflected in this tracking:
 | AI images toggle | Yes | Yes | Yes | Visible | `Implemented` | Switches stock-video vs AI-image path |
 | Auto-generated captions | No direct field | Yes | Yes | Visible | `Verified` | Generated through Whisper |
 | Subtitle sidecar files | No direct field | Yes | Yes | Indirect | `Implemented` | `.srt/.vtt` files generated separately |
+| Modern headline overlay card | No direct field | Yes | Yes | Visible | `Verified` | New glass-card style top story treatment is present in rendered output |
+| `Live` badge / scene index | No direct field | Yes | Yes | Visible | `Verified` | `Live` and `Scene x/y` labels appear in rendered video |
+| Top progress bar | No direct field | Yes | Yes | Visible | `Verified` | Scene progress treatment visible at top edge |
+| Lower ticker strip | No direct field | Yes | Yes | Visible | `Verified` | Bottom ticker / lower-third is visible in rendered video |
+| Cinematic media motion | No direct field | Yes | Yes | Visible | `Implemented` | Portrait, landscape, and long-form use subtle zoom / fade treatment |
+| Caption style polish | No direct field | Yes | Yes | Visible | `Verified` | Active-word highlight and stronger caption styling visible in output |
+| Category-aware overlay theming | No direct field | Yes | Yes | Visible | `Implemented` | Overlay accent colors and labels adapt to scene headline/context |
+| Refined ticker entrance and badge pulse | No direct field | Yes | Yes | Visible | `Implemented` | Lower-third motion and `Live` badge pacing have been softened and strengthened |
 
 ---
 
@@ -112,15 +120,27 @@ Primary code paths reflected in this tracking:
 |---|---:|---:|---:|---|---|---|
 | Category chips | Yes | Yes | Yes | Indirect | `Verified` | Scopes source set and prompt framing |
 | Multi-source selection | Yes | Yes | Yes | Indirect | `Implemented` | Auto-script pulls from multiple selected feeds |
-| `All Sources` option | Yes | Yes | Yes | Indirect | `Implemented` | Category-scoped all-sources selection |
+| `All Sources` option | Yes | Yes | Yes | Indirect | `Implemented` | Category-scoped all-sources selection with backend quality control |
 | Built-in source registry | Yes | Yes | Yes | Indirect | `Verified` | Default curated feeds |
 | Custom RSS/feed source add | Yes | Yes | Yes | Indirect | `Implemented` | New feed saved and available immediately |
+| Custom feed validation | No direct field | Yes | Yes | Indirect | `Implemented` | Feed URL is validated before saving; empty or malformed feeds are rejected |
+| Custom feed duplicate blocking | No direct field | Yes | Yes | Operational | `Implemented` | Same feed URL cannot be added multiple times |
 | Keyword bias field | Yes | Yes | Yes | Indirect | `Implemented` | Biases topic discovery, hooks, and script generation |
+| Scene audio preview | Yes | Browser-side | No | Operational | `Implemented` | `/create` now includes a browser narration preview per scene |
+| Scene subtitle preview | Yes | Frontend derived | No | Visible | `Implemented` | `/create` now shows subtitle layout preview before render |
+| Render readiness summary | Yes | Frontend derived | No | Operational | `Implemented` | `/create` now shows audio/subtitle/media readiness by scene count |
+| Priority keyword promotion | No direct field | Yes | Yes | Indirect | `Implemented` | Top-level keywords are now promoted into scene keywords, search terms, and AI prompts |
 | Trending topic suggestions | Yes | Yes | Yes | Indirect | `Implemented` | Generated from merged source stories |
+| Topic prompt ranking | No direct field | Yes | Yes | Indirect | `Implemented` | Stories are ranked before prompting using keyword relevance, freshness, source weight, and coverage |
 | Style selector (`News`/`Viral`/`Explainer`) | Yes | Yes | Yes | Indirect | `Implemented` | Changes tone of hooks and script |
 | Hook suggestions | Yes | Yes | Yes | Indirect | `Implemented` | User-selected hook steers scene 1 framing |
+| Hook quality scoring | Yes | Yes | Yes | Indirect | `Implemented` | Hook options now include score and rationale to guide selection |
 | Auto refresh | Yes | Yes | Yes | Operational | `Implemented` | Refreshes topics and hooks from current source set |
 | Auto-script generation | Yes | Yes | Yes | Indirect | `Implemented` | Creates scene draft later used for render |
+| Category-scoped source merge | Yes | Yes | Yes | Indirect | `Implemented` | Multiple feeds are merged, deduped, source-weighted, freshness-ranked, and capped before prompting |
+| Source trust weighting | No direct field | Yes | Yes | Indirect | `Implemented` | Higher-trust feeds are prioritized when large source sets are selected |
+| Freshness-biased story ranking | No direct field | Yes | Yes | Indirect | `Implemented` | Newer stories are ranked above older ones during multi-source aggregation |
+| Category-specific source caps | No direct field | Yes | Yes | Indirect | `Implemented` | Oversized `All Sources` selections are trimmed by category to reduce noise |
 
 ---
 
@@ -130,8 +150,10 @@ Primary code paths reflected in this tracking:
 |---|---:|---:|---:|---|---|---|
 | Per-video metadata store | No direct UI | Yes | Yes | Operational | `Implemented` | Saves topic, summary, subcategory, keywords |
 | Publish metadata suggestions | Yes | Yes | Yes | Operational | `Implemented` | Uses saved video metadata to generate platform metadata |
+| Platform-specific metadata strategy | No direct UI | Yes | Yes | Operational | `Implemented` | Metadata prompt now adapts title/caption strategy per platform |
+| Headline-aware metadata prompts | No direct UI | Yes | Yes | Operational | `Implemented` | Scene headlines are now included in publish metadata generation |
 | Publish dashboard autofill | Yes | Yes | Yes | Operational | `Implemented` | Prefills title/description/caption/hashtags |
-| Metadata context chips | Yes | Yes | No | Operational | `Implemented` | Displays category, subcategory, keywords in publish step |
+| Metadata context chips | Yes | Yes | No | Operational | `Implemented` | Displays category, subcategory, keywords, and headline context in publish step |
 
 ---
 
@@ -140,13 +162,30 @@ Primary code paths reflected in this tracking:
 | Feature | Frontend | Backend | Pipeline use | Class | Status | Notes |
 |---|---:|---:|---:|---|---|---|
 | Content signature generation | No | Yes | Yes | Operational | `Implemented` | Hash built from scenes + config + render mode |
-| Ready-video reuse | No | Yes | Yes | Operational | `Implemented` | Same ready video ID returned instead of duplicate render |
-| Queue dedupe | No | Yes | Yes | Operational | `Implemented` | Same in-flight content does not queue again |
+| Signature normalization | No | Yes | Yes | Operational | `Implemented` | Whitespace/case-only differences no longer create duplicate signatures |
+| Ready-video reuse | No | Yes | Yes | Operational | `Verified` | Same ready video ID returned instead of duplicate render |
+| Queue dedupe | No | Yes | Yes | Operational | `Verified` | Same in-flight content does not queue again |
+| Meaningful-variant separation | No | Yes | Yes | Operational | `Verified` | Topic-adjacent but materially different scripts still create separate videos |
 | Duplicate publish guard | No direct UI | Yes | Yes | Operational | `Implemented` | Already-published platform job is rejected |
 
 ---
 
-## E. Backend-supported Render Features Not Fully Exposed
+## E. Media Relevance and Stock Selection
+
+| Feature | Frontend | Backend | Pipeline use | Class | Status | Notes |
+|---|---:|---:|---:|---|---|---|
+| Smart media term prioritization | No direct field | Yes | Yes | Indirect | `Implemented` | Scene media terms now prioritize specific phrases over generic terms |
+| Keyword-weighted media search | Indirect via keywords field | Yes | Yes | Indirect | `Implemented` | Keywords now influence Pexels selection more strongly |
+| Keyword-aligned AI image prompts | Indirect via keywords field | Yes | Yes | Indirect | `Implemented` | AI prompts now append keyword focus instead of relying on raw prompt text only |
+| Subcategory-weighted media search | Indirect via subcategory field | Yes | Yes | Indirect | `Implemented` | Subcategory is promoted into media search priority |
+| Phrase-combo Pexels queries | No | Yes | Yes | Indirect | `Implemented` | Query builder tries specific multi-word combinations before generic fallbacks |
+| Generic-term deprioritization | No | Yes | Yes | Indirect | `Implemented` | `news`, `latest`, `update`, etc. are lowered in priority |
+| Best-fit Pexels candidate scoring | No | Yes | Yes | Indirect | `Implemented` | Selection now prefers stronger duration/orientation fit instead of random pick |
+| Sports/cricket media relevance | No direct field | Yes | Yes | Indirect | `Partial` | Improved, but still needs manual validation against real outputs |
+
+---
+
+## F. Backend-supported Render Features Not Fully Exposed
 
 | Feature | Frontend | Backend | Pipeline use | Class | Status | Notes |
 |---|---:|---:|---:|---|---|---|
@@ -159,7 +198,7 @@ Primary code paths reflected in this tracking:
 
 ---
 
-## F. Video Details / Watch Flow
+## G. Video Details / Watch Flow
 
 | Feature | Frontend | Backend | Pipeline use | Class | Status | Notes |
 |---|---:|---:|---:|---|---|---|
@@ -170,7 +209,7 @@ Primary code paths reflected in this tracking:
 
 ---
 
-## G. Queue / Ops / Dashboard Features
+## H. Queue / Ops / Dashboard Features
 
 These are integrated but not part of final MP4 visuals.
 
@@ -188,7 +227,7 @@ These are integrated but not part of final MP4 visuals.
 
 ---
 
-## H. Runtime Reliability Features
+## I. Runtime Reliability Features
 
 | Feature | Frontend | Backend | Pipeline use | Class | Status | Notes |
 |---|---:|---:|---:|---|---|---|
@@ -200,13 +239,40 @@ These are integrated but not part of final MP4 visuals.
 
 ---
 
-## I. Verification Matrix
+## J. Visual Verification Findings
 
-### I1. Fully Verified
+Observed from live rendered video `cmn9g3g6c000001s13rt010pi`:
+
+- New modern headline card is visible
+- `Live` badge is visible
+- `Scene x/5` label is visible
+- Top progress bar is visible
+- Bottom ticker strip is visible
+- Updated active-word caption highlight is visible
+- Landscape template is rendering correctly
+- Per-scene headline updates are visible across scenes
+- Metadata pipeline is present in backend store for this video
+
+Observed weakness in the same video:
+
+- Media relevance is improved structurally, but still not fully reliable
+- Some visuals remain too generic for sports/cricket context
+- This confirms overlay/presentation improvements are verified, while media relevance remains a quality-tuning area
+
+---
+
+## K. Verification Matrix
+
+### K1. Fully Verified
 
 - Scene text -> narration
 - Scene text -> captions
 - Headline -> overlay
+- Modern headline card -> overlay
+- `Live` badge -> overlay
+- `Scene x/y` -> overlay
+- Top progress bar -> overlay
+- Lower ticker strip -> overlay
 - Orientation -> composition selection
 - Voice -> narration change
 - Base output video ID path
@@ -214,9 +280,20 @@ These are integrated but not part of final MP4 visuals.
 - Caption failure fallback
 - Docker render success
 - Multi-source story merge path
+- Source trust weighting for oversized source selections
+- Freshness-biased multi-source story ranking
+- Category-specific source caps for `All Sources`
+- Priority keyword promotion into scene metadata
 - Duplicate ready-video reuse
+- Signature normalization for formatting-only duplicates
+- Meaningful-variant separation for dedupe
+- Custom feed validation for empty/malformed sources
+- Custom feed duplicate blocking
+- Topic prompt ranking before AI generation
+- Hook quality scoring and rationale
+- Category-aware overlay theming
 
-### I2. Implemented But Should Still Be Re-checked Manually
+### K2. Implemented But Should Still Be Re-checked Manually
 
 - Music mood differences across multiple renders
 - Music volume differences
@@ -228,8 +305,12 @@ These are integrated but not part of final MP4 visuals.
 - Custom RSS source quality on real-world feeds
 - `All Sources` quality vs noise for each category
 - Keyword-biased topic quality for different categories
+- Media relevance quality for sports/cricket outputs
+- Media relevance quality for custom RSS niche feeds
+- Verify cinematic media motion quality on multiple categories
+- Verify category-aware overlay accents across multiple story types
 
-### I3. Intentionally Not Render-visible
+### K3. Intentionally Not Render-visible
 
 - Category chips
 - Source selection
@@ -247,7 +328,7 @@ These are integrated but not part of final MP4 visuals.
 
 ---
 
-## J. Phase-wise Checklist
+## L. Phase-wise Checklist
 
 ### Phase P0: Inventory
 - [x] Separate visible vs indirect vs operational features
@@ -270,10 +351,16 @@ These are integrated but not part of final MP4 visuals.
 - [x] Create video request schema
 - [x] TTS / Whisper / Pexels / Remotion integration
 - [x] Multi-source RSS merge
+- [x] `All Sources` backend quality control
 - [x] Custom source persistence
 - [x] Topic/hook/script endpoints accept `sourceIds`
+- [x] Priority keyword promotion into scene metadata
+- [x] Custom feed validation before save
+- [x] Topic prompt ranking before AI generation
+- [x] Hook quality scoring before selection
 - [x] Metadata persistence
 - [x] Duplicate signature path
+- [x] Signature normalization for whitespace/case variants
 - [x] Status API
 
 ### Phase P3: Pipeline Wiring
@@ -282,11 +369,24 @@ These are integrated but not part of final MP4 visuals.
 - [x] Long-form template
 - [x] Captions
 - [x] Headline overlays
+- [x] Modern overlay card treatment
+- [x] `Live` / scene progress overlay treatment
+- [x] Lower ticker strip
+- [x] Category-aware overlay theming
+- [x] Refined ticker entrance and badge pulse
 - [x] Audio + music composition
 - [x] AI image / stock media switch
 - [x] Keyword prompt enrichment
+- [x] Source trust weighting
+- [x] Freshness-biased story ranking
+- [x] Category-specific source caps
+- [x] Priority keyword promotion into search terms and AI prompts
+- [x] Smart Pexels term prioritization
+- [x] Phrase-combo media query generation
+- [x] Best-fit Pexels candidate scoring
 - [x] Metadata suggestion pipeline
 - [x] Duplicate reuse path
+- [x] Meaningful-variant separation in dedupe behavior
 
 ### Phase P4: Outcome Validation
 - [x] Narration visible as final audio output
@@ -294,10 +394,13 @@ These are integrated but not part of final MP4 visuals.
 - [x] Headline visibly rendered
 - [x] Orientation visibly rendered
 - [x] Stock background media rendered
+- [x] Modern overlay treatment visibly rendered
+- [x] Scene progress / ticker treatment visibly rendered
 - [x] Duplicate ready-video returns existing ID
 - [ ] AI image output visually verified
 - [ ] Long-form output visually verified
 - [ ] Custom RSS source output visually verified
+- [ ] Media relevance quality visually verified across categories
 
 ### Phase P5: Manual Verification
 - [x] Live create request enters render successfully
@@ -306,47 +409,73 @@ These are integrated but not part of final MP4 visuals.
 - [x] Multi-source UI visible and working
 - [x] `All Sources` UI visible and selectable
 - [x] Custom source add UI visible and persists
+- [x] New overlay/ticker/progress visuals observed in a live rendered video
 - [ ] Verify music mood manually
 - [ ] Verify caption position manually
 - [ ] Verify keyword-biased topic quality manually
 - [ ] Verify custom RSS source on multiple feed types
+- [ ] Verify improved media relevance on real category outputs
 
 ### Phase P6: Docker Verification
 - [x] Runtime starts with bundled Whisper path
 - [x] Video creation works in Docker
 - [x] Captions work in Docker
 - [x] MP4 writes into `/app/data/videos`
+- [x] Updated overlay visuals appear in Docker-rendered output
 - [ ] Repeat verify with AI images enabled
 - [ ] Repeat verify with landscape
 - [ ] Repeat verify with long-form
 - [ ] Repeat verify with custom RSS source
+- [ ] Repeat verify media relevance improvements in Docker
 
 ---
 
-## K. Recommended Next Verification Order
+## M. Next Sprint Priorities
+
+1. Media relevance hardening
+   Improve category-specific visual matching so sports, cricket, business, world, and science outputs stop falling back to generic footage too often.
+2. Production verification execution
+   Run the standardized checks in [`PRODUCTION_VERIFICATION_CHECKLIST.md`](/d:/short-video-maker_1/short-video-creator/PRODUCTION_VERIFICATION_CHECKLIST.md) and record the real results in [`MANUAL_VERIFICATION_LOG.md`](/d:/short-video-maker_1/short-video-creator/MANUAL_VERIFICATION_LOG.md).
+
+---
+
+## N. Recommended Next Verification Order
 
 1. Verify `All Sources` output quality per category and decide per-category max source count if noise is high.
 2. Verify keyword bias strength with 3-4 real categories.
 3. Verify a custom RSS source end-to-end from add -> topic -> hook -> script -> render.
-4. Verify `captionPosition` with top, center, bottom renders.
-5. Verify `captionBackgroundColor` with multiple contrasting colors.
-6. Verify `musicVolume` with muted, low, high.
-7. Verify AI images with targeted prompt-sensitive scenes.
-8. Expose and verify `videoType` in create UI.
-9. Expose and verify `durationLimit` in create UI.
-10. Decide whether subtitle sidecar files should remain separate or be muxed into final output.
+4. Verify media relevance quality specifically for sports/cricket, business, and world outputs.
+5. Verify `captionPosition` with top, center, bottom renders.
+6. Verify `captionBackgroundColor` with multiple contrasting colors.
+7. Verify `musicVolume` with muted, low, high.
+8. Verify AI images with targeted prompt-sensitive scenes.
+9. Expose and verify `videoType` in create UI.
+10. Expose and verify `durationLimit` in create UI.
+11. Decide whether subtitle sidecar files should remain separate or be muxed into final output.
 
 ---
 
-## L. Summary
+## O. Summary
 
 Current project reality:
 
 - Core create-to-render pipeline is working.
 - Source intelligence is now materially stronger than before.
 - Auto-script flow now supports multi-source aggregation, category-scoped `All Sources`, keyword biasing, style, and hook selection.
+- The create page now includes pre-render scene previews for narration, subtitles, and render readiness instead of being form-only.
+- `All Sources` aggregation is now quality-controlled with source trust weighting, freshness bias, and category-specific source caps.
+- Keyword-to-visual alignment is now stronger because top-level keywords are promoted into scene metadata, stock-search terms, and AI-image prompts.
 - Custom RSS/feed sources are now part of the workflow.
+- Custom RSS feeds are now validated before save and duplicate URLs are blocked.
+- Topic-generation prompts now prioritize fresher, higher-trust, better-covered, and keyword-relevant stories.
+- Hook options are now ranked with score guidance and rationale, making stronger openings easier to select consistently.
+- Publish metadata generation now uses richer context from headlines, category, subcategory, and keywords, with platform-aware prompting.
+- Repeatable production verification is now standardized through dedicated baseline scripts plus manual and production checklist documents.
 - Duplicate video creation is now prevented at backend signature level.
+- Duplicate prevention now normalizes formatting-only differences while still allowing meaningful script variants to render separately.
+- Final rendered video presentation has materially improved through a modern overlay card, live badge, scene index, progress bar, ticker strip, and stronger caption treatment.
+- Visual identity polish now includes category-aware overlay accents, refined ticker motion, and smoother media drift across portrait, landscape, and long-form templates.
+- Media relevance logic is now significantly smarter than before, but still needs category-by-category manual validation.
 - Some render capabilities still exist only in backend/types and should later be exposed in the create UI.
 - Some features improve quality or efficiency without appearing inside final video, and this document now tracks that explicitly.
 

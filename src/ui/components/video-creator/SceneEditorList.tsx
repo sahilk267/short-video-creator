@@ -10,6 +10,8 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import type { CaptionPositionEnum, VoiceEnum } from "../../../types/shorts";
+import ScenePreviewPanel from "./ScenePreviewPanel";
 
 export interface SceneFormData {
   text: string;
@@ -23,6 +25,9 @@ export interface SceneFormData {
 interface SceneEditorListProps {
   scenes: SceneFormData[];
   category?: string;
+  voice: VoiceEnum;
+  captionPosition: CaptionPositionEnum;
+  captionBackgroundColor: string;
   onAddScene: () => void;
   onRemoveScene: (index: number) => void;
   onSceneChange: (index: number, field: keyof SceneFormData, value: string) => void;
@@ -42,6 +47,9 @@ const subcategorySuggestions: Record<string, string[]> = {
 const SceneEditorList: React.FC<SceneEditorListProps> = ({
   scenes,
   category,
+  voice,
+  captionPosition,
+  captionBackgroundColor,
   onAddScene,
   onRemoveScene,
   onSceneChange,
@@ -130,6 +138,16 @@ const SceneEditorList: React.FC<SceneEditorListProps> = ({
                 onChange={(e) => onSceneChange(index, "searchTerms", e.target.value)}
                 helperText="Enter keywords for background video, separated by commas"
                 required
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <ScenePreviewPanel
+                scene={scene}
+                sceneIndex={index}
+                voice={voice}
+                captionPosition={captionPosition}
+                captionBackgroundColor={captionBackgroundColor}
               />
             </Grid>
           </Grid>

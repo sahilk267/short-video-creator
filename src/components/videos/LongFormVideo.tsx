@@ -17,6 +17,7 @@ import {
 import { z } from "zod";
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { calculateVolume, createCaptionPages, shortVideoSchema } from "../utils";
+import { NewsOverlay } from "./NewsOverlay";
 
 const { fontFamily } = loadFont(); // "Barlow Condensed"
 
@@ -63,6 +64,7 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
         const startFrame =
           scenes.slice(0, i).reduce((acc, curr) => acc + curr.audio.duration, 0) * fps;
         const durationInFrames = Math.ceil(audio.duration * fps);
+        const relativeFrame = frame - Math.round(startFrame);
 
         return (
           <Sequence
@@ -79,8 +81,8 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    transform: `scale(${interpolate(frame - Math.round(startFrame), [0, durationInFrames], [1.01, 1.05], { extrapolateRight: "clamp" })})`,
-                    opacity: interpolate(frame - Math.round(startFrame), [0, 8, durationInFrames], [0.78, 1, 0.92], { extrapolateRight: "clamp" }),
+                    transform: `translate(${interpolate(relativeFrame, [0, durationInFrames], [-14, 12], { extrapolateRight: "clamp" })}px, ${interpolate(relativeFrame, [0, durationInFrames], [6, -6], { extrapolateRight: "clamp" })}px) scale(${interpolate(relativeFrame, [0, durationInFrames], [1.01, 1.05], { extrapolateRight: "clamp" })})`,
+                    opacity: interpolate(relativeFrame, [0, 8, durationInFrames], [0.78, 1, 0.92], { extrapolateRight: "clamp" }),
                   }}
                 />
               ) : imageUrl ? (
@@ -90,12 +92,19 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    transform: `scale(${interpolate(frame - Math.round(startFrame), [0, durationInFrames], [1.01, 1.06], { extrapolateRight: "clamp" })})`,
-                    opacity: interpolate(frame - Math.round(startFrame), [0, 8, durationInFrames], [0.78, 1, 0.92], { extrapolateRight: "clamp" }),
+                    transform: `translate(${interpolate(relativeFrame, [0, durationInFrames], [-14, 12], { extrapolateRight: "clamp" })}px, ${interpolate(relativeFrame, [0, durationInFrames], [6, -6], { extrapolateRight: "clamp" })}px) scale(${interpolate(relativeFrame, [0, durationInFrames], [1.01, 1.06], { extrapolateRight: "clamp" })})`,
+                    opacity: interpolate(relativeFrame, [0, 8, durationInFrames], [0.78, 1, 0.92], { extrapolateRight: "clamp" }),
                   }}
                 />
               ) : null}
             </AbsoluteFill>
+
+            <NewsOverlay
+              headline={headline}
+              tickerText={buildChapterLabel(headline, i)}
+              sceneIndex={i}
+              totalScenes={scenes.length}
+            />
 
             {/* Dark gradient overlay for readability */}
             <AbsoluteFill
@@ -125,7 +134,7 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                   backdropFilter: "blur(12px)",
                   boxShadow: "0 16px 32px rgba(0,0,0,0.24)",
                   opacity: interpolate(
-                    frame - Math.round(startFrame),
+                    relativeFrame,
                     [0, 15, durationInFrames - 15, durationInFrames],
                     [0, 1, 1, 0],
                     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },

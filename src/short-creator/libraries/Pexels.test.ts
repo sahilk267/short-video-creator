@@ -93,3 +93,18 @@ test("should prioritize specific multi-word search terms before generic ones", a
   expect(findVideoSpy).toHaveBeenCalled();
   expect(findVideoSpy.mock.calls[0]?.[0]).toBe("cricket controversy");
 });
+
+test("should inject domain-aware anchor queries for cricket scenes", () => {
+  const pexels = new PexelsAPI("asdf");
+
+  const candidates = (pexels as any).buildQueryCandidates([
+    "news",
+    "PCB",
+    "Moeen Ali",
+    "cricket controversy",
+  ]);
+
+  expect(candidates).toContain("cricket stadium");
+  expect(candidates).toContain("cricket player");
+  expect(candidates[0]).toBe("cricket controversy");
+});

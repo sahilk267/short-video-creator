@@ -37,6 +37,19 @@ export class CustomNewsSourceStore {
     fs.writeFileSync(this.storePath, JSON.stringify(records, null, 2), "utf-8");
   }
 
+  private normalizeComparableUrl(url: string): string {
+    try {
+      const parsed = new URL(url.trim());
+      parsed.hash = "";
+      if ((parsed.protocol === "http:" && parsed.port === "80") || (parsed.protocol === "https:" && parsed.port === "443")) {
+        parsed.port = "";
+      }
+      return parsed.toString().replace(/\/+$/, "").toLowerCase();
+    } catch {
+      return url.trim().replace(/\/+$/, "").toLowerCase();
+    }
+  }
+
   public listSync(): CustomNewsSourceRecord[] {
     return this.readAllSync();
   }
@@ -52,6 +65,12 @@ export class CustomNewsSourceStore {
     subCategory?: string;
   }): Promise<CustomNewsSourceRecord> {
     const records = this.readAllSync();
+    const normalizedUrl = this.normalizeComparableUrl(input.url);
+    const duplicate = records.find((record) => this.normalizeComparableUrl(record.url) === normalizedUrl);
+    if (duplicate) {
+      throw new Error(`Source already exists: ${duplicate.name}`);
+    }
+
     const slug = input.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")

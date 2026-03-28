@@ -13,6 +13,7 @@ import {
 import { RenderConfig, SceneInput, MusicMoodEnum, CaptionPositionEnum, VoiceEnum, OrientationEnum, MusicVolumeEnum } from "../../types/shorts";
 import type { AutoScriptStyle, NewsSourceOption } from "../components/video-creator/AutoScriptPanel";
 import type { SceneFormData } from "../components/video-creator/SceneEditorList";
+import type { HookOption } from "../../script-generator/AiLlmGenerator";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import apiClient from "../services/apiClient";
 
@@ -44,7 +45,7 @@ const VideoCreator: React.FC = () => {
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedStyle, setSelectedStyle] = useState<AutoScriptStyle>("News");
-  const [hookOptions, setHookOptions] = useState<string[]>([]);
+  const [hookOptions, setHookOptions] = useState<HookOption[]>([]);
   const [selectedHook, setSelectedHook] = useState("");
   const [keywordQuery, setKeywordQuery] = useState("");
   const [sourceSaving, setSourceSaving] = useState(false);
@@ -57,6 +58,13 @@ const VideoCreator: React.FC = () => {
     ? sources.filter((source) => selectedSources.includes(source.id)).map((source) => source.name).join(", ")
     : "No source selected";
   const keywordList = keywordQuery.split(",").map((keyword) => keyword.trim()).filter(Boolean);
+  const readinessSummary = {
+    scenesWithText: scenes.filter((scene) => scene.text.trim().length >= 10).length,
+    scenesWithMediaHints: scenes.filter((scene) => (
+      scene.searchTerms.split(",").map((term) => term.trim()).filter(Boolean).length >= 2
+    )).length,
+    scenesWithHeadline: scenes.filter((scene) => scene.headline.trim().length > 0).length,
+  };
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -122,7 +130,11 @@ const VideoCreator: React.FC = () => {
       });
       const hooks = Array.isArray(res.data?.hooks) ? res.data.hooks : [];
       setHookOptions(hooks);
-      setSelectedHook((current) => (current && hooks.includes(current) ? current : (hooks[0] || "")));
+      setSelectedHook((current) => (
+        current && hooks.some((hook: HookOption) => hook.text === current)
+          ? current
+          : (hooks[0]?.text || "")
+      ));
     } finally {
       setHooksLoading(false);
     }
@@ -367,11 +379,34 @@ const VideoCreator: React.FC = () => {
         </Stack>
       </Paper>
 
+      <Paper sx={{ p: 2.5, mb: 3, bgcolor: "rgba(25, 118, 210, 0.04)", border: "1px solid", borderColor: "divider" }}>
+        <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          Render Readiness
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap flexWrap="wrap">
+          <Typography variant="body2">
+            Audio-ready scenes: <strong>{readinessSummary.scenesWithText}/{scenes.length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Subtitle-ready scenes: <strong>{readinessSummary.scenesWithText}/{scenes.length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Media-ready scenes: <strong>{readinessSummary.scenesWithMediaHints}/{scenes.length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Headline coverage: <strong>{readinessSummary.scenesWithHeadline}/{scenes.length}</strong>
+          </Typography>
+        </Stack>
+      </Paper>
+
       <form onSubmit={(event) => void handleSubmit(event)}>
         <Suspense fallback={<LoadingSpinner message="Loading scene editor..." />}>
           <SceneEditorList
             scenes={scenes}
             category={selectedCategory}
+            voice={config.voice}
+            captionPosition={config.captionPosition}
+            captionBackgroundColor={config.captionBackgroundColor}
             onAddScene={handleAddScene}
             onRemoveScene={handleRemoveScene}
             onSceneChange={handleSceneChange}
