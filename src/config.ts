@@ -208,10 +208,12 @@ export class Config {
   // Phase 6: Scheduling
   this.cronInterval = process.env.CRON_INTERVAL || "*/30 * * * *";
 
-    // Redirect caches to the persistent volume
+    // In Docker, prefer explicit cache locations if provided; otherwise use a stable default.
     if (this.runningInDocker) {
-      process.env.PUPPETEER_CACHE_DIR = path.join(this.dataDirPath, "cache", "puppeteer");
-      process.env.HF_HOME = path.join(this.dataDirPath, "cache", "huggingface");
+      process.env.PUPPETEER_CACHE_DIR =
+        process.env.PUPPETEER_CACHE_DIR || path.join(this.dataDirPath, "cache", "puppeteer");
+      process.env.HF_HOME =
+        process.env.HF_HOME || path.join(this.dataDirPath, "cache", "huggingface");
       logger.info({ 
         puppeteerCache: process.env.PUPPETEER_CACHE_DIR,
         hfHome: process.env.HF_HOME 

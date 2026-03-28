@@ -18,6 +18,7 @@ import { Config } from "../config";
 import { logger } from "../logger";
 import { MusicManager } from "./music";
 import { VideoMetadataStore } from "../db/VideoMetadataStore";
+import { AiLlmGenerator } from "../script-generator/AiLlmGenerator";
 import type {
   SceneInput,
   RenderConfig,
@@ -28,7 +29,7 @@ import type {
   MusicTag,
   MusicForVideo,
 } from "../types/shorts";
-import { LanguageEnum } from "../types/shorts";
+import { LanguageEnum, TextModeEnum } from "../types/shorts";
 
 const ignoredCapitalizedSearchPhrases = new Set([
   "this",
@@ -51,6 +52,7 @@ export class ShortCreator {
   }[] = [];
   private ttsAdapter: TtsAdapter;
   private videoMetadataStore: VideoMetadataStore;
+  private translator: AiLlmGenerator;
 
   constructor(
     private config: Config,
@@ -61,8 +63,9 @@ export class ShortCreator {
     private pexelsApi: PexelsAPI,
     private musicManager: MusicManager,
   ) {
-    this.ttsAdapter = new TtsAdapter(kokoro);
+    this.ttsAdapter = new TtsAdapter(kokoro, config.aiLlmUrl, config.aiLlmModel);
     this.videoMetadataStore = new VideoMetadataStore(config.dataDirPath);
+    this.translator = new AiLlmGenerator(config.aiLlmUrl, config.aiLlmModel);
   }
 
   private normalizeSearchPhrase(value?: string): string {
@@ -174,6 +177,7 @@ export class ShortCreator {
       subcategory: this.normalizeSignatureValue(scene.subcategory),
       headline: this.normalizeSignatureValue(scene.headline),
       visualPrompt: this.normalizeSignatureValue(scene.visualPrompt),
+      sourceLanguage: scene.sourceLanguage || LanguageEnum.en,
       language: scene.language || LanguageEnum.en,
       translationTarget: this.normalizeSignatureValue(scene.translationTarget || null),
     }));
@@ -186,6 +190,129 @@ export class ShortCreator {
     };
 
     return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+  }
+
+  private async translateCaptions(
+    captions: Caption[],
+    sourceLanguage: LanguageEnum,
+    targetLanguage: LanguageEnum,
+  ): Promise<Caption[]> {
+    if (!captions.length || sourceLanguage === targetLanguage) {
+      return captions;
+    }
+
+    const translated = await Promise.all(captions.map(async (caption) => {
+      if (!caption.text.trim()) {
+        return caption;
+      }
+
+      try {
+        const text = await this.translator.translateText(caption.text, sourceLanguage, targetLanguage);
+        return {
+          ...caption,
+          text: text.trim() || caption.text,
+        };
+      } catch (error) {
+        logger.warn({ error, sourceLanguage, targetLanguage, caption: caption.text }, "Caption translation failed, keeping source text");
+        return caption;
+      }
+    }));
+
+    return translated;
+  }
+
+  private async translateOverlayText(
+    text: string | undefined,
+    sourceLanguage: LanguageEnum,
+    targetLanguage: LanguageEnum,
+    precomputedText?: string,
+  ): Promise<string | undefined> {
+    if (precomputedText?.trim()) {
+      return precomputedText.trim();
+    }
+
+    if (!text?.trim()) {
+      return text;
+    }
+
+    if (sourceLanguage === targetLanguage) {
+      return text;
+    }
+
+    try {
+      const translated = await this.translator.translateText(text, sourceLanguage, targetLanguage);
+      return translated.trim() || text;
+    } catch (error) {
+      logger.warn(
+        { error, sourceLanguage, targetLanguage, text },
+        "Overlay translation failed, keeping source text",
+      );
+      return text;
+    }
+  }
+
+  private buildSyntheticCaptions(
+    text: string,
+    durationSeconds: number,
+  ): Caption[] {
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .map((word) => word.trim())
+      .filter(Boolean);
+
+    if (words.length === 0) {
+      return [];
+    }
+
+    const totalDurationMs = Math.max(1200, Math.round(durationSeconds * 1000));
+    const wordDurationMs = Math.max(120, Math.floor(totalDurationMs / words.length));
+
+    return words.map((word, index) => {
+      const startMs = index * wordDurationMs;
+      const endMs = index === words.length - 1
+        ? totalDurationMs
+        : Math.min(totalDurationMs, startMs + wordDurationMs);
+      return {
+        text: word,
+        startMs,
+        endMs,
+      };
+    });
+  }
+
+  private async resolveCaptionTrack(
+    scene: SceneInput,
+    sourceLanguage: LanguageEnum,
+    targetLanguage: LanguageEnum,
+    whisperCaptions: Caption[],
+    audioDurationSeconds: number,
+  ): Promise<Caption[]> {
+    if (sourceLanguage === targetLanguage && whisperCaptions.length > 0) {
+      return whisperCaptions;
+    }
+
+    try {
+      const translatedFullText = scene.captionText?.trim()
+        || (sourceLanguage === targetLanguage
+          ? scene.text
+          : await this.translator.translateText(scene.text, sourceLanguage, targetLanguage));
+      const synthetic = this.buildSyntheticCaptions(translatedFullText, audioDurationSeconds);
+      if (synthetic.length > 0) {
+        return synthetic;
+      }
+    } catch (error) {
+      logger.warn(
+        { error, sourceLanguage, targetLanguage, sceneText: scene.text },
+        "Caption translation fallback failed",
+      );
+    }
+
+    if (whisperCaptions.length > 0) {
+      return await this.translateCaptions(whisperCaptions, scene.language, targetLanguage);
+    }
+
+    return this.buildSyntheticCaptions(scene.text, audioDurationSeconds);
   }
 
   public status(id: string): VideoStatus {
@@ -306,19 +433,15 @@ export class ShortCreator {
 
     const orientation: OrientationEnum =
       config.orientation || OrientationEnum.portrait;
+    const textMode = config.textMode || TextModeEnum.hybrid;
 
     let index = 0;
     for (const scene of inputScenes) {
       const sceneNum = index + 1;
       console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Generating audio...`);
-      const audio = await this.ttsAdapter.synthesize(scene);
+      const audio = await this.ttsAdapter.synthesize(scene, config.voice);
       let { audioLength } = audio;
       const { audio: audioStream } = audio;
-
-      // add the paddingBack in seconds to the last scene
-      if (index + 1 === inputScenes.length && config.paddingBack) {
-        audioLength += config.paddingBack / 1000;
-      }
 
       const tempId = cuid();
       const tempWavFileName = `${tempId}.wav`;
@@ -346,12 +469,42 @@ export class ShortCreator {
         );
       }
 
+      const sourceScriptLanguage = scene.sourceLanguage || config.scriptLanguage || scene.language;
+      const effectiveCaptionLanguage =
+        config.captionLanguage ||
+        (subtitleLanguage as LanguageEnum | undefined) ||
+        scene.language;
+      const effectiveOverlayLanguage =
+        config.overlayLanguage ||
+        sourceScriptLanguage;
+
+      await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
+
+      // Prefer the actual encoded file duration over model-reported duration.
+      try {
+        audioLength = await this.ffmpeg.getAudioDuration(tempMp3Path);
+      } catch (error) {
+        logger.warn(
+          { error, tempMp3Path, fallbackAudioLength: audioLength },
+          "Failed to probe MP3 duration, using synthesizer duration",
+        );
+      }
+
+      const baseAudioLength = audioLength;
+      const displayCaptions = await this.resolveCaptionTrack(
+        scene,
+        sourceScriptLanguage,
+        effectiveCaptionLanguage,
+        captions,
+        baseAudioLength,
+      );
+
       // Build and save subtitle files if subtitleLanguage specified (Phase 2.5)
-      if (subtitleLanguage && captions.length > 0) {
+      if (effectiveCaptionLanguage && displayCaptions.length > 0) {
         try {
           await SubtitleBuilder.buildAndSave(
-            captions,
-            { audioLanguage: scene.language, subtitleLanguage },
+            displayCaptions,
+            { audioLanguage: scene.language, subtitleLanguage: effectiveCaptionLanguage },
             this.config.tempDirPath,
             `${tempId}_sub`,
           );
@@ -360,7 +513,10 @@ export class ShortCreator {
         }
       }
 
-      await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
+      // add the paddingBack in seconds to the last scene after actual duration probe
+      if (index + 1 === inputScenes.length && config.paddingBack) {
+        audioLength += config.paddingBack / 1000;
+      }
 
       const isAiImage = config.useAiImages || this.config.useAiImages;
       const mediaSearchTerms = this.buildMediaSearchTerms(scene);
@@ -434,13 +590,20 @@ export class ShortCreator {
         mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
       }
 
+      const baseHeadline =
+        scene.cues?.[0]?.label ||
+        scene.headline ||
+        scene.text.split(" ").slice(0, 5).join(" ") + "...";
+      const overlayHeadline = await this.translateOverlayText(
+        baseHeadline,
+        sourceScriptLanguage,
+        effectiveOverlayLanguage,
+        scene.overlayText,
+      );
+
       scenes.push({
-        captions,
-        // Phase 3.4: prefer cue label for timeline-aware chapter/headline rendering.
-        headline:
-          scene.cues?.[0]?.label ||
-          scene.headline ||
-          scene.text.split(" ").slice(0, 5).join(" ") + "...",
+        captions: displayCaptions,
+        headline: overlayHeadline,
         [mediaUrl.endsWith(".mp4") ? "video" : "imageUrl"]: mediaUrl,
         visualPrompt: scene.visualPrompt,
         audio: {
@@ -451,9 +614,6 @@ export class ShortCreator {
 
       totalDuration += audioLength;
       index++;
-    }
-    if (config.paddingBack) {
-      totalDuration += config.paddingBack / 1000;
     }
 
     const selectedMusic = this.findMusic(totalDuration, config.music);
@@ -468,8 +628,16 @@ export class ShortCreator {
           durationMs: totalDuration * 1000,
           paddingBack: config.paddingBack,
           ...{
+            scriptLanguage: config.scriptLanguage,
+            audioLanguage: config.audioLanguage,
+            overlayLanguage: config.overlayLanguage,
+            captionLanguage: config.captionLanguage,
+            textMode,
             captionBackgroundColor: config.captionBackgroundColor,
             captionPosition: config.captionPosition,
+            subtitleLineCount: config.subtitleLineCount,
+            subtitleFontScale: config.subtitleFontScale,
+            subtitleLanguage: config.captionLanguage || config.subtitleLanguage,
           },
           musicVolume: config.musicVolume,
         },

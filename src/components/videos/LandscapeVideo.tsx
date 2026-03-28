@@ -9,7 +9,6 @@ import {
   interpolate,
 } from "remotion";
 import { z } from "zod";
-import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 
 import {
   calculateVolume,
@@ -17,8 +16,8 @@ import {
   shortVideoSchema,
 } from "../utils";
 import { NewsOverlay } from "./NewsOverlay";
-
-const { fontFamily } = loadFont();
+import { TextModeEnum } from "../../types/shorts";
+import { videoUiFontFamily } from "./fontStacks";
 
 export const LandscapeVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   scenes,
@@ -27,6 +26,11 @@ export const LandscapeVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const subtitleLineCount = Math.max(1, Math.min(3, config.subtitleLineCount ?? 1));
+  const subtitleFontScale = config.subtitleFontScale ?? 1;
+  const textMode = config.textMode ?? TextModeEnum.hybrid;
+  const showOverlay = textMode !== TextModeEnum.captions;
+  const showCaptions = textMode !== TextModeEnum.overlay;
 
   const captionBackgroundColor = config.captionBackgroundColor ?? "blue";
 
@@ -69,16 +73,15 @@ export const LandscapeVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
         const pages = createCaptionPages({
           captions,
           lineMaxLength: 30,
-          lineCount: 1,
+          lineCount: subtitleLineCount,
           maxDistanceMs: 1000,
         });
 
         const startFrame =
           scenes.slice(0, i).reduce((acc, curr) => acc + curr.audio.duration, 0) * fps;
-        let durationInFrames =
-          scenes.slice(0, i + 1).reduce((acc, curr) => acc + curr.audio.duration, 0) * fps;
+        let durationInFrames = Math.max(1, Math.round(audio.duration * fps));
         if (config.paddingBack && i === scenes.length - 1) {
-          durationInFrames += (config.paddingBack / 1000) * fps;
+          durationInFrames += Math.round((config.paddingBack / 1000) * fps);
         }
 
         return (
@@ -88,18 +91,21 @@ export const LandscapeVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
             key={`scene-${i}`}
           >
             <SceneMedia scene={scene} durationInFrames={durationInFrames} />
-            <NewsOverlay
-              headline={scene.headline}
-              sceneIndex={i}
-              totalScenes={scenes.length}
-            />
+            {showOverlay ? (
+              <NewsOverlay
+                headline={scene.headline}
+                sceneIndex={i}
+                totalScenes={scenes.length}
+              />
+            ) : null}
             <Audio src={audio.url} />
-            {pages.map((page, j) => (
+            {showCaptions ? pages.map((page, j) => (
               <Sequence
                 key={`scene-${i}-page-${j}`}
                 from={Math.round((page.startMs / 1000) * fps)}
-                durationInFrames={Math.round(
-                  ((page.endMs - page.startMs) / 1000) * fps,
+                durationInFrames={Math.max(
+                  1,
+                  Math.round(((page.endMs - page.startMs) / 1000) * fps),
                 )}
               >
                 <div
@@ -113,8 +119,8 @@ export const LandscapeVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                   {page.lines.map((line, k) => (
                     <p
                       style={{
-                        fontSize: "7.2em",
-                        fontFamily,
+                        fontSize: `${7.2 * subtitleFontScale}em`,
+                        fontFamily: videoUiFontFamily,
                         fontWeight: 800,
                         color: "white",
                         WebkitTextStroke: "2px rgba(5,8,14,0.9)",
@@ -150,7 +156,7 @@ export const LandscapeVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                   ))}
                 </div>
               </Sequence>
-            ))}
+            )) : null}
           </Sequence>
         );
       })}

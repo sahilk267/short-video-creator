@@ -17,8 +17,10 @@ services:
     environment:
       - DEV=false
       - NODE_OPTIONS=--max-old-space-size=4096
-      - KOKORO_MODEL_PRECISION=fp32
+      - KOKORO_MODEL_PRECISION=q4
       - SKIP_RUNTIME_INSTALL=true
+      - PUPPETEER_CACHE_DIR=/app/data/cache/puppeteer
+      - HF_HOME=/app/data/cache/huggingface
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_ENABLED=true
@@ -28,7 +30,6 @@ services:
       - ./data:/app/data
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    entrypoint: ["node", "dist/index.js"]
     shm_size: "2gb"
     restart: unless-stopped
     depends_on:

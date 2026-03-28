@@ -17,6 +17,7 @@ import { CustomNewsSourceStore } from "../../db/CustomNewsSourceStore";
 import { ReportMerger } from "../../aggregator/ReportMerger";
 import { RssFetcher } from "../../news-fetcher/RssFetcher";
 import { AiLlmGenerator, type AutoScriptStyle, type HookOption } from "../../script-generator/AiLlmGenerator";
+import { LanguageEnum, type CreateShortInput, type SceneInput } from "../../types/shorts";
 
 // todo abstract class
 export class APIRouter {
@@ -48,12 +49,13 @@ export class APIRouter {
       async (req: ExpressRequest, res: ExpressResponse) => {
         try {
           const input = validateCreateShortInput(req.body);
-
-          logger.info({ input }, "Creating short video");
+          logger.info({ input }, "Queueing short video");
 
           const videoId = this.shortCreator.addToQueue(
             input.scenes,
             input.config,
+            input.config.videoType,
+            input.config.subtitleLanguage,
           );
 
           res.status(201).json({
@@ -438,6 +440,43 @@ export class APIRouter {
     );
 
     this.router.post(
+      "/auto-script/translate",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        try {
+          const {
+            text,
+            sourceLanguage,
+            targetLanguage,
+          }: {
+            text?: string;
+            sourceLanguage?: string;
+            targetLanguage?: string;
+          } = req.body;
+
+          if (!text || !sourceLanguage || !targetLanguage) {
+            res.status(400).json({ error: "text, sourceLanguage, and targetLanguage are required" });
+            return;
+          }
+
+          if (sourceLanguage === targetLanguage) {
+            res.status(200).json({ text });
+            return;
+          }
+
+          const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
+          const translated = await aiLlm.translateText(String(text), String(sourceLanguage), String(targetLanguage));
+          res.status(200).json({ text: translated });
+        } catch (error: any) {
+          logger.error({ err: error, body: req.body }, "Error in preview translation");
+          res.status(500).json({
+            error: "Failed to translate preview text",
+            message: error.message || "Unknown error",
+          });
+        }
+      },
+    );
+
+    this.router.post(
       "/auto-script/topics",
       async (req: ExpressRequest, res: ExpressResponse) => {
         try {
@@ -597,4 +636,5 @@ export class APIRouter {
       },
     );
   }
+
 }

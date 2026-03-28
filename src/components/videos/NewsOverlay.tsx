@@ -1,8 +1,6 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
-import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
-
-const { fontFamily } = loadFont();
+import { videoUiFontFamily } from "./fontStacks";
 
 interface NewsOverlayProps {
   headline?: string;
@@ -102,7 +100,7 @@ export const NewsOverlay: React.FC<NewsOverlayProps> = ({
   const sectionLabel = `Scene ${sceneIndex + 1}/${totalScenes}`;
 
   return (
-    <AbsoluteFill style={{ color: "white", fontFamily, pointerEvents: "none" }}>
+    <AbsoluteFill style={{ color: "white", fontFamily: videoUiFontFamily, pointerEvents: "none" }}>
       <AbsoluteFill
         style={{
           background:

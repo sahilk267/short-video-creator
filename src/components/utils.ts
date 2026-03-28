@@ -4,6 +4,7 @@ import {
   type CaptionPage,
   type CaptionLine,
   type OrientationEnum,
+  LanguageEnum,
   MusicVolumeEnum,
 } from "../types/shorts";
 import { AvailableComponentsEnum, type OrientationConfig } from "./types";
@@ -23,8 +24,16 @@ export const shortVideoSchema = z.object({
   ),
   config: z.object({
     paddingBack: z.number().optional(),
+    scriptLanguage: z.nativeEnum(LanguageEnum).optional(),
+    audioLanguage: z.nativeEnum(LanguageEnum).optional(),
+    overlayLanguage: z.nativeEnum(LanguageEnum).optional(),
+    captionLanguage: z.nativeEnum(LanguageEnum).optional(),
+    textMode: z.enum(["overlay", "captions", "hybrid"]).optional(),
     captionPosition: z.enum(["top", "center", "bottom"]).optional(),
     captionBackgroundColor: z.string().optional(),
+    subtitleLanguage: z.nativeEnum(LanguageEnum).optional(),
+    subtitleLineCount: z.number().optional(),
+    subtitleFontScale: z.number().optional(),
     durationMs: z.number(),
     musicVolume: z.nativeEnum(MusicVolumeEnum).optional(),
     useAiImages: z.boolean().optional(),

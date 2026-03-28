@@ -17,13 +17,13 @@ test("TtsAdapter should translate text when translationTarget differs from langu
     generate: vi.fn().mockResolvedValue({ audio: new ArrayBuffer(4), audioLength: 2 }),
   } as any as Kokoro;
 
-  const adapter = new TtsAdapter(kokoro);
+  const adapter = new TtsAdapter(kokoro, "http://mocked", "model");
 
   const scene: SceneInput = {
     text: "Hello world",
     searchTerms: ["hello", "world"],
     language: LanguageEnum.hi,
-    translationTarget: LanguageEnum.en,
+    sourceLanguage: LanguageEnum.en,
   };
 
   const result = await adapter.synthesize(scene);
@@ -37,7 +37,7 @@ test("TtsAdapter should fallback to source text when translation target matches 
     generate: vi.fn().mockResolvedValue({ audio: new ArrayBuffer(2), audioLength: 1 }),
   } as any as Kokoro;
 
-  const adapter = new TtsAdapter(kokoro);
+  const adapter = new TtsAdapter(kokoro, "http://mocked", "model");
 
   const scene: SceneInput = {
     text: "Hola mundo",
