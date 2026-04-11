@@ -19,14 +19,14 @@
 // A. QUICK START - Minimal integration to get services working together
 // ============================================================
 
-import { OrchestratorService } from "./src/orchestrator/orchestrator.service";
-import { StateTrackerService } from "./src/state/state-tracker.service";
-import { MemoryService } from "./src/memory/memory.service";
-import { FeedbackService } from "./src/feedback/feedback.service";
-import { PredictiveService } from "./src/predict/predict.service";
-import { AssetService } from "./src/assets/asset.service";
-import { MetadataService } from "./src/metadata/metadata.service";
-import { logger } from "./src/logger";
+import { OrchestratorService } from "../src/orchestrator/orchestrator.service";
+import { StateTrackerService } from "../src/state/state-tracker.service";
+import { MemoryService } from "../src/memory/memory.service";
+import { FeedbackService } from "../src/feedback/feedback.service";
+import { PredictiveService } from "../src/predict/predict.service";
+import { AssetService } from "../src/assets/asset.service";
+import { MetadataService } from "../src/metadata/metadata.service";
+import { logger } from "../src/logger";
 
 /**
  * EXAMPLE 1: Single video processing pipeline
