@@ -1,9 +1,12 @@
 /**
  * Feedback Service - Improve scripts based on scoring feedback
  * Enables self-improving script generation within retry budget
+ * 
+ * PHASE 4: Integrated with DecisionEngine for intelligent decisions
  */
 
 import { logger } from "../logger";
+import type { DecisionEngineService } from "../decision/decision-engine.service";
 
 export interface ScriptQualityIssue {
   type: "hook" | "engagement" | "clarity" | "length" | "keywords";
@@ -22,6 +25,17 @@ export interface FeedbackContext {
 }
 
 export class FeedbackService {
+  /**
+   * Optional DecisionEngine for intelligent retry decisions
+   * If provided, uses intelligent decisions instead of score-threshold logic
+   */
+  private decisionEngine?: DecisionEngineService;
+  private enableDecisionEngine: boolean;
+
+  constructor(decisionEngine?: DecisionEngineService, enableDecisionEngine: boolean = false) {
+    this.decisionEngine = decisionEngine;
+    this.enableDecisionEngine = enableDecisionEngine;
+  }
   /**
    * Analyze a script and return specific improvement suggestions
    */
@@ -147,8 +161,40 @@ export class FeedbackService {
 
   /**
    * Decide if script should be retried
+   * PHASE 4: Uses DecisionEngine if enabled, otherwise falls back to simple threshold logic
    */
-  shouldRetry(score: number, retryCount: number, maxRetries: number = 2): boolean {
+  shouldRetry(
+    score: number,
+    retryCount: number,
+    maxRetries: number = 2,
+    category: string = "News",
+    issues: ScriptQualityIssue[] = [],
+  ): boolean {
+    // Use DecisionEngine if enabled
+    if (this.enableDecisionEngine && this.decisionEngine) {
+      const decision = this.decisionEngine.decide({
+        step: "generation",
+        score,
+        issues: issues.map((i) => ({
+          type: i.type,
+          severity: i.severity,
+          message: i.message,
+        })),
+        retryCount,
+        maxRetries,
+        category,
+        budget: "quality",
+      });
+
+      const shouldRetry = decision.action !== "accept" && decision.action !== "skip";
+      logger.debug(
+        { action: decision.action, reason: decision.reason, shouldRetry },
+        "DecisionEngine determined retry decision"
+      );
+      return shouldRetry;
+    }
+
+    // FALLBACK: Original simple logic
     if (retryCount >= maxRetries) {
       logger.debug({ retryCount, maxRetries }, "Max retries reached");
       return false;
@@ -160,6 +206,147 @@ export class FeedbackService {
     }
 
     return false;
+  }
+
+  /**
+   * Get category-specific quality threshold
+   */
+  getCategoryThreshold(category: string): number {
+    // Different content types have different quality requirements
+    const thresholds: Record<string, number> = {
+      "News": 60,              // News: factual accuracy more important than viral appeal
+      "Politics": 55,          // Politics: engagement from base supporters critical
+      "Cricket": 72,           // Sports: high engagement needed
+      "Entertainment": 68,     // Entertainment: viral coefficient high
+      "Technology": 65,        // Tech: clarity important, good engagement medium
+      "Viral": 75,             // Viral content: very high bar
+      "Explainer": 70,         // Explainer: clarity + completeness high
+      "Motivation": 65,        // Motivation: emotional engagement key
+      "Business": 68,          // Business: credibility + engagement
+      "Health": 70,            // Health: accuracy critical
+    };
+
+    return thresholds[category] || 65; // Default medium threshold
+  }
+
+  /**
+   * Suggest partial regeneration target based on issues
+   */
+  suggestPartialRegenTarget(
+    issues: ScriptQualityIssue[],
+  ): "hook" | "keywords" | "full" | null {
+    if (issues.length === 0) {
+      return null;
+    }
+
+    // Count high-severity issues by type
+    const highSeverity = issues.filter((i) => i.severity === "high");
+
+    // If only hook is problematic, fix just the hook
+    if (
+      highSeverity.length === 1 &&
+      highSeverity[0].type === "hook"
+    ) {
+      logger.debug({}, "Partial regeneration: hook only");
+      return "hook";
+    }
+
+    // If only keywords are problematic, fix just keywords
+    if (
+      highSeverity.length === 1 &&
+      highSeverity[0].type === "keywords"
+    ) {
+      logger.debug({}, "Partial regeneration: keywords only");
+      return "keywords";
+    }
+
+    // Multiple issues or engagement issues = full regeneration needed
+    logger.debug({ issueCount: issues.length }, "Full regeneration needed");
+    return "full";
+  }
+
+  /**
+   * Generate targeted improvement prompt for partial regen
+   */
+  generatePartialImprovementPrompt(
+    context: FeedbackContext,
+    target: "hook" | "keywords" | "full",
+  ): string {
+    let prompt = "";
+
+    if (target === "hook") {
+      prompt = `You are a viral content expert. The script below has a weak opening hook.\n`;
+      prompt += `Generate only a NEW first line/paragraph (hook) that:\n`;
+      prompt += `- Grabs attention in first 3 seconds\n`;
+      prompt += `- Uses curiosity or urgency words\n`;
+      prompt += `- Is under 15 words\n\n`;
+      prompt += `Current hook: ${context.script.split("\n")[0]}\n`;
+      prompt += `Topic: ${context.topic || context.category}\n`;
+      prompt += `Output only the new hook line:\n`;
+    } else if (target === "keywords") {
+      prompt = `You are a content SEO expert. Your task is to enhance keyword coverage.\n`;
+      prompt += `Script: ${context.script}\n\n`;
+      prompt += `Must naturally incorporate these keywords: ${context.keywords?.join(", ")}\n`;
+      prompt += `Output the full script with keywords naturally woven in:\n`;
+    } else {
+      // Full regeneration
+      prompt = this.generateImprovementPrompt(context);
+    }
+
+    return prompt;
+  }
+
+  /**
+   * Enhanced retry decision with detailed reasoning
+   */
+  makeRetryDecision(
+    score: number,
+    category: string,
+    retryCount: number,
+    maxRetries: number = 2,
+    issues?: ScriptQualityIssue[],
+  ): {
+    shouldRetry: boolean;
+    reason: string;
+    suggestedTarget?: "hook" | "keywords" | "full";
+  } {
+    const threshold = this.getCategoryThreshold(category);
+
+    if (retryCount >= maxRetries) {
+      logger.debug(
+        { retryCount, maxRetries, score, threshold },
+        "Max retries reached",
+      );
+      return {
+        shouldRetry: false,
+        reason: `Max retries (${maxRetries}) reached`,
+      };
+    }
+
+    if (score >= threshold) {
+      logger.debug(
+        { score, threshold },
+        "Score acceptable for category",
+      );
+      return {
+        shouldRetry: false,
+        reason: `Score ${score} meets threshold ${threshold}`,
+      };
+    }
+
+    // Suggest partial regen if possible
+    const partial = issues ? this.suggestPartialRegenTarget(issues) : "full";
+
+    logger.debug(
+      { score, threshold, target: partial, retryCount },
+      "Retry recommended",
+    );
+
+    return {
+      shouldRetry: true,
+      reason: `Score ${score} below threshold ${threshold}`,
+      suggestedTarget: partial || "full",
+    };
   }
 
   /**

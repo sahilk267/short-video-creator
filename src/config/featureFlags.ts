@@ -24,6 +24,12 @@ export interface FeatureFlags {
 
   // Agent loop: minimal retry loop with evaluation
   enableAgentLoop: boolean;
+
+  // NEW: Decision Engine - intelligent decisions instead of blind retry
+  enableDecisionEngine: boolean;
+
+  // NEW: Goal System - drive behavior based on goals (speed vs quality)
+  enableGoalSystem: boolean;
 }
 
 /**
@@ -37,6 +43,8 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   enableMetadataGeneration: process.env.FEATURE_METADATA_GENERATION === "true" || false,
   enableBeatSync: process.env.FEATURE_BEAT_SYNC === "true" || false,
   enableAgentLoop: process.env.FEATURE_AGENT_LOOP === "true" || false,
+  enableDecisionEngine: process.env.FEATURE_DECISION_ENGINE === "true" || false,
+  enableGoalSystem: process.env.FEATURE_GOAL_SYSTEM === "true" || false,
 };
 
 /**
@@ -50,6 +58,8 @@ export const SAFE_PRODUCTION_FLAGS: FeatureFlags = {
   enableMetadataGeneration: false, // Platform-specific testing needed
   enableBeatSync: false,           // Complex feature
   enableAgentLoop: false,          // Experimental
+  enableDecisionEngine: false,     // NEW: Requires testing
+  enableGoalSystem: false,         // NEW: Requires tuning
 };
 
 export function getFeatureFlags(): FeatureFlags {

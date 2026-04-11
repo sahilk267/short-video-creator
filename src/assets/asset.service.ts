@@ -20,11 +20,22 @@ export interface FallbackAsset {
   path?: string;
   url?: string;
   duration?: number;
+  relevance?: number;
+}
+
+export interface AssetUsageRecord {
+  assetKey: string;
+  keywords: string[];
+  timestamp: string;
+  videoId: string;
 }
 
 export class AssetService {
   private localAssetsPath: string;
   private sources: AssetSource[] = [];
+  private usedAssets: Map<string, AssetUsageRecord> = new Map();
+  private resultCache: Map<string, FallbackAsset> = new Map();
+  private cacheTTL: number = 60 * 60 * 1000; // 1 hour default
 
   constructor(dataDirPath: string) {
     this.localAssetsPath = path.join(dataDirPath, "assets");
@@ -201,4 +212,117 @@ export class AssetService {
       logger.info({ sourceName: source.name }, "Custom asset source registered");
     }
   }
+
+  /**
+   * Score asset relevance based on keyword match
+   */
+  scoreAssetRelevance(searchKeywords: string[], assetKeywords: string[]): number {
+    if (assetKeywords.length === 0) {
+      return 0.5; // Neutral/default score
+    }
+
+    const matched = searchKeywords.filter((keyword) =>
+      assetKeywords.some((akw) =>
+        akw.toLowerCase().includes(keyword.toLowerCase()) ||
+        keyword.toLowerCase().includes(akw.toLowerCase())
+      )
+    ).length;
+
+    // Score 0-1 based on match percentage
+    return Math.min(1, matched / Math.max(1, searchKeywords.length));
+  }
+
+  /**
+   * Track asset usage to prevent duplicates
+   */
+  recordAssetUsage(videoId: string, asset: FallbackAsset): void {
+    const assetKey = asset.url || asset.path || `fallback-${Math.random()}`;
+    const record: AssetUsageRecord = {
+      assetKey,
+      keywords: asset.keywords,
+      timestamp: new Date().toISOString(),
+      videoId,
+    };
+
+    this.usedAssets.set(assetKey, record);
+    logger.debug({ videoId, assetKey }, "Asset usage recorded");
+  }
+
+  /**
+   * Check if asset has been used recently (duplicate prevention)
+   */
+  hasRecentlyUsed(assetKey: string, withinMinutes: number = 30): boolean {
+    const record = this.usedAssets.get(assetKey);
+    if (!record) return false;
+
+    const recordTime = new Date(record.timestamp).getTime();
+    const now = Date.now();
+    const ageMs = now - recordTime;
+
+    return ageMs < withinMinutes * 60 * 1000;
+  }
+
+  /**
+   * Get all assets used by a video
+   */
+  getVideoAssets(videoId: string): AssetUsageRecord[] {
+    const videoAssets: AssetUsageRecord[] = [];
+
+    for (const record of this.usedAssets.values()) {
+      if (record.videoId === videoId) {
+        videoAssets.push(record);
+      }
+    }
+
+    return videoAssets;
+  }
+
+  /**
+   * Cache search result for faster subsequent lookups
+   */
+  private setCacheResult(keywords: string[], asset: FallbackAsset): void {
+    const cacheKey = keywords.sort().join("|");
+    this.resultCache.set(cacheKey, asset);
+
+    // Auto-expire cache entry after TTL
+    setTimeout(() => {
+      this.resultCache.delete(cacheKey);
+    }, this.cacheTTL);
+  }
+
+  /**
+   * Get cached search result if available
+   */
+  private getCachedResult(keywords: string[]): FallbackAsset | undefined {
+    const cacheKey = keywords.sort().join("|");
+    return this.resultCache.get(cacheKey);
+  }
+
+  /**
+   * Clear cache and usage tracking (for testing)
+   */
+  clearCache(): void {
+    this.resultCache.clear();
+    logger.debug({}, "Asset cache cleared");
+  }
+
+  /**
+   * Clean old usage records
+   */
+  cleanOldRecords(olderThanDays: number = 7): number {
+    const cutoff = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+    let removed = 0;
+
+    for (const [key, record] of this.usedAssets.entries()) {
+      const recordTime = new Date(record.timestamp).getTime();
+      if (recordTime < cutoff) {
+        this.usedAssets.delete(key);
+        removed++;
+      }
+    }
+
+    logger.debug({ removed, days: olderThanDays }, "Old asset records cleaned");
+    return removed;
+  }
 }
+

@@ -331,23 +331,194 @@ export class MetadataService {
   }
 
   /**
-   * Add relevant emoji to title
+   * Generate metadata with A/B testing variants
    */
-  private addRelevantEmoji(category: string): string {
-    const emojiMap: Record<string, string> = {
-      news: "📰",
-      sports: "⚽",
-      cricket: "🏏",
-      tech: "💻",
-      business: "💼",
-      entertainment: "🎬",
-      lifestyle: "✨",
-      health: "🏥",
-      science: "🔬",
-      travel: "✈️",
+  generateMetadataWithVariants(
+    script: string,
+    platform: PlatformType,
+    options: {
+      category?: string;
+      keywords?: string[];
+      topic?: string;
+      style?: "News" | "Viral" | "Explainer";
+      generateVariants?: boolean;
+    } = {},
+  ): {
+    primary: PlatformMetadata;
+    variants: PlatformMetadata[];
+  } {
+    const primary = this.generateMetadata(script, platform, options);
+
+    // Generate 1-2 variants if requested
+    const variants: PlatformMetadata[] = [];
+
+    if (options.generateVariants && options.keywords && options.keywords.length > 0) {
+      // Variant 1: Keyword-focused (better SEO)
+      const keywordVariant = this.generateKeywordFocusedVariant(
+        primary,
+        options.keywords,
+        platform,
+      );
+      variants.push(keywordVariant);
+
+      // Variant 2: Emotion-focused (better engagement)
+      if (platform !== "telegram") {
+        // Telegram users prefer facts over emotion
+        const emotionVariant = this.generateEmotionFocusedVariant(
+          primary,
+          options.category,
+          platform,
+        );
+        variants.push(emotionVariant);
+      }
+    }
+
+    return { primary, variants };
+  }
+
+  /**
+   * Generate SEO-optimized keywords for script
+   */
+  generateSEOKeywords(
+    script: string,
+    category: string,
+    limit: number = 5,
+  ): {
+    primary: string[];
+    secondary: string[];
+  } {
+    const words = script.toLowerCase().split(/\s+/);
+    const stopwords = new Set([
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "is",
+      "are",
+      "was",
+      "were",
+      "to",
+      "of",
+      "in",
+      "on",
+      "at",
+      "for",
+      "with",
+      "from",
+      "as",
+      "by",
+    ]);
+
+    // Count word frequency
+    const wordFreq: Record<string, number> = {};
+    words.forEach((word) => {
+      const clean = word.replace(/[^\w]/g, "");
+      if (clean.length > 3 && !stopwords.has(clean)) {
+        wordFreq[clean] = (wordFreq[clean] || 0) + 1;
+      }
+    });
+
+    // Sort by frequency
+    const sorted = Object.entries(wordFreq)
+      .sort((a, b) => b[1] - a[1])
+      .map(([word]) => word);
+
+    return {
+      primary: sorted.slice(0, limit),
+      secondary: sorted.slice(limit, limit * 2),
+    };
+  }
+
+  /**
+   * Private: generate keyword-focused variant
+   */
+  private generateKeywordFocusedVariant(
+    primary: PlatformMetadata,
+    keywords: string[],
+    platform: PlatformType,
+  ): PlatformMetadata {
+    const variant = { ...primary };
+
+    // Prepend keywords to title for SEO
+    if (keywords.length > 0) {
+      variant.title = `${keywords[0]}: ${primary.title}`;
+      const limits = this.platformLimits[platform];
+      variant.title = variant.title.substring(0, limits.maxTitleLength);
+    }
+
+    // Add keywords to description
+    variant.description =
+      `Keywords: ${keywords.join(", ")}\n\n${primary.description}`;
+    const limits = this.platformLimits[platform];
+    variant.description = variant.description.substring(0, limits.maxDescriptionLength);
+
+    return variant;
+  }
+
+  /**
+   * Private: generate emotion/engagement-focused variant
+   */
+  private generateEmotionFocusedVariant(
+    primary: PlatformMetadata,
+    category: string | undefined,
+    platform: PlatformType,
+  ): PlatformMetadata {
+    const variant = { ...primary };
+
+    // Add emotional/CTA elements
+    const emotionTriggers: Record<string, string[]> = {
+      general: ["🔥 ", "✨ Would you believe this: "],
+      news: ["⚡ Breaking: ", "📢 Just in: "],
+      viral: ["🤯 Incredible: ", "😱 Watch: "],
+      sports: ["⚽ Amazing: ", "🏆 Epic: "],
+      tech: ["💡 New: ", "🚀 Innovation: "],
     };
 
-    const categoryLower = category.toLowerCase();
-    return emojiMap[categoryLower] || "📌";
+    const triggers = emotionTriggers[category?.toLowerCase() || "general"] || emotionTriggers.general;
+    const trigger = triggers[Math.floor(Math.random() * triggers.length)];
+
+    variant.title = (trigger + primary.title).substring(
+      0,
+      this.platformLimits[platform].maxTitleLength,
+    );
+
+    // Add engagement CTA
+    const ctaMap: Record<PlatformType, string> = {
+      youtube: "\n\nDon't forget to like and subscribe!",
+      instagram: "\n\n💬 Tag someone who'd love this!",
+      tiktok: "\n\nShare this! #fyp",
+      telegram: "\n\nShare with your friends!",
+      facebook: "\n\n👍 React and comment below!",
+    };
+
+    variant.description = (primary.description + (ctaMap[platform] || "")).substring(
+      0,
+      this.platformLimits[platform].maxDescriptionLength,
+    );
+
+    return variant;
+  }
+
+  /**
+   * Generate prompt for LLM to create metadata variants
+   */
+  generateLLMPrompt(
+    script: string,
+    category: string,
+    keywords?: string[],
+  ): {
+    seoPrompt: string;
+    titleVariantPrompt: string;
+    descriptionPrompt: string;
+  } {
+    return {
+      seoPrompt: `Extract 5 primary and 5 secondary SEO keywords from this script about ${category}.\nScript: ${script.substring(0, 500)}\n\nReturn as JSON: { primary: [...], secondary: [...] }`,
+
+      titleVariantPrompt: `Generate 2 alternative titles for a ${category} video.\nOriginal title: ${script.split("\n")[0]}\nKeywords: ${keywords?.join(", ") || "general"}\n\nMake them: 1) SEO-focused with keywords, 2) Emotion-focused with emojis.`,
+
+      descriptionPrompt: `Generate platform-specific descriptions (YouTube, Instagram, TikTok) for this ${category} content.\nTopic: ${keywords?.join(", ") || script.substring(0, 50)}\n\nReturn concise descriptions tailored for each platform.`,
+    };
   }
 }
+
