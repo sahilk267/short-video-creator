@@ -520,5 +520,25 @@ export class MetadataService {
       descriptionPrompt: `Generate platform-specific descriptions (YouTube, Instagram, TikTok) for this ${category} content.\nTopic: ${keywords?.join(", ") || script.substring(0, 50)}\n\nReturn concise descriptions tailored for each platform.`,
     };
   }
+
+  /**
+   * Add a relevant emoji based on category
+   */
+  private addRelevantEmoji(category: string): string {
+    const emojiMap: Record<string, string> = {
+      "News": "📰",
+      "Cricket": "🏏",
+      "Entertainment": "🎬",
+      "Technology": "💻",
+      "Viral": "🔥",
+      "Explainer": "💡",
+      "Politics": "⚖️",
+      "Business": "📈",
+      "Health": "🏥",
+      "Motivation": "✨",
+    };
+
+    return emojiMap[category] || "✨";
+  }
 }
 

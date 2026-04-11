@@ -123,8 +123,9 @@ export class MemoryService {
       results = results.filter((p) => p.style === query.style);
     }
 
-    if (query.minScore !== undefined) {
-      results = results.filter((p) => p.score >= query.minScore);
+    const minScore = query.minScore;
+    if (minScore !== undefined) {
+      results = results.filter((p) => p.score >= minScore);
     }
 
     // Sort by score descending

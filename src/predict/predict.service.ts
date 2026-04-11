@@ -300,4 +300,5 @@ export class PredictiveService {
       detailed,
     };
   }
+}
 
