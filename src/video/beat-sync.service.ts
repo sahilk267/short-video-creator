@@ -36,7 +36,7 @@ export class BeatSyncService {
     );
 
     return scenes.map((scene, index) => {
-      const currentDurationMs = scene.duration || 3000; // default 3s
+      const currentDurationMs = scene.audio.duration || 3000; // default 3s
       const optimalDurationMs = this.findOptimalDuration(
         currentDurationMs,
         beatLengthMs,
@@ -65,7 +65,10 @@ export class BeatSyncService {
   applySyncToScenes(syncedScenes: SyncedScene[]): Scene[] {
     return syncedScenes.map((synced) => ({
       ...synced.original,
-      duration: synced.adjustedDurationMs,
+      audio: {
+        ...synced.original.audio,
+        duration: synced.adjustedDurationMs,
+      },
     }));
   }
 
@@ -127,7 +130,7 @@ export class BeatSyncService {
   suggestBPM(scenes: Scene[]): number {
     if (scenes.length === 0) return 120; // default
 
-    const avgDurationMs = scenes.reduce((sum, s) => sum + (s.duration || 3000), 0) / scenes.length;
+    const avgDurationMs = scenes.reduce((sum, s) => sum + (s.audio.duration || 3000), 0) / scenes.length;
     const estimatedBPM = (60000 / avgDurationMs) * 1000;
 
     // Round to nearest common BPM
@@ -151,7 +154,7 @@ export class BeatSyncService {
     const wellAlignedCount = alignments.filter((a) => a > 0.8).length;
     const suggestionsCount = syncedScenes.filter((s) => s.suggestion).length;
     const totalAdjustmentMs = syncedScenes.reduce(
-      (sum, s) => sum + Math.abs(s.adjustedDurationMs - (s.original.duration || 3000)),
+      (sum, s) => sum + Math.abs(s.adjustedDurationMs - (s.original.audio.duration || 3000)),
       0,
     );
 
