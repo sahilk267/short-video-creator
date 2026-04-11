@@ -129,66 +129,175 @@ export class PredictiveService {
   }
 
   /**
-   * Predict engagement potential based on script metadata
+   * Enforce strict threshold for critical scoring
    */
-  predictEngagement(
-    topic: string,
-    options: {
-      category?: string;
-      keywords?: string[];
-      style?: "News" | "Viral" | "Explainer";
-      hasEmotionalTriggers?: boolean;
-      hasUrgency?: boolean;
-    } = {},
-  ): { engagementScore: number; advice: string } {
-    let score = 50;
-
-    // Emotional triggers boost
-    if (options.hasEmotionalTriggers) {
-      score += 15;
-    }
-
-    // Urgency boost (especially for News/Viral)
-    if (options.hasUrgency) {
-      score += 10;
-      if (options.style === "News" || options.style === "Viral") {
-        score += 10;
-      }
-    }
-
-    // Category-specific adjustments
-    const categoryBoosts: Record<string, number> = {
-      "Cricket": 20,
-      "Sports": 15,
-      "Technology": 12,
-      "Business": 10,
-      "Entertainment": 18,
-      "Lifestyle": 8,
+  enforceScoreThreshold(
+    score: number,
+    category: string,
+    strictMode: boolean = false,
+  ): {
+    passed: boolean;
+    reason: string;
+    enforced: boolean;
+  } {
+    const thresholds: Record<string, { soft: number; strict: number }> = {
+      "News": { soft: 50, strict: 65 },
+      "Cricket": { soft: 65, strict: 75 },
+      "Entertainment": { soft: 55, strict: 70 },
+      "Technology": { soft: 50, strict: 60 },
+      "Viral": { soft: 70, strict: 80 },
+      "Explainer": { soft: 60, strict: 72 },
+      "Politics": { soft: 45, strict: 60 },
+      "Business": { soft: 55, strict: 68 },
+      "Health": { soft: 60, strict: 75 },
+      "Motivation": { soft: 50, strict: 65 },
     };
 
-    if (options.category && categoryBoosts[options.category]) {
-      score += categoryBoosts[options.category];
-    }
+    const config = thresholds[category] || { soft: 55, strict: 70 };
+    const threshold = strictMode ? config.strict : config.soft;
+    const passed = score >= threshold;
 
-    // Keyword richness
-    if (options.keywords && options.keywords.length >= 3) {
-      score += 10;
-    }
+    const reason = passed
+      ? `Score ${score} meets ${strictMode ? "strict" : "soft"} threshold (${threshold})`
+      : `Score ${score} below ${strictMode ? "strict" : "soft"} threshold (${threshold})`;
 
-    // Cap and generate advice
-    score = Math.max(0, Math.min(100, score));
+    logger.debug(
+      { score, threshold, category, strictMode, passed },
+      "Score threshold enforced",
+    );
 
-    let advice = "Standard content strategy";
-    if (score > 80) {
-      advice = "High engagement potential - prioritize for peak hours";
-    } else if (score > 60) {
-      advice = "Good engagement potential - standard publishing schedule";
-    } else if (score > 40) {
-      advice = "Moderate potential - enhance with hashtags and CTAs";
-    } else {
-      advice = "Low potential - consider topic or keyword revision";
-    }
-
-    return { engagementScore: score, advice };
+    return {
+      passed,
+      reason,
+      enforced: strictMode,
+    };
   }
-}
+
+  /**
+   * Get memory-based engagement forecast
+   */
+  getForecastWithMemory(
+    topic: string,
+    category: string,
+    keywords?: string[],
+  ): {
+    forecast: number;
+    baseScore: number;
+    memoryBoosted: number;
+    confidence: number;
+  } {
+    const baseScore = 50;
+
+    if (!this.memoryService || !keywords || keywords.length === 0) {
+      return {
+        forecast: baseScore,
+        baseScore,
+        memoryBoosted: 0,
+        confidence: 0.5,
+      };
+    }
+
+    try {
+      // Get similar high-performing patterns from memory
+      const similarPatterns = this.memoryService.getSimilarPatterns(
+        keywords,
+        category,
+        10,
+      );
+
+      if (similarPatterns.length === 0) {
+        return {
+          forecast: baseScore,
+          baseScore,
+          memoryBoosted: 0,
+          confidence: 0.4,
+        };
+      }
+
+      // Calculate boost from similar patterns
+      const topScore = similarPatterns[0].score;
+      const avgScore = similarPatterns.reduce((sum, p) => sum + p.score, 0) / similarPatterns.length;
+
+      // Bounded boost: up to +15 points
+      const memoryBoost = Math.min(15, (avgScore - 50) * 0.3);
+      const forecast = Math.min(100, baseScore + memoryBoost);
+
+      logger.debug(
+        { category, patternCount: similarPatterns.length, avgScore, boost: memoryBoost },
+        "Memory forecast calculated",
+      );
+
+      return {
+        forecast,
+        baseScore,
+        memoryBoosted: memoryBoost,
+        confidence: Math.min(0.9, 0.5 + similarPatterns.length * 0.05),
+      };
+    } catch (error) {
+      logger.warn({ error }, "Memory forecast failed");
+      return {
+        forecast: baseScore,
+        baseScore,
+        memoryBoosted: 0,
+        confidence: 0.3,
+      };
+    }
+  }
+
+  /**
+   * Detailed viability report with all factors
+   */
+  getDetailedAssessment(
+    topic: string,
+    category: string,
+    options: {
+      keywords?: string[];
+      style?: "News" | "Viral" | "Explainer";
+      pastEngagement?: { category: string; avgScore: number }[];
+      memoryEnabled?: boolean;
+    } = {},
+  ): {
+    viability: ViabilityAssessment;
+    memory: ReturnType<PredictiveService["getForecastWithMemory"]>;
+    threshold: ReturnType<PredictiveService["enforceScoreThreshold"]>;
+    detailed: {
+      factors: Record<string, number | string>;
+      riskFactors: string[];
+      opportunities: string[];
+    };
+  } {
+    const viability = this.assessTopic(topic, category, options);
+    const memory = options.memoryEnabled
+      ? this.getForecastWithMemory(topic, category, options.keywords)
+      : { forecast: 50, baseScore: 50, memoryBoosted: 0, confidence: 0 };
+
+    const threshold = this.enforceScoreThreshold(viability.score, category, false);
+
+    const detailed = {
+      factors: {
+        topic_score: viability.score,
+        memory_forecast: memory.forecast,
+        confidence: Math.round(viability.confidence * 100) + "%",
+        style: options.style || "News",
+        keyword_count: options.keywords?.length || 0,
+      },
+      riskFactors: viability.reasons.filter((r) =>
+        r.toLowerCase().includes("low") ||
+        r.toLowerCase().includes("weak") ||
+        r.toLowerCase().includes("vague")
+      ),
+      opportunities: viability.reasons.filter((r) =>
+        r.toLowerCase().includes("high") ||
+        r.toLowerCase().includes("strong") ||
+        r.toLowerCase().includes("similar")
+      ),
+    };
+
+    return {
+      viability,
+      memory,
+      threshold,
+      detailed,
+    };
+  }
+

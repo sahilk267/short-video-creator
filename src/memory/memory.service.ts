@@ -214,4 +214,62 @@ export class MemoryService {
       topScores,
     };
   }
+
+  /**
+   * NEW: Track failed pattern to reduce future use
+   * Reduces score by 5-15 points depending on failure count
+   */
+  async penalizeFailedPattern(patternId: string, failureReason?: string): Promise<void> {
+    const pattern = this.patterns.find((p) => p.id === patternId);
+    if (!pattern) {
+      logger.debug({ patternId }, "Pattern not found for penalty");
+      return;
+    }
+
+    // Track failure count in metadata
+    if (!pattern.engagement) {
+      pattern.engagement = { views: 0, likes: 0, shares: 0 };
+    }
+
+    // Use shares as failure counter (unconventional but safe)
+    const failureCount = (pattern.engagement.shares || 0) % 100; // 0-99
+    const scoreReduction = Math.min(15, 5 + failureCount * 0.1);
+
+    pattern.score = Math.max(50, pattern.score - scoreReduction);
+    pattern.updatedAt = new Date().toISOString();
+    pattern.engagement.shares = (pattern.engagement.shares || 0) + 1;
+
+    logger.info(
+      { patternId, failureReason, scoreReduction, newScore: pattern.score },
+      "Pattern penalized for failure"
+    );
+
+    await this.savePatterns();
+  }
+
+  /**
+   * NEW: Get repeated failures to learn patterns
+   */
+  getFailureAnalysis(): {
+    worstPerformers: StoredPattern[];
+    failureRateByCategory: Record<string, number>;
+  } {
+    // Patterns with low scores (50-60) but multiple failures
+    const worstPerformers = this.patterns
+      .filter((p) => p.score < 65 && (p.engagement?.shares || 0) > 2)
+      .sort((a, b) => (a.engagement?.shares || 0) - (b.engagement?.shares || 0))
+      .slice(0, 10);
+
+    const failureRateByCategory: Record<string, number> = {};
+    this.patterns.forEach((p) => {
+      if (!failureRateByCategory[p.category]) {
+        failureRateByCategory[p.category] = 0;
+      }
+      if (p.score < 65) {
+        failureRateByCategory[p.category] += 1;
+      }
+    });
+
+    return { worstPerformers, failureRateByCategory };
+  }
 }

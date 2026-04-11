@@ -20,7 +20,7 @@ export interface GenerationAttempt {
   attemptNumber: number;
   script: string;
   score: number;
-  issues?: Array<{ type: string; message: string }>;
+  issues?: Array<{ type: string; severity: "low" | "medium" | "high"; message: string }>;
   duration?: number;
 }
 
@@ -109,10 +109,17 @@ export class AgentLoopService {
           this.feedbackService &&
           bestAttempt
         ) {
+          // Re-analyze best attempt to get full ScriptQualityIssue objects
+          const reanalyzedIssues = this.feedbackService.analyzeScript(bestAttempt.script, bestAttempt.score, {
+            category: context.category,
+            style: context.style,
+            keywords: context.keywords,
+          });
+
           feedbackPrompt = this.feedbackService.generateImprovementPrompt({
             script: bestAttempt.script,
             score: bestAttempt.score,
-            issues: bestAttempt.issues || [],
+            issues: reanalyzedIssues,
             category: context.category,
             style: context.style || "News",
             keywords: context.keywords,
@@ -135,6 +142,7 @@ export class AgentLoopService {
           score: generated.score,
           issues: issues.map((issue) => ({
             type: issue.type,
+            severity: issue.severity,
             message: issue.message,
           })),
         };
@@ -156,6 +164,8 @@ export class AgentLoopService {
             generated.score,
             i,
             this.config.maxRetries,
+            context.category,
+            issues,
           );
 
           if (!shouldRetry) {
