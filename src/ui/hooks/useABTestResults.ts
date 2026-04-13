@@ -34,8 +34,13 @@ export interface ABTestResultsState {
 }
 
 function normalizeVideos(raw: unknown): VideoEntry[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((v: Record<string, unknown>) => ({
+  const rows = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as { videos?: unknown[] })?.videos)
+      ? (raw as { videos: unknown[] }).videos
+      : [];
+
+  return rows.map((v: Record<string, unknown>) => ({
     id: String(v.id || ""),
     status: v.status ? String(v.status) : undefined,
   }));

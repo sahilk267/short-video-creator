@@ -60,7 +60,7 @@ export function useRemoveMemberMutation(tenantId?: string, onDone?: () => void) 
 
 export function useCreateApiKeyMutation(tenantId?: string, onDone?: () => void) {
   return useMutation<{ id: string; value?: string }, CreateApiKeyPayload>(
-    (payload) => api.tenants.keys.update(tenantId || "", payload) as Promise<{ id: string; value?: string }>,
+    (payload) => api.tenants.keys.create(tenantId || "", payload) as Promise<{ id: string; value?: string }>,
     { onSuccess: () => onDone?.() },
   );
 }
@@ -68,9 +68,8 @@ export function useCreateApiKeyMutation(tenantId?: string, onDone?: () => void) 
 export function useRegenerateApiKeyMutation(tenantId?: string, onDone?: () => void) {
   return useMutation<{ id: string; value?: string }, { keyId: string }>(
     (payload) =>
-      api.tenants.keys.update(tenantId || "", {
-        action: "regenerate",
-        keyId: payload.keyId,
+      api.tenants.keys.create(tenantId || "", {
+        name: payload.keyId,
       }) as Promise<{ id: string; value?: string }>,
     { onSuccess: () => onDone?.() },
   );

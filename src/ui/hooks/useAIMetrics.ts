@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { apiClient } from "../services/apiClient";
+import { api } from "../services/apiClient";
 
 export interface LearningEvent {
   id: string;
@@ -380,9 +380,9 @@ export function useAIMetrics(options: { autoLoad?: boolean } = {}) {
     setError(null);
     try {
       const [dashboardResponse, modelResponse, eventsResponse] = await Promise.all([
-        apiClient.ai.dashboard() as Promise<DashboardResponse>,
-        apiClient.ai.getModel() as Promise<ModelResponse>,
-        apiClient.ai.listEvents(200) as Promise<LearningEvent[]>,
+        api.ai.dashboard() as Promise<DashboardResponse>,
+        api.ai.getModel() as Promise<ModelResponse>,
+        api.ai.listEvents(200) as Promise<LearningEvent[]>,
       ]);
 
       setEvents(eventsResponse);

@@ -84,6 +84,16 @@ export interface ScheduleConfig {
 
 const STEPS = ["Select Videos", "Choose Platforms", "Add Metadata", "Schedule & Review", "Publish"];
 
+interface PublishStatusJob {
+  jobId: string;
+  platform: string;
+  videoId: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  createdAt: string;
+  completedAt?: string;
+  errorMessage?: string;
+}
+
 export const PublishDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { warning: warnNotification, error: errorNotification } = useNotification();
@@ -98,6 +108,7 @@ export const PublishDashboard: React.FC = () => {
     timezone: "UTC",
   });
   const [publishedJobIds, setPublishedJobIds] = useState<string[]>([]);
+  const [publishedJobs, setPublishedJobs] = useState<PublishStatusJob[]>([]);
 
   // Fetch videos list
   const { data: videosList, isLoading: videosLoading } = useQuery(
@@ -107,6 +118,50 @@ export const PublishDashboard: React.FC = () => {
 
   // Publish hook
   const [publishAsync, { loading: isPublishing, error: publishError }] = usePublish();
+
+  const refreshPublishedJobs = async () => {
+    if (publishedJobIds.length === 0) {
+      setPublishedJobs([]);
+      return;
+    }
+
+    const results = await Promise.all(
+      publishedJobIds.map(async (jobId) => {
+        try {
+          const raw = await api.publish.getJob(jobId) as {
+            id: string;
+            platform: string;
+            renderOutputPath: string;
+            status: string;
+            createdAt: string;
+            updatedAt: string;
+            error?: string | null;
+          };
+
+          return {
+            jobId: raw.id,
+            platform: raw.platform,
+            videoId: raw.renderOutputPath.split(/[\\/]/).pop()?.replace(/\.mp4$/i, "") || raw.id,
+            status:
+              raw.status === "published"
+                ? "completed"
+                : raw.status === "publishing"
+                  ? "processing"
+                  : raw.status === "failed"
+                    ? "failed"
+                    : "pending",
+            createdAt: raw.createdAt,
+            completedAt: raw.status === "published" ? raw.updatedAt : undefined,
+            errorMessage: raw.error || undefined,
+          } satisfies PublishStatusJob;
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    setPublishedJobs(results.filter((job): job is PublishStatusJob => Boolean(job)));
+  };
 
   // Keyboard shortcut: Ctrl+P to publish
   useEffect(() => {
@@ -191,6 +246,11 @@ export const PublishDashboard: React.FC = () => {
     void autofillMetadata();
   }, [activeStep, selectedPlatforms, selectedVideos]);
 
+  useEffect(() => {
+    if (publishedJobIds.length === 0) return;
+    void refreshPublishedJobs();
+  }, [publishedJobIds]);
+
   // Validation
   const isVideoStepValid = selectedVideos.length > 0;
   const isPlatformStepValid = selectedPlatforms.length > 0;
@@ -258,7 +318,7 @@ export const PublishDashboard: React.FC = () => {
 
       if (result) {
         setPublishedJobIds(result.jobIds);
-        setActiveStep(4); // Move to status tracker
+        setActiveStep(4);
       }
     } catch (error) {
       console.error("Publish error:", error);
@@ -325,6 +385,8 @@ export const PublishDashboard: React.FC = () => {
         return (
           <PublishStatusTracker
             jobIds={publishedJobIds}
+            jobs={publishedJobs}
+            onRefresh={() => void refreshPublishedJobs()}
             isLoading={isPublishing}
           />
         );

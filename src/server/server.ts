@@ -48,6 +48,9 @@ export class Server {
     this.app.use("/api/marketing", marketingRouter.router);
     this.app.use("/api/ai", aiRouter.router);
     this.app.use("/api/content", contentRouter.router);
+    this.app.get("/api/metrics", (_req: ExpressRequest, res: ExpressResponse) => {
+      res.redirect("/api/health/metrics");
+    });
 
     // Serve static files from the UI build
     this.app.use(express.static(path.join(__dirname, "../../dist/ui")));

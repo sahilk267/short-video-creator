@@ -26,7 +26,7 @@ const CategoryMapping: React.FC = () => {
 
   const fetchMappings = async () => {
     try {
-      const mappingsResponse = await api.channels.list<MappingRecord[]>();
+      const mappingsResponse = await api.channels.list() as MappingRecord[];
       setMappings(mappingsResponse || []);
     } catch {
       setMappings([]);

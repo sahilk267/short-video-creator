@@ -63,8 +63,13 @@ function normalizeQueueStats(raw: unknown): QueueStats {
 }
 
 function normalizeRenderJobs(raw: unknown): RenderJob[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((item: Record<string, unknown>) => ({
+  const rows = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as { videos?: unknown[] })?.videos)
+      ? (raw as { videos: unknown[] }).videos
+      : [];
+
+  return rows.map((item: Record<string, unknown>) => ({
     id: String(item.id || ""),
     status: (item.status as RenderJob["status"]) || "pending",
     category: String(item.category || ""),
