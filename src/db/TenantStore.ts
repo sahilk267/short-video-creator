@@ -9,6 +9,8 @@ export interface TenantRecord {
   workspaceName: string;
   tier: TenantTier;
   apiKeys: Record<string, string>;
+  description?: string;
+  logoUrl?: string;
   encryptedApiKeys?: Record<string, string>;
   quotas?: {
     monthlyRenders?: number;
@@ -87,6 +89,46 @@ export class TenantStore {
     current[idx] = {
       ...current[idx],
       apiKeys: { ...current[idx].apiKeys, ...apiKeys },
+      updatedAt: new Date().toISOString(),
+    };
+    await this.writeAll(current);
+    return current[idx];
+  }
+
+  async removeKey(id: string, keyName: string): Promise<TenantRecord | undefined> {
+    const current = await this.readAll();
+    const idx = current.findIndex((t) => t.id === id);
+    if (idx < 0) return undefined;
+
+    const nextApiKeys = { ...current[idx].apiKeys };
+    delete nextApiKeys[keyName];
+
+    const nextEncryptedKeys = { ...(current[idx].encryptedApiKeys ?? {}) };
+    delete nextEncryptedKeys[keyName];
+
+    current[idx] = {
+      ...current[idx],
+      apiKeys: nextApiKeys,
+      encryptedApiKeys: nextEncryptedKeys,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.writeAll(current);
+    return current[idx];
+  }
+
+  async updateWorkspace(
+    id: string,
+    updates: Pick<TenantRecord, "workspaceName" | "description" | "logoUrl">,
+  ): Promise<TenantRecord | undefined> {
+    const current = await this.readAll();
+    const idx = current.findIndex((t) => t.id === id);
+    if (idx < 0) return undefined;
+
+    current[idx] = {
+      ...current[idx],
+      workspaceName: updates.workspaceName || current[idx].workspaceName,
+      description: updates.description ?? current[idx].description,
+      logoUrl: updates.logoUrl ?? current[idx].logoUrl,
       updatedAt: new Date().toISOString(),
     };
     await this.writeAll(current);

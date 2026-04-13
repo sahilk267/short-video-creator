@@ -29,6 +29,9 @@ RUN apt install -y \
       curl \
       make \
       libsdl2-dev \
+      # kokoro dependencies
+      espeak-ng \
+      espeak-ng-data \
       # remotion dependencies
       libnss3 \
       libdbus-1-3 \
@@ -67,6 +70,7 @@ RUN pnpm build
 
 FROM base
 COPY static /app/static
+COPY docker-entrypoint.js /app/docker-entrypoint.js
 COPY --from=install-whisper /whisper /app/libs/whisper
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
@@ -77,10 +81,16 @@ ENV DATA_DIR_PATH=/app/data
 ENV DOCKER=true
 ENV WHISPER_MODEL=base.en
 ENV WHISPER_INSTALL_PATH=/app/libs/whisper
+ENV KOKORO_MODEL_PRECISION=fp32
+ENV PUPPETEER_CACHE_DIR=/app/data/cache/puppeteer
+ENV HF_HOME=/app/data/cache/huggingface
 # number of chrome tabs to use for rendering
 ENV CONCURRENCY=1
 # video cache - 2000MB
 ENV VIDEO_CACHE_SIZE_IN_BYTES=2097152000
 
-# CMD starts the app, which now handles its own installation at runtime
-CMD ["pnpm", "start"]
+# install kokoro, headless chrome and ensure music files are present
+RUN node dist/scripts/install.js
+
+# Use the entrypoint script to handle cache seeding and app startup
+CMD ["node", "/app/docker-entrypoint.js"]

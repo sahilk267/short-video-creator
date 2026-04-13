@@ -380,6 +380,8 @@ export const api = {
         apiClient.get(`/api/tenants/${tenantId}/keys`),
       create: (tenantId: string, data: unknown) =>
         apiClient.post(`/api/tenants/${tenantId}/keys`, data),
+      update: (tenantId: string, data: unknown) =>
+        apiClient.post(`/api/tenants/${tenantId}/keys`, data),
       delete: (tenantId: string, keyId: string) =>
         apiClient.delete(`/api/tenants/${tenantId}/keys/${keyId}`),
     },

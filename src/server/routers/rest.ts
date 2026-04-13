@@ -28,6 +28,7 @@ export class APIRouter {
   private scriptPlanStore: ScriptPlanStore;
   private videoMetadataStore: VideoMetadataStore;
   private customNewsSourceStore: CustomNewsSourceStore;
+  private channelConfigsPath: string;
 
   constructor(config: Config, shortCreator: ShortCreator) {
     this.config = config;
@@ -37,6 +38,11 @@ export class APIRouter {
     this.scriptPlanStore = new ScriptPlanStore(config.dataDirPath);
     this.videoMetadataStore = new VideoMetadataStore(config.dataDirPath);
     this.customNewsSourceStore = new CustomNewsSourceStore(config.dataDirPath);
+    this.channelConfigsPath = path.join(config.dataDirPath, "channelConfigs.json");
+    fs.ensureFileSync(this.channelConfigsPath);
+    if (!fs.readFileSync(this.channelConfigsPath, "utf-8").trim()) {
+      fs.writeFileSync(this.channelConfigsPath, "[]", "utf-8");
+    }
 
     this.router.use(express.json());
 
@@ -144,6 +150,47 @@ export class APIRouter {
         res.status(200).json({
           videos,
         });
+      },
+    );
+
+    this.router.get(
+      "/channel-configs",
+      async (_req: ExpressRequest, res: ExpressResponse) => {
+        res.status(200).json(await this.readChannelConfigs());
+      },
+    );
+
+    this.router.post(
+      "/channel-configs",
+      async (req: ExpressRequest, res: ExpressResponse) => {
+        const { category, platform, channelId } = req.body || {};
+        if (!category || !platform || !channelId) {
+          res.status(400).json({ error: "category, platform, and channelId are required" });
+          return;
+        }
+
+        const current = await this.readChannelConfigs();
+        const record = {
+          id: `${platform}-${String(category).toLowerCase().replace(/\s+/g, "-")}`,
+          category: String(category),
+          platform: String(platform),
+          channelId: String(channelId),
+          updatedAt: new Date().toISOString(),
+        };
+
+        const existingIndex = current.findIndex(
+          (item: any) =>
+            item.category.toLowerCase() === record.category.toLowerCase()
+            && item.platform.toLowerCase() === record.platform.toLowerCase(),
+        );
+        if (existingIndex >= 0) {
+          current[existingIndex] = record;
+        } else {
+          current.push(record);
+        }
+
+        await fs.writeFile(this.channelConfigsPath, JSON.stringify(current, null, 2), "utf-8");
+        res.status(201).json(record);
       },
     );
 
@@ -637,4 +684,14 @@ export class APIRouter {
     );
   }
 
+  private async readChannelConfigs(): Promise<any[]> {
+    const content = await fs.readFile(this.channelConfigsPath, "utf-8");
+    if (!content.trim()) return [];
+    try {
+      return JSON.parse(content) as any[];
+    } catch {
+      await fs.writeFile(this.channelConfigsPath, "[]", "utf-8");
+      return [];
+    }
+  }
 }
