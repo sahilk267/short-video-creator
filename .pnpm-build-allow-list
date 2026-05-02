@@ -1,0 +1,6 @@
+@ffmpeg-installer/linux-x64
+esbuild
+msgpackr-extract
+onnxruntime-node
+protobufjs
+sharp

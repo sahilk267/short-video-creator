@@ -20,7 +20,7 @@ export interface GenerationAttempt {
   attemptNumber: number;
   script: string;
   score: number;
-  issues?: Array<{ type: string; message: string }>;
+  issues?: Array<{ type: string; severity?: string; message: string }>;
   duration?: number;
 }
 
@@ -112,7 +112,7 @@ export class AgentLoopService {
           feedbackPrompt = this.feedbackService.generateImprovementPrompt({
             script: bestAttempt.script,
             score: bestAttempt.score,
-            issues: bestAttempt.issues || [],
+            issues: (bestAttempt.issues || []) as import("../feedback/feedback.service").ScriptQualityIssue[],
             category: context.category,
             style: context.style || "News",
             keywords: context.keywords,
@@ -135,6 +135,7 @@ export class AgentLoopService {
           score: generated.score,
           issues: issues.map((issue) => ({
             type: issue.type,
+            severity: issue.severity,
             message: issue.message,
           })),
         };
