@@ -24,6 +24,7 @@ import { CostsRouter } from "./routers/costs";
 import { ShadowbanRouter } from "./routers/shadowban";
 import { StrategyRouter } from "./routers/strategy";
 import { WebhooksRouter } from "./routers/webhooks";
+import { BrandingRouter } from "./routers/branding";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
@@ -55,6 +56,7 @@ export class Server {
     const shadowbanRouter = new ShadowbanRouter(config);
     const strategyRouter = new StrategyRouter(config);
     const webhooksRouter = new WebhooksRouter(config);
+    const brandingRouter = new BrandingRouter(config);
 
     this.app.use("/api", apiRateLimiter);
     this.app.use("/api", apiRouter.router);
@@ -75,6 +77,7 @@ export class Server {
     this.app.use("/api/shadowban", shadowbanRouter.router);
     this.app.use("/api/strategy", strategyRouter.router);
     this.app.use("/api/webhooks", webhooksRouter.router);
+    this.app.use("/api/branding", brandingRouter.router);
 
     // Serve static files from the UI build
     this.app.use(express.static(path.join(__dirname, "../../dist/ui")));

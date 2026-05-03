@@ -24,6 +24,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import QueueIcon from '@mui/icons-material/Queue';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import ColorLensIcon from '@mui/icons-material/ColorLens';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -77,7 +78,8 @@ const NAV_SECTIONS = [
   {
     title: 'System',
     items: [
-      { path: '/webhooks', label: 'Notifications', icon: <NotificationsActiveIcon />, badge: 'NEW' },
+      { path: '/webhooks', label: 'Notifications', icon: <NotificationsActiveIcon /> },
+      { path: '/branding', label: 'White-Label Branding', icon: <ColorLensIcon />, badge: 'NEW' },
       { path: '/content-tools', label: 'Content Tools', icon: <BuildIcon /> },
       { path: '/mappings', label: 'Category Mapping', icon: <BusinessIcon /> },
       { path: '/health', label: 'Health', icon: <MonitorHeartIcon /> },

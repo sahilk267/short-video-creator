@@ -24,6 +24,7 @@ const RecycleDashboard = lazy(() => import('./pages/RecycleDashboard'));
 const CostTracker = lazy(() => import('./pages/CostTracker'));
 const StrategyDashboard = lazy(() => import('./pages/StrategyDashboard'));
 const WebhookDashboard = lazy(() => import('./pages/WebhookDashboard'));
+const BrandingDashboard = lazy(() => import('./pages/BrandingDashboard'));
 
 const App: React.FC = () => {
   return (
@@ -52,6 +53,7 @@ const App: React.FC = () => {
               <Route path="/costs" element={<CostTracker />} />
               <Route path="/strategy" element={<StrategyDashboard />} />
               <Route path="/webhooks" element={<WebhookDashboard />} />
+              <Route path="/branding" element={<BrandingDashboard />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
