@@ -29,6 +29,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import CommentIcon from '@mui/icons-material/Comment';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
+import BlockIcon from '@mui/icons-material/Block';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -101,6 +102,7 @@ const NAV_SECTIONS = [
       { path: '/comment-cta', label: 'Comment CTA', icon: <CommentIcon />, badge: 'NEW' },
       { path: '/series', label: 'Series Builder', icon: <PlaylistAddIcon />, badge: 'NEW' },
       { path: '/watermark', label: 'Watermark Engine', icon: <BrandingWatermarkIcon />, badge: 'NEW' },
+      { path: '/shadowban', label: 'Shadowban Detection', icon: <BlockIcon />, badge: 'NEW' },
     ],
   },
   {
