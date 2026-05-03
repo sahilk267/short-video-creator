@@ -25,6 +25,10 @@ import PsychologyIcon from '@mui/icons-material/Psychology';
 import QueueIcon from '@mui/icons-material/Queue';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
+import TranslateIcon from '@mui/icons-material/Translate';
+import CommentIcon from '@mui/icons-material/Comment';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -76,18 +80,27 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    title: 'Content Creation',
+    title: 'AI Engines (Phase 7-8)',
     items: [
-      { path: '/humanized', label: 'Humanized Content', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/thumbnail', label: 'Thumbnail Generator', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/editing', label: 'Expert Editing', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/visual', label: 'Visual Enhancement', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/audio', label: 'Audio Quality', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/emotional', label: 'Emotional Resonance', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/attention', label: 'Attention Optimizer', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/quality', label: 'Quality Scoring', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/engagement', label: 'Engagement Prediction', icon: <BuildIcon />, badge: 'NEW' },
-      { path: '/account', label: 'Account Manager', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/humanized', label: 'Humanized Content', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/thumbnail', label: 'Thumbnail Generator', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/editing', label: 'Expert Editing', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/visual', label: 'Visual Enhancement', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/audio', label: 'Audio Quality', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/emotional', label: 'Emotional Resonance', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/attention', label: 'Attention Optimizer', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/quality', label: 'Quality Scoring', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/engagement', label: 'Engagement Prediction', icon: <BuildIcon />, badge: 'AI' },
+      { path: '/account', label: 'Account Manager', icon: <BuildIcon />, badge: 'AI' },
+    ],
+  },
+  {
+    title: 'Content Tools',
+    items: [
+      { path: '/translate', label: 'Translation Engine', icon: <TranslateIcon />, badge: 'NEW' },
+      { path: '/comment-cta', label: 'Comment CTA', icon: <CommentIcon />, badge: 'NEW' },
+      { path: '/series', label: 'Series Builder', icon: <PlaylistAddIcon />, badge: 'NEW' },
+      { path: '/watermark', label: 'Watermark Engine', icon: <BrandingWatermarkIcon />, badge: 'NEW' },
     ],
   },
   {
@@ -95,7 +108,7 @@ const NAV_SECTIONS = [
     items: [
       { path: '/webhooks', label: 'Notifications', icon: <NotificationsActiveIcon /> },
       { path: '/branding', label: 'White-Label Branding', icon: <ColorLensIcon /> },
-      { path: '/content-tools', label: 'Content Tools', icon: <BuildIcon /> },
+      { path: '/content-tools', label: 'Content Tools Dashboard', icon: <BuildIcon /> },
       { path: '/mappings', label: 'Category Mapping', icon: <BusinessIcon /> },
       { path: '/health', label: 'Health', icon: <MonitorHeartIcon /> },
       { path: '/tenants', label: 'Tenants', icon: <BusinessIcon /> },
@@ -199,7 +212,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         <Box component="footer" sx={{ py: 2, mt: 'auto', backgroundColor: '#1e293b', borderTop: '1px solid rgba(99,102,241,0.2)', textAlign: 'center' }}>
           <Typography variant="caption" color="rgba(255,255,255,0.4)">
-            AI Viral Content Empire v11.0 · {new Date().getFullYear()} · All 44+ Engines Active
+            AI Viral Content Empire v12.0 · {new Date().getFullYear()} · All 60 Engines Active
           </Typography>
         </Box>
       </Box>

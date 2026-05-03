@@ -35,6 +35,10 @@ const AttentionOptimizerPage = lazy(() => import('./pages/AttentionOptimizerPage
 const QualityScoringPage = lazy(() => import('./pages/QualityScoringPage'));
 const EngagementPredictionPage = lazy(() => import('./pages/EngagementPredictionPage'));
 const AccountManagerPage = lazy(() => import('./pages/AccountManagerPage'));
+const TranslatePage = lazy(() => import('./pages/TranslatePage'));
+const CommentCtaPage = lazy(() => import('./pages/CommentCtaPage'));
+const SeriesBuilderPage = lazy(() => import('./pages/SeriesBuilderPage'));
+const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 
 const App: React.FC = () => {
   return (
@@ -74,6 +78,10 @@ const App: React.FC = () => {
               <Route path="/quality" element={<QualityScoringPage />} />
               <Route path="/engagement" element={<EngagementPredictionPage />} />
               <Route path="/account" element={<AccountManagerPage />} />
+              <Route path="/translate" element={<TranslatePage />} />
+              <Route path="/comment-cta" element={<CommentCtaPage />} />
+              <Route path="/series" element={<SeriesBuilderPage />} />
+              <Route path="/watermark" element={<WatermarkPage />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
