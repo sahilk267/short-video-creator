@@ -23,6 +23,7 @@ const ImageGenerator = lazy(() => import('./pages/ImageGenerator'));
 const RecycleDashboard = lazy(() => import('./pages/RecycleDashboard'));
 const CostTracker = lazy(() => import('./pages/CostTracker'));
 const StrategyDashboard = lazy(() => import('./pages/StrategyDashboard'));
+const WebhookDashboard = lazy(() => import('./pages/WebhookDashboard'));
 
 const App: React.FC = () => {
   return (
@@ -50,6 +51,7 @@ const App: React.FC = () => {
               <Route path="/recycle" element={<RecycleDashboard />} />
               <Route path="/costs" element={<CostTracker />} />
               <Route path="/strategy" element={<StrategyDashboard />} />
+              <Route path="/webhooks" element={<WebhookDashboard />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
