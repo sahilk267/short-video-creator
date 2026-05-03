@@ -150,10 +150,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {[
                 { path: '/trends', label: '🔥 Trends' },
                 { path: '/create', label: '+ Create' },
-                { path: '/publish', label: 'Publish' },
-                { path: '/analytics', label: 'Analytics' },
-                { path: '/hooks', label: 'Hooks' },
+                { path: '/scheduler', label: 'Schedule' },
                 { path: '/strategy', label: 'Strategy' },
+                { path: '/humanized', label: 'AI Tools' },
               ].map(({ path, label }) => (
                 <Button
                   key={path}
