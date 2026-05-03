@@ -36,6 +36,8 @@ import { QualityRouter } from "./routers/quality";
 import { EngagementRouter } from "./routers/engagement";
 import { AccountRouter } from "./routers/account";
 import { WatermarkRouter } from "./routers/watermark";
+import { VideoLibraryRouter } from "./routers/videolibrary";
+import { ScheduleRouter } from "./routers/schedule";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
@@ -79,6 +81,8 @@ export class Server {
     const engagementRouter = new EngagementRouter();
     const accountRouter = new AccountRouter(config);
     const watermarkRouter = new WatermarkRouter();
+    const videoLibraryRouter = new VideoLibraryRouter(config);
+    const scheduleRouter = new ScheduleRouter(config);
 
     this.app.use("/api", apiRateLimiter);
     this.app.use("/api", apiRouter.router);
@@ -111,6 +115,8 @@ export class Server {
     this.app.use("/api/engagement", engagementRouter.router);
     this.app.use("/api/account", accountRouter.router);
     this.app.use("/api/watermark", watermarkRouter.router);
+    this.app.use("/api/videolibrary", videoLibraryRouter.router);
+    this.app.use("/api/schedule", scheduleRouter.router);
 
     // Serve static files from the UI build
     this.app.use(express.static(path.join(__dirname, "../../dist/ui")));

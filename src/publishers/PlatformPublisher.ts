@@ -1,26 +1,35 @@
 /**
- * PlatformPublisher – Phase 5.2
- *
- * Abstract interface + shared types for all platform publishers.
+ * PlatformPublisher – Enhanced interface with all advanced fields
  */
 import type { PlatformType } from "../types/shorts";
 
 export interface PublishParams {
   videoFilePath: string;
+  videoUrl?: string;
   title: string;
   description: string;
   tags: string[];
   category: string;
   language: string;
   thumbnailPath?: string;
+  thumbnailUrl?: string;
   scheduleAt?: Date;
+  callToAction?: string;
+  aspectRatio?: string;
+  visibility?: "public" | "private" | "unlisted";
+  location?: string;
+  firstComment?: string;
 }
 
 export interface PublishResult {
   success: boolean;
   externalId?: string;
+  platformVideoId?: string;
   publishedUrl?: string;
+  scheduledFor?: string;
   error?: string;
+  rateLimitResetAt?: Date;
+  credentialsValid?: boolean;
 }
 
 export interface PlatformLimits {
@@ -31,6 +40,19 @@ export interface PlatformLimits {
   maxTagCount: number;
   maxTagLength: number;
   supportedFormats: string[];
+  aspectRatios?: string[];
+  maxFrameRate?: number;
+}
+
+export interface PlatformCapabilities {
+  supportsScheduling: boolean;
+  supportsReels: boolean;
+  supportsCarousel: boolean;
+  supportsStories: boolean;
+  supportsLive: boolean;
+  supportsThumbnailUpload: boolean;
+  supportsFirstComment: boolean;
+  maxHashtags: number;
 }
 
 export interface PlatformPublisher {
@@ -40,4 +62,5 @@ export interface PlatformPublisher {
   refreshToken(): Promise<void>;
   validateCredentials(): Promise<boolean>;
   getVideoLimits(): PlatformLimits;
+  getCapabilities?(): PlatformCapabilities;
 }

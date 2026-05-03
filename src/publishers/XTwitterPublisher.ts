@@ -57,10 +57,10 @@ export class XTwitterPublisher implements PlatformPublisher {
 
       const tweetId = res.data.data?.id;
       logger.info({ tweetId }, "X/Twitter post published");
-      return { success: true, externalId: tweetId, publishedUrl: `https://x.com/i/web/status/${tweetId}` };
+      return { success: true, platformVideoId: tweetId, publishedUrl: `https://x.com/i/web/status/${tweetId}` };
     } catch (err: unknown) {
       logger.error({ err }, "X/Twitter publish failed");
-      return { success: false, error: (err as Error).message };
+      return { success: false, error: err instanceof Error ? err.message : "X/Twitter publish failed" };
     }
   }
 

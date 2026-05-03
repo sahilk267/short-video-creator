@@ -30,6 +30,9 @@ import CommentIcon from '@mui/icons-material/Comment';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 import BlockIcon from '@mui/icons-material/Block';
+import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import TuneIcon from '@mui/icons-material/Tune';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -59,13 +62,16 @@ const NAV_SECTIONS = [
       { path: '/trends', label: 'Trend Dashboard', icon: <TrendingUpIcon />, badge: '🔥' },
       { path: '/hooks', label: 'Hook Library', icon: <BookmarksIcon /> },
       { path: '/image-generator', label: 'Image Generator', icon: <ImageIcon /> },
+      { path: '/image-filters', label: 'Image Filters', icon: <TuneIcon />, badge: 'NEW' },
+      { path: '/video-library', label: 'Video Library DB', icon: <LibraryAddIcon />, badge: 'NEW' },
     ],
   },
   {
     title: 'Publishing & Growth',
     items: [
       { path: '/publish', label: 'Publish', icon: <PublishIcon /> },
-      { path: '/scheduler', label: 'Scheduler', icon: <ScheduleIcon /> },
+      { path: '/scheduler', label: 'Scheduler (Queue)', icon: <ScheduleIcon /> },
+      { path: '/schedule-manager', label: 'Schedule Manager', icon: <EventRepeatIcon />, badge: 'NEW' },
       { path: '/queue', label: 'Bulk Queue', icon: <QueueIcon /> },
       { path: '/strategy', label: 'Strategy Center', icon: <PsychologyIcon /> },
       { path: '/recycle', label: 'Content Recycle', icon: <RecyclingIcon /> },
@@ -203,7 +209,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           ))}
 
           <Box sx={{ p: 2, mt: 'auto' }}>
-            <Typography variant="caption" color="rgba(255,255,255,0.3)">v11.0 · AI Content Empire Platform</Typography>
+            <Typography variant="caption" color="rgba(255,255,255,0.3)">v12.0 · AI Content Empire Platform · 60 Engines</Typography>
           </Box>
         </Drawer>
 

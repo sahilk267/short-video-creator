@@ -71,7 +71,7 @@ export class LinkedInPublisher implements PlatformPublisher {
       );
       const postId = postRes.data.id;
       logger.info({ postId }, "LinkedIn video published");
-      return { success: true, externalId: postId, publishedUrl: `https://linkedin.com/feed/update/${postId}` };
+      return { success: true, platformVideoId: postId, publishedUrl: `https://linkedin.com/feed/update/${postId}` };
     } catch (err: unknown) {
       logger.error({ err }, "LinkedIn publish failed");
       return { success: false, error: (err as Error).message };

@@ -126,12 +126,18 @@ export class VideoLibraryStore {
 
   async updateMetrics(
     id: string,
-    metrics: Partial<VideoRecord["engagementMetrics"]>,
+    metrics: Partial<NonNullable<VideoRecord["engagementMetrics"]>>,
   ): Promise<VideoRecord | undefined> {
     const record = await this.get(id);
     if (!record) return undefined;
+    const current = record.engagementMetrics ?? { views: 0, likes: 0, comments: 0, shares: 0 };
     return this.update(id, {
-      engagementMetrics: { ...record.engagementMetrics, ...metrics },
+      engagementMetrics: {
+        views: metrics.views ?? current.views,
+        likes: metrics.likes ?? current.likes,
+        comments: metrics.comments ?? current.comments,
+        shares: metrics.shares ?? current.shares,
+      },
     });
   }
 

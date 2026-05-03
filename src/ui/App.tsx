@@ -40,6 +40,9 @@ const CommentCtaPage = lazy(() => import('./pages/CommentCtaPage'));
 const SeriesBuilderPage = lazy(() => import('./pages/SeriesBuilderPage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const ShadowbanPage = lazy(() => import('./pages/ShadowbanPage'));
+const VideoLibraryPage = lazy(() => import('./pages/VideoLibraryPage'));
+const SchedulePersistPage = lazy(() => import('./pages/SchedulePersistPage'));
+const ImageFilterPage = lazy(() => import('./pages/ImageFilterPage'));
 
 const App: React.FC = () => {
   return (
@@ -84,6 +87,9 @@ const App: React.FC = () => {
               <Route path="/series" element={<SeriesBuilderPage />} />
               <Route path="/watermark" element={<WatermarkPage />} />
               <Route path="/shadowban" element={<ShadowbanPage />} />
+              <Route path="/video-library" element={<VideoLibraryPage />} />
+              <Route path="/schedule-manager" element={<SchedulePersistPage />} />
+              <Route path="/image-filters" element={<ImageFilterPage />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
