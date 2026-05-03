@@ -40,6 +40,24 @@ const DEFAULT_LIMITS: Record<PlatformType, PlatformLimits> = {
     maxTagLength: 0,
     supportedFormats: ["mp4", "mov"],
   },
+  linkedin: {
+    maxFileSizeMB: 5 * 1024,
+    maxDurationSeconds: 10 * 60,
+    maxTitleLength: 200,
+    maxDescriptionLength: 3000,
+    maxTagCount: 10,
+    maxTagLength: 50,
+    supportedFormats: ["mp4", "mov", "avi"],
+  },
+  x: {
+    maxFileSizeMB: 512,
+    maxDurationSeconds: 140,
+    maxTitleLength: 280,
+    maxDescriptionLength: 280,
+    maxTagCount: 3,
+    maxTagLength: 50,
+    supportedFormats: ["mp4", "mov"],
+  },
 };
 
 export function getPlatformLimits(platform: PlatformType): PlatformLimits {

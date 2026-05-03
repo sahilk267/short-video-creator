@@ -17,6 +17,12 @@ const AIDashboard = lazy(() => import('./pages/AIDashboard'));
 const TenantConsole = lazy(() => import('./pages/TenantConsole'));
 const ContentTools = lazy(() => import('./pages/ContentTools'));
 const HealthDashboard = lazy(() => import('./pages/HealthDashboard'));
+const TrendDashboard = lazy(() => import('./pages/TrendDashboard'));
+const HookLibrary = lazy(() => import('./pages/HookLibrary'));
+const ImageGenerator = lazy(() => import('./pages/ImageGenerator'));
+const RecycleDashboard = lazy(() => import('./pages/RecycleDashboard'));
+const CostTracker = lazy(() => import('./pages/CostTracker'));
+const StrategyDashboard = lazy(() => import('./pages/StrategyDashboard'));
 
 const App: React.FC = () => {
   return (
@@ -38,6 +44,12 @@ const App: React.FC = () => {
               <Route path="/health" element={<HealthDashboard />} />
               <Route path="/tenants" element={<TenantConsole />} />
               <Route path="/content-tools" element={<ContentTools />} />
+              <Route path="/trends" element={<TrendDashboard />} />
+              <Route path="/hooks" element={<HookLibrary />} />
+              <Route path="/image-generator" element={<ImageGenerator />} />
+              <Route path="/recycle" element={<RecycleDashboard />} />
+              <Route path="/costs" element={<CostTracker />} />
+              <Route path="/strategy" element={<StrategyDashboard />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
@@ -46,4 +58,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+export default App;

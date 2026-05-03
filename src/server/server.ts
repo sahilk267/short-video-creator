@@ -15,6 +15,14 @@ import { TenantRouter } from "./routers/tenants";
 import { MarketingRouter } from "./routers/marketing";
 import { AiRouter } from "./routers/ai";
 import { ContentRouter } from "./routers/content";
+import { TrendsRouter } from "./routers/trends";
+import { HooksRouter } from "./routers/hooks";
+import { TranslateRouter } from "./routers/translate";
+import { ImageRouter } from "./routers/image";
+import { RecycleRouter } from "./routers/recycle";
+import { CostsRouter } from "./routers/costs";
+import { ShadowbanRouter } from "./routers/shadowban";
+import { StrategyRouter } from "./routers/strategy";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
@@ -37,6 +45,14 @@ export class Server {
     const marketingRouter = new MarketingRouter(config);
     const aiRouter = new AiRouter(config);
     const contentRouter = new ContentRouter();
+    const trendsRouter = new TrendsRouter();
+    const hooksRouter = new HooksRouter(config);
+    const translateRouter = new TranslateRouter();
+    const imageRouter = new ImageRouter(config);
+    const recycleRouter = new RecycleRouter(config);
+    const costsRouter = new CostsRouter(config);
+    const shadowbanRouter = new ShadowbanRouter(config);
+    const strategyRouter = new StrategyRouter(config);
 
     this.app.use("/api", apiRateLimiter);
     this.app.use("/api", apiRouter.router);
@@ -48,6 +64,14 @@ export class Server {
     this.app.use("/api/marketing", marketingRouter.router);
     this.app.use("/api/ai", aiRouter.router);
     this.app.use("/api/content", contentRouter.router);
+    this.app.use("/api/trends", trendsRouter.router);
+    this.app.use("/api/hooks", hooksRouter.router);
+    this.app.use("/api/translate", translateRouter.router);
+    this.app.use("/api/image", imageRouter.router);
+    this.app.use("/api/recycle", recycleRouter.router);
+    this.app.use("/api/costs", costsRouter.router);
+    this.app.use("/api/shadowban", shadowbanRouter.router);
+    this.app.use("/api/strategy", strategyRouter.router);
 
     // Serve static files from the UI build
     this.app.use(express.static(path.join(__dirname, "../../dist/ui")));

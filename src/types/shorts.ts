@@ -354,7 +354,7 @@ export type PublishJobStatus =
   | "skipped";
 
 // ─── Phase 5: Platform Publisher Types ──────────────────────────────────────
-export type PlatformType = "youtube" | "telegram" | "instagram" | "facebook";
+export type PlatformType = "youtube" | "telegram" | "instagram" | "facebook" | "linkedin" | "x";
 
 // ─── Phase 4/5: Render Job DB Record ─────────────────────────────────────────
 export interface RenderJobRecord {
