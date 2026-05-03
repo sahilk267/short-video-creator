@@ -22,25 +22,30 @@ interface HumanizedResult {
   eyeMovement: Array<{ time: number; direction: string }>;
 }
 
-export function HumanizedContentPage() {
+function HumanizedContentPage() {
   const [script, setScript] = useState("");
   const [emotion, setEmotion] = useState<"excited" | "calm" | "urgent" | "informative" | "humorous">("excited");
   const [result, setResult] = useState<HumanizedResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleHumanize = async () => {
     if (!script.trim()) return;
     setLoading(true);
+    setError(null);
+    const controller = new AbortController();
     try {
       const res = await fetch("/api/humanized/humanize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ script, emotion }),
+        signal: controller.signal,
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setResult(data.result);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to humanize content");
     } finally {
       setLoading(false);
     }
@@ -80,6 +85,8 @@ export function HumanizedContentPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {result && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -99,9 +106,9 @@ export function HumanizedContentPage() {
             Pause Points
           </Typography>
           <Box sx={{ ml: 2, mb: 2 }}>
-            {result.pauseMilliseconds.slice(0, 5).map((p, i) => (
-              <Typography key={i}>
-                Pause {i + 1}: {p.toFixed(0)}ms
+            {result.pauseMilliseconds.slice(0, 5).map((p, idx) => (
+              <Typography key={`pause-${idx}`}>
+                Pause {idx + 1}: {p.toFixed(0)}ms
               </Typography>
             ))}
             {result.pauseMilliseconds.length > 5 && (
@@ -110,14 +117,17 @@ export function HumanizedContentPage() {
           </Box>
 
           <Typography variant="h6" sx={{ mb: 2, color: "#f59e0b" }}>
-            Gestures
+            Gestures ({result.gesturePoints.length} total)
           </Typography>
           <Box sx={{ ml: 2 }}>
-            {result.gesturePoints.slice(0, 5).map((g, i) => (
-              <Typography key={i}>
+            {result.gesturePoints.slice(0, 5).map((g, idx) => (
+              <Typography key={`gesture-${idx}`}>
                 {g.gesture} @ {g.time}ms
               </Typography>
             ))}
+            {result.gesturePoints.length > 5 && (
+              <Typography variant="caption">... and {result.gesturePoints.length - 5} more</Typography>
+            )}
           </Box>
         </Paper>
       )}

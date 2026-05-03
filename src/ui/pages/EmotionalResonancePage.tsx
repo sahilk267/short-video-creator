@@ -24,29 +24,43 @@ interface EmotionalScore {
   overallScore: number;
 }
 
-export function EmotionalResonancePage() {
+function EmotionalResonancePage() {
   const [script, setScript] = useState("");
   const [audioDuration, setAudioDuration] = useState(30);
   const [visualElements, setVisualElements] = useState(5);
   const [score, setScore] = useState<EmotionalScore | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleScore = async () => {
     if (!script.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/emotional/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scriptText: script, audioLength: audioDuration, visualElements }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setScore(data.score);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to analyze emotional content");
     } finally {
       setLoading(false);
     }
+  };
+
+  const emotionColors: Record<string, string> = {
+    joy: "#FFD700",
+    fear: "#E74C3C",
+    anger: "#C0392B",
+    sadness: "#34495E",
+    surprise: "#F39C12",
+    trust: "#3498DB",
+    disgust: "#6C5CE7",
+    anticipation: "#FF7675",
   };
 
   return (
@@ -89,10 +103,16 @@ export function EmotionalResonancePage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {score && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
-          <Alert severity={score.overallScore > 0.7 ? "success" : "info"} sx={{ mb: 2 }}>
-            Emotional Tone: <strong>{score.tone}</strong> (Intensity: {score.intensity.toFixed(2)})
+          <Alert
+            severity={score.overallScore > 0.7 ? "success" : "info"}
+            sx={{ mb: 2, bgcolor: emotionColors[score.tone] + "22" }}
+          >
+            <strong>Emotional Tone:</strong> {score.tone.charAt(0).toUpperCase() + score.tone.slice(1)} (Intensity:{" "}
+            {score.intensity.toFixed(2)})
           </Alert>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 3 }}>
@@ -148,8 +168,17 @@ export function EmotionalResonancePage() {
           <Typography variant="h6" sx={{ mb: 2, color: "#f59e0b" }}>
             Overall Score: {(score.overallScore * 100).toFixed(0)}/100
           </Typography>
+
+          <Box>
+            <Chip
+              label={score.tone}
+              sx={{ bgcolor: emotionColors[score.tone], color: "#000", fontWeight: 700 }}
+            />
+          </Box>
         </Paper>
       )}
     </Container>
   );
 }
+
+export default EmotionalResonancePage;

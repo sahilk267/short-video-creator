@@ -23,7 +23,7 @@ interface ThumbnailDirectives {
   safeZones: { top: number; bottom: number; left: number; right: number };
 }
 
-export function ThumbnailPage() {
+function ThumbnailPage() {
   const [title, setTitle] = useState("Your Viral Title");
   const [emotion, setEmotion] = useState<"surprise" | "curiosity" | "urgency" | "humor" | "fear">("curiosity");
   const [contrast, setContrast] = useState<"low" | "medium" | "high">("high");
@@ -33,20 +33,23 @@ export function ThumbnailPage() {
   const [directives, setDirectives] = useState<ThumbnailDirectives | null>(null);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/thumbnail/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, contrast, emotionalTrigger: emotion, bgColor, textColor, accentColor }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setDirectives(data.directives);
       setScore(data.effectivenessScore);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to generate thumbnail");
     } finally {
       setLoading(false);
     }
@@ -117,6 +120,8 @@ export function ThumbnailPage() {
           </Button>
         </Paper>
 
+        {error && <Alert severity="error">{error}</Alert>}
+
         {directives && (
           <Paper
             sx={{
@@ -163,3 +168,5 @@ export function ThumbnailPage() {
     </Container>
   );
 }
+
+export default ThumbnailPage;

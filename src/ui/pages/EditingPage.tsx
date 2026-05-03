@@ -31,24 +31,27 @@ interface EditingPlan {
   energyLevel: number;
 }
 
-export function EditingPage() {
+function EditingPage() {
   const [duration, setDuration] = useState(30);
   const [intensity, setIntensity] = useState(3);
   const [plan, setPlan] = useState<EditingPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGeneratePlan = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/editing/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ videoDuration: duration * 1000, emotionalIntensity: intensity }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setPlan(data.plan);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to generate editing plan");
     } finally {
       setLoading(false);
     }
@@ -102,6 +105,8 @@ export function EditingPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {plan && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -118,7 +123,7 @@ export function EditingPage() {
           </Box>
 
           <Typography variant="h6" sx={{ mb: 2, color: "#f59e0b" }}>
-            Effects
+            Effects ({plan.effects.length} total)
           </Typography>
           <TableContainer>
             <Table sx={{ bgcolor: "#0f172a" }}>
@@ -132,7 +137,7 @@ export function EditingPage() {
               </TableHead>
               <TableBody>
                 {plan.effects.slice(0, 10).map((effect, idx) => (
-                  <TableRow key={idx}>
+                  <TableRow key={`effect-${idx}`}>
                     <TableCell>{effect.technique}</TableCell>
                     <TableCell align="right">{(effect.startTime / 1000).toFixed(2)}</TableCell>
                     <TableCell align="right">{effect.duration.toFixed(0)}</TableCell>
@@ -143,10 +148,14 @@ export function EditingPage() {
             </Table>
           </TableContainer>
           {plan.effects.length > 10 && (
-            <Typography variant="caption">... and {plan.effects.length - 10} more effects</Typography>
+            <Typography variant="caption" sx={{ display: "block", mt: 1 }}>
+              ... and {plan.effects.length - 10} more effects
+            </Typography>
           )}
         </Paper>
       )}
     </Container>
   );
 }
+
+export default EditingPage;

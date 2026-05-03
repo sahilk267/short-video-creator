@@ -21,7 +21,7 @@ interface AudioEnhancement {
   estimatedQuality: number;
 }
 
-export function AudioQualityPage() {
+function AudioQualityPage() {
   const [currentLUFS, setCurrentLUFS] = useState(-18);
   const [targetLUFS, setTargetLUFS] = useState(-14);
   const [musicDucking, setMusicDucking] = useState(true);
@@ -29,19 +29,22 @@ export function AudioQualityPage() {
   const [fadeOutMs, setFadeOutMs] = useState(800);
   const [enhancement, setEnhancement] = useState<AudioEnhancement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleProcess = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/audio/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentLUFS, targetLUFS }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setEnhancement(data.enhancement);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to process audio");
     } finally {
       setLoading(false);
     }
@@ -123,6 +126,8 @@ export function AudioQualityPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {enhancement && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -149,7 +154,7 @@ export function AudioQualityPage() {
               Applied Filters
             </Typography>
             {enhancement.ffmpegFilters.map((filter, idx) => (
-              <Typography key={idx} variant="body2" sx={{ fontFamily: "monospace" }}>
+              <Typography key={`filter-${idx}`} variant="body2" sx={{ fontFamily: "monospace" }}>
                 {filter}
               </Typography>
             ))}
@@ -159,3 +164,5 @@ export function AudioQualityPage() {
     </Container>
   );
 }
+
+export default AudioQualityPage;

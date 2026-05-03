@@ -20,7 +20,7 @@ interface EnhancementResult {
   estimatedQualityScore: number;
 }
 
-export function VisualEnhancementPage() {
+function VisualEnhancementPage() {
   const [autoSharpen, setAutoSharpen] = useState(true);
   const [contrastOptimize, setContrastOptimize] = useState(true);
   const [ruleOfThirds, setRuleOfThirds] = useState(true);
@@ -29,9 +29,11 @@ export function VisualEnhancementPage() {
   const [sharpnessLevel, setSharpnessLevel] = useState(1);
   const [enhancement, setEnhancement] = useState<EnhancementResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleEnhance = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/visual/enhance", {
         method: "POST",
@@ -47,10 +49,11 @@ export function VisualEnhancementPage() {
           noiseReduction: 0.5,
         }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setEnhancement(data.enhancement);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to enhance video");
     } finally {
       setLoading(false);
     }
@@ -112,6 +115,8 @@ export function VisualEnhancementPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {enhancement && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -149,3 +154,5 @@ export function VisualEnhancementPage() {
     </Container>
   );
 }
+
+export default VisualEnhancementPage;

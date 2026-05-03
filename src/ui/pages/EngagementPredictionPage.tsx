@@ -25,26 +25,29 @@ interface EngagementPrediction {
   targetAudience: string;
 }
 
-export function EngagementPredictionPage() {
+function EngagementPredictionPage() {
   const [views, setViews] = useState(1000);
   const [hookQuality, setHookQuality] = useState<"low" | "medium" | "high">("medium");
   const [topicTrend, setTopicTrend] = useState<"low" | "medium" | "high">("medium");
   const [postingTime, setPostingTime] = useState<"low" | "medium" | "high">("medium");
   const [prediction, setPrediction] = useState<EngagementPrediction | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handlePredict = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/engagement/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ views, hookQuality, topicTrend, postingTime }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setPrediction(data.prediction);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to predict engagement");
     } finally {
       setLoading(false);
     }
@@ -100,10 +103,13 @@ export function EngagementPredictionPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {prediction && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity="success" sx={{ mb: 3 }}>
-            Viral Score: <strong>{prediction.viralScore.toFixed(1)}/100</strong> · Peak Time: <strong>{prediction.peakTime}</strong>
+            Viral Score: <strong>{prediction.viralScore.toFixed(1)}/100</strong> · Peak Time:{" "}
+            <strong>{prediction.peakTime}</strong>
           </Alert>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 3 }}>
@@ -114,7 +120,7 @@ export function EngagementPredictionPage() {
               { label: "Expected Shares", value: prediction.expectedShares, color: "#ef4444" },
             ].map((item) => (
               <Box
-                key={item.label}
+                key={`pred-${item.label}`}
                 sx={{
                   flex: 1,
                   p: 2,
@@ -148,3 +154,5 @@ export function EngagementPredictionPage() {
     </Container>
   );
 }
+
+export default EngagementPredictionPage;

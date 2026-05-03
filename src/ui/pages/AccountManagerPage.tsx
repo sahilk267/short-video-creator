@@ -21,7 +21,7 @@ interface AccountMetrics {
   accountTier: "starter" | "growth" | "professional" | "elite";
 }
 
-export function AccountManagerPage() {
+function AccountManagerPage() {
   const [totalVideos, setTotalVideos] = useState(10);
   const [totalViews, setTotalViews] = useState(5000);
   const [totalEngagement, setTotalEngagement] = useState(250);
@@ -29,15 +29,18 @@ export function AccountManagerPage() {
   const [metrics, setMetrics] = useState<AccountMetrics | null>(null);
   const [guidance, setGuidance] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCalculate = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/account/metrics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ totalVideos, totalViews, totalEngagement, followersGained }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setMetrics(data.metrics);
 
@@ -46,10 +49,11 @@ export function AccountManagerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ metrics: data.metrics }),
       });
+      if (!guidanceRes.ok) throw new Error("Failed to fetch guidance");
       const guidanceData = await guidanceRes.json();
       setGuidance(guidanceData.guidance);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to calculate metrics");
     } finally {
       setLoading(false);
     }
@@ -101,6 +105,8 @@ export function AccountManagerPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {metrics && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert
@@ -128,7 +134,10 @@ export function AccountManagerPage() {
               { label: "Avg Engagement", value: (metrics.averageEngagement * 100).toFixed(2) + "%" },
               { label: "Followers Gained", value: metrics.followersGained },
             ].map((item) => (
-              <Box key={item.label} sx={{ flex: 1, p: 2, bgcolor: "#0f172a", borderRadius: 1 }}>
+              <Box
+                key={`acct-${item.label}`}
+                sx={{ flex: 1, p: 2, bgcolor: "#0f172a", borderRadius: 1 }}
+              >
                 <Typography variant="body2" sx={{ mb: 0.5 }}>
                   {item.label}
                 </Typography>
@@ -137,7 +146,7 @@ export function AccountManagerPage() {
             ))}
           </Stack>
 
-          <Box sx={{ p: 2, bgcolor: "#0f172a", borderRadius: 1, border: `2px solid ${tierColors[metrics.accountTier]}` }}>
+          <Box sx={{ p: 2, bgcolor: "#0f172a", borderRadius: 1, border: `2px solid ${tierColors[metrics.accountTier]}`, mb: 3 }}>
             <Typography variant="body2" sx={{ mb: 1, color: tierColors[metrics.accountTier], fontWeight: 700 }}>
               Tier Badge: {metrics.accountTier.charAt(0).toUpperCase() + metrics.accountTier.slice(1)}
             </Typography>
@@ -154,13 +163,13 @@ export function AccountManagerPage() {
           </Box>
 
           {guidance.length > 0 && (
-            <Box sx={{ mt: 3 }}>
+            <Box>
               <Typography variant="h6" sx={{ mb: 2, color: "#f59e0b" }}>
                 Guidance
               </Typography>
               <Stack spacing={1}>
-                {guidance.map((tip, i) => (
-                  <Alert key={i} severity="info" sx={{ mb: 0 }}>
+                {guidance.map((tip, idx) => (
+                  <Alert key={`guidance-${idx}`} severity="info" sx={{ mb: 0 }}>
                     {tip}
                   </Alert>
                 ))}
@@ -172,3 +181,5 @@ export function AccountManagerPage() {
     </Container>
   );
 }
+
+export default AccountManagerPage;

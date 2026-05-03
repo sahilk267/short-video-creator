@@ -23,24 +23,27 @@ interface AttentionOptimization {
   estimatedRetention: number;
 }
 
-export function AttentionOptimizerPage() {
+function AttentionOptimizerPage() {
   const [duration, setDuration] = useState(30);
   const [platform, setPlatform] = useState<"tiktok" | "instagram" | "youtube" | "youtube_shorts">("tiktok");
   const [optimization, setOptimization] = useState<AttentionOptimization | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleOptimize = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/attention/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ duration, platform }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setOptimization(data.optimization);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to optimize attention");
     } finally {
       setLoading(false);
     }
@@ -86,6 +89,8 @@ export function AttentionOptimizerPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {optimization && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -95,24 +100,24 @@ export function AttentionOptimizerPage() {
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
             <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                Hook Length: {optimization.hookLength.toFixed(1)}s
+                <strong>Hook Length:</strong> {optimization.hookLength.toFixed(1)}s
               </Typography>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                Pace Multiplier: {optimization.paceMultiplier.toFixed(2)}x
+                <strong>Pace Multiplier:</strong> {optimization.paceMultiplier.toFixed(2)}x
               </Typography>
               <Typography variant="body2">
-                Transition Frequency: {optimization.transitionFrequency.toFixed(0)} per minute
+                <strong>Transition Frequency:</strong> {optimization.transitionFrequency.toFixed(0)} per minute
               </Typography>
             </Box>
 
             <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                Music Intensity: {optimization.musicIntensity.toFixed(2)}/1.0
+                <strong>Music Intensity:</strong> {optimization.musicIntensity.toFixed(2)}/1.0
               </Typography>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                Visual Change Frequency: {optimization.visualChangeFrequency.toFixed(1)}x per minute
+                <strong>Visual Change Frequency:</strong> {optimization.visualChangeFrequency.toFixed(1)}x per minute
               </Typography>
-              <Typography variant="body2" sx={{ color: "#22c55e" }}>
+              <Typography variant="body2" sx={{ color: "#22c55e", fontWeight: 700 }}>
                 Estimated Retention: {(optimization.estimatedRetention * 100).toFixed(0)}%
               </Typography>
             </Box>
@@ -122,3 +127,5 @@ export function AttentionOptimizerPage() {
     </Container>
   );
 }
+
+export default AttentionOptimizerPage;

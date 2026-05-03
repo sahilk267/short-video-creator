@@ -23,7 +23,7 @@ interface QualityMetrics {
   recommendations: string[];
 }
 
-export function QualityScoringPage() {
+function QualityScoringPage() {
   const [hasAudio, setHasAudio] = useState(true);
   const [audioLUFS, setAudioLUFS] = useState(-14);
   const [visualResolution, setVisualResolution] = useState(1920);
@@ -31,19 +31,22 @@ export function QualityScoringPage() {
   const [scriptLength, setScriptLength] = useState(500);
   const [metrics, setMetrics] = useState<QualityMetrics | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleScore = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/quality/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hasAudio, audioLUFS, visualResolution, frameRate, scriptLength }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setMetrics(data.metrics);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Failed to score quality");
     } finally {
       setLoading(false);
     }
@@ -88,6 +91,8 @@ export function QualityScoringPage() {
         </Button>
       </Paper>
 
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {metrics && (
         <Paper sx={{ p: 3, bgcolor: "#1e293b" }}>
           <Alert severity={metrics.overallScore > 0.75 ? "success" : metrics.overallScore > 0.5 ? "info" : "warning"} sx={{ mb: 3 }}>
@@ -101,7 +106,7 @@ export function QualityScoringPage() {
               { label: "Script", value: metrics.scriptQuality },
               { label: "Engagement", value: metrics.engagementPotential },
             ].map((item) => (
-              <Box key={item.label}>
+              <Box key={`metric-${item.label}`}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                   <Typography variant="body2">{item.label}</Typography>
                   <Typography variant="body2" sx={{ color: "#f59e0b" }}>
@@ -119,8 +124,8 @@ export function QualityScoringPage() {
                 Issues:
               </Typography>
               <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                {metrics.issues.map((issue, i) => (
-                  <Chip key={i} label={issue} color="error" size="small" />
+                {metrics.issues.map((issue, idx) => (
+                  <Chip key={`issue-${idx}`} label={issue} color="error" size="small" />
                 ))}
               </Stack>
             </Box>
@@ -132,8 +137,8 @@ export function QualityScoringPage() {
                 Recommendations:
               </Typography>
               <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                {metrics.recommendations.map((rec, i) => (
-                  <Chip key={i} label={rec} color="success" size="small" />
+                {metrics.recommendations.map((rec, idx) => (
+                  <Chip key={`rec-${idx}`} label={rec} color="success" size="small" />
                 ))}
               </Stack>
             </Box>
@@ -143,3 +148,5 @@ export function QualityScoringPage() {
     </Container>
   );
 }
+
+export default QualityScoringPage;
