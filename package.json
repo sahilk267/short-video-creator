@@ -86,6 +86,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.5.3",
+    "recharts": "^3.8.1",
     "remotion": "^4.0.286",
     "rss-parser": "^3.13.0",
     "uuid": "^13.0.0",

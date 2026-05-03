@@ -1,5 +1,5 @@
 /**
- * VideoLibraryPage – Full video library management with CRUD, search, filters, stats
+ * VideoLibraryPage – Full video library management with CRUD, search, filters, stats + analytics
  */
 import React, { useState, useEffect, useCallback } from "react";
 import {
@@ -8,6 +8,7 @@ import {
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab,
   Stack, InputAdornment, Badge, Tooltip, Divider, Paper, LinearProgress
 } from "@mui/material";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -177,6 +178,7 @@ export const VideoLibraryPage: React.FC = () => {
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
         <Tab label="Library" icon={<VideoLibraryIcon />} iconPosition="start" />
         <Tab label="Stats & Analytics" icon={<BarChartIcon />} iconPosition="start" />
+        <Tab label="Engagement Trends" icon={<BarChartIcon />} iconPosition="start" />
         <Tab label="Trending Tags" icon={<TagIcon />} iconPosition="start" />
       </Tabs>
 
@@ -359,8 +361,123 @@ export const VideoLibraryPage: React.FC = () => {
         </Grid>
       )}
 
-      {/* Tab 2: Trending Tags */}
+      {/* Tab 2: Engagement Trends */}
       {tab === 2 && (
+        <Box>
+          {videos.length === 0 ? (
+            <Paper sx={{ textAlign: "center", py: 8, backgroundColor: "transparent", border: "2px dashed rgba(255,255,255,0.1)" }}>
+              <BarChartIcon sx={{ fontSize: 48, opacity: 0.3, mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">No videos to analyze yet</Typography>
+            </Paper>
+          ) : (
+            <Grid container spacing={3}>
+              {/* Overall Engagement Trends */}
+              <Grid item xs={12}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>📈 Overall Engagement Trends</Typography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={videos.map((v, i) => ({ name: v.title.slice(0, 12), views: v.engagementMetrics?.views || 0, likes: v.engagementMetrics?.likes || 0, comments: v.engagementMetrics?.comments || 0, shares: v.engagementMetrics?.shares || 0 }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                        <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: "rgba(15,23,42,0.9)", border: "1px solid #6366f1" }} />
+                        <Legend />
+                        <Line type="monotone" dataKey="views" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
+                        <Line type="monotone" dataKey="likes" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} />
+                        <Line type="monotone" dataKey="comments" stroke="#22c55e" strokeWidth={2} dot={{ r: 4 }} />
+                        <Line type="monotone" dataKey="shares" stroke="#ec4899" strokeWidth={2} dot={{ r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Per-Video Performance Comparison */}
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>👁️ Views vs Engagement</Typography>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={videos.slice(0, 8).map((v) => ({ name: v.title.slice(0, 10), views: v.engagementMetrics?.views || 0, engagement: (v.engagementMetrics?.likes || 0) + (v.engagementMetrics?.comments || 0) + (v.engagementMetrics?.shares || 0) }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" fontSize={11} angle={-45} textAnchor="end" height={80} />
+                        <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: "rgba(15,23,42,0.9)", border: "1px solid #6366f1" }} />
+                        <Legend />
+                        <Bar dataKey="views" fill="#6366f1" radius={4} />
+                        <Bar dataKey="engagement" fill="#f59e0b" radius={4} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Engagement Breakdown Pie */}
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>🎯 Total Engagement Breakdown</Typography>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: "Likes", value: videos.reduce((s, v) => s + (v.engagementMetrics?.likes || 0), 0) },
+                            { name: "Comments", value: videos.reduce((s, v) => s + (v.engagementMetrics?.comments || 0), 0) },
+                            { name: "Shares", value: videos.reduce((s, v) => s + (v.engagementMetrics?.shares || 0), 0) },
+                          ].filter(d => d.value > 0)}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry) => `${entry.name}: ${entry.value}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          <Cell fill="#6366f1" />
+                          <Cell fill="#f59e0b" />
+                          <Cell fill="#22c55e" />
+                        </Pie>
+                        <RechartsTooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Top Performers */}
+              <Grid item xs={12}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>🏆 Top Performers (Engagement Rate)</Typography>
+                    {videos
+                      .map((v) => ({ ...v, engagementRate: v.engagementMetrics?.views ? ((v.engagementMetrics.likes + v.engagementMetrics.comments + v.engagementMetrics.shares) / v.engagementMetrics.views * 100).toFixed(2) : 0 }))
+                      .sort((a, b) => parseFloat(b.engagementRate as any) - parseFloat(a.engagementRate as any))
+                      .slice(0, 5)
+                      .map((v, idx) => (
+                        <Box key={v.id} sx={{ mb: 2, pb: 2, borderBottom: idx < 4 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                            <Typography variant="body2" fontWeight="bold">{idx + 1}. {v.title}</Typography>
+                            <Chip label={`${v.engagementRate}% engagement`} color="primary" size="small" />
+                          </Stack>
+                          <Stack direction="row" gap={2} sx={{ fontSize: "0.85rem", color: "text.secondary" }}>
+                            <span>👁️ {v.engagementMetrics?.views.toLocaleString()} views</span>
+                            <span>❤️ {v.engagementMetrics?.likes.toLocaleString()} likes</span>
+                            <span>💬 {v.engagementMetrics?.comments.toLocaleString()} comments</span>
+                            <span>↗️ {v.engagementMetrics?.shares.toLocaleString()} shares</span>
+                          </Stack>
+                        </Box>
+                      ))}
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
+      )}
+
+      {/* Tab 3: Trending Tags */}
+      {tab === 3 && (
         <Card variant="outlined">
           <CardContent>
             <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>🔥 Trending Tags in Your Library</Typography>
