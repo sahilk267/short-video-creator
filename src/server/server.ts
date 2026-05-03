@@ -5,6 +5,8 @@ import type {
   Response as ExpressResponse,
 } from "express";
 import path from "path";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./swagger";
 import { ShortCreator } from "../short-creator/ShortCreator";
 import { APIRouter } from "./routers/rest";
 import { MCPRouter } from "./routers/mcp";
@@ -117,6 +119,16 @@ export class Server {
     this.app.use("/api/watermark", watermarkRouter.router);
     this.app.use("/api/videolibrary", videoLibraryRouter.router);
     this.app.use("/api/schedule", scheduleRouter.router);
+
+    // API Documentation (Swagger UI)
+    this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+      customSiteTitle: "AI Viral Content Empire – API Docs",
+      customCss: ".swagger-ui .topbar { background-color: #6366f1; }",
+    }));
+    this.app.get("/api/docs.json", (_req: ExpressRequest, res: ExpressResponse) => {
+      res.setHeader("Content-Type", "application/json");
+      res.send(swaggerSpec);
+    });
 
     // Serve static files from the UI build
     this.app.use(express.static(path.join(__dirname, "../../dist/ui")));

@@ -1,31 +1,42 @@
 services:
+  # ── Redis (Job Queue) ──────────────────────────────────────────
   redis:
     image: redis:7-alpine
+    container_name: ace-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  short-creator:
+  # ── AI Viral Content Empire App ────────────────────────────────
+  app:
     build:
       context: .
-      dockerfile: main-tiny.Dockerfile
+      dockerfile: main.Dockerfile
+    container_name: ace-app
     env_file:
       - .env
     environment:
+      # Override/set Docker-specific values
+      - DOCKER=true
       - DEV=false
-      - NODE_OPTIONS=--max-old-space-size=4096
-      - KOKORO_MODEL_PRECISION=q4
       - SKIP_RUNTIME_INSTALL=true
-      - PUPPETEER_CACHE_DIR=/app/data/cache/puppeteer
-      - HF_HOME=/app/data/cache/huggingface
+      - NODE_OPTIONS=--max-old-space-size=4096
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_ENABLED=true
+      - PUPPETEER_CACHE_DIR=/app/data/cache/puppeteer
+      - HF_HOME=/app/data/cache/huggingface
     ports:
-      - "3123:3123"
+      - "${PORT:-3123}:${PORT:-3123}"
     volumes:
       - ./data:/app/data
     extra_hosts:
@@ -33,11 +44,41 @@ services:
     shm_size: "2gb"
     restart: unless-stopped
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           memory: 6g
+        reservations:
+          memory: 2g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3123}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ── Nginx Reverse Proxy (Optional – uncomment if needed) ──────
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: ace-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     app:
+  #       condition: service_healthy
 
 volumes:
   redis_data:
+    driver: local
+
+networks:
+  default:
+    name: ace-network
+    driver: bridge

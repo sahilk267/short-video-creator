@@ -18,8 +18,11 @@ import { RenderWorker } from "./workers/RenderWorker";
 import { PublishWorker } from "./workers/PublishWorker";
 import { DeadLetterWorker } from "./workers/DeadLetterWorker";
 import { SchedulerService } from "./services/SchedulerService";
+import { runEnvironmentValidation } from "./config/validate";
 
 async function main() {
+  runEnvironmentValidation();
+
   const config = new Config();
   try {
     config.ensureConfig();

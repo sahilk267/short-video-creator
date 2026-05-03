@@ -1,0 +1,475 @@
+{
+  "info": {
+    "name": "AI Viral Content Empire – API v12.0",
+    "_postman_id": "ai-content-empire-v12",
+    "description": "Complete API collection for the AI Viral Content Empire SaaS Platform.\n\n## Setup\n1. Import this collection into Postman\n2. Set the `baseUrl` variable to your server (default: http://localhost:3123)\n3. Set `PEXELS_API_KEY` in environment if needed\n\n## Usage\nRun the requests in order. Create a video first, then publish it.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3123", "type": "string" },
+    { "key": "videoId", "value": "", "type": "string" },
+    { "key": "libraryId", "value": "", "type": "string" },
+    { "key": "scheduleId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/health",
+            "description": "Check system health status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎬 Video Creation",
+      "item": [
+        {
+          "name": "Create Short Video",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('videoId', json.id);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/shorts",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenes\": [\n    {\n      \"text\": \"Artificial intelligence is transforming the world as we know it.\",\n      \"searchTerms\": [\"technology\", \"AI\", \"future\", \"digital\"]\n    },\n    {\n      \"text\": \"Here are three ways AI will change your business in 2026.\",\n      \"searchTerms\": [\"business\", \"office\", \"entrepreneur\", \"growth\"]\n    },\n    {\n      \"text\": \"Subscribe now for daily AI insights that keep you ahead of the curve.\",\n      \"searchTerms\": [\"subscribe\", \"notification\", \"social media\"]\n    }\n  ],\n  \"music\": { \"genre\": \"ambient\", \"mood\": \"inspiring\" },\n  \"voice\": \"af_heart\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Videos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/shorts?status=done&limit=20",
+              "query": [
+                { "key": "status", "value": "done" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Video Status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/shorts/{{videoId}}"
+          }
+        },
+        {
+          "name": "Delete Video",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/shorts/{{videoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 Video Library",
+      "item": [
+        {
+          "name": "List Library",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videolibrary?status=draft&limit=50",
+              "query": [
+                { "key": "status", "value": "draft" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add to Library",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('libraryId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/videolibrary",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"AI Trends 2026\",\n  \"description\": \"Top AI trends reshaping industries\",\n  \"category\": \"Technology\",\n  \"platform\": \"youtube\",\n  \"status\": \"draft\",\n  \"tags\": [\"AI\", \"tech\", \"trends\", \"2026\"],\n  \"duration\": 60\n}"
+            }
+          }
+        },
+        {
+          "name": "Library Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/videolibrary/stats"
+          }
+        },
+        {
+          "name": "Search Library",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/videolibrary/search?q=technology",
+              "query": [{ "key": "q", "value": "technology" }]
+            }
+          }
+        },
+        {
+          "name": "Get Library Record",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/videolibrary/{{libraryId}}"
+          }
+        },
+        {
+          "name": "Update Metrics",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/videolibrary/{{libraryId}}/metrics",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"views\": 15000,\n  \"likes\": 1200,\n  \"comments\": 89,\n  \"shares\": 340\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Library Record",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/videolibrary/{{libraryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 Schedule",
+      "item": [
+        {
+          "name": "List Schedules",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/schedule"
+          }
+        },
+        {
+          "name": "Create Schedule",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('scheduleId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/schedule",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Daily Tech Content\",\n  \"platforms\": [\"youtube\", \"instagram\"],\n  \"categories\": [\"Technology\"],\n  \"languages\": [\"en\"],\n  \"cronExpression\": \"0 9 * * *\",\n  \"engines\": {\n    \"enableHashtagOptimization\": true,\n    \"enableCommentCTA\": true,\n    \"enableViralElements\": true,\n    \"enableTrendAlignment\": true\n  },\n  \"quality\": {\n    \"targetLUFS\": -14,\n    \"visualQualityTier\": \"premium\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Schedule Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/schedule/stats"
+          }
+        },
+        {
+          "name": "Trigger Manual Run",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/schedule/{{scheduleId}}/run"
+          }
+        },
+        {
+          "name": "Pause Schedule",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/schedule/{{scheduleId}}/status",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"status\": \"paused\" }"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📈 Trends",
+      "item": [
+        {
+          "name": "Get Trending Topics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/trends?category=Technology",
+              "query": [{ "key": "category", "value": "Technology" }]
+            }
+          }
+        },
+        {
+          "name": "Viral Radar",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/trends/viral"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🖼 Image Generation",
+      "item": [
+        {
+          "name": "Generate Image",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/image/generate",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"quote_card\",\n  \"title\": \"AI is transforming every industry\",\n  \"category\": \"Technology\",\n  \"platform\": \"instagram_square\",\n  \"style\": \"modern\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Filter Presets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/image/filters"
+          }
+        },
+        {
+          "name": "Build CSS Filter",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/image/filters/css",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filter\": \"cinema\",\n  \"intensity\": 90,\n  \"brightness\": 90,\n  \"contrast\": 130,\n  \"saturation\": 80\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚀 Publishing",
+      "item": [
+        {
+          "name": "Publish to YouTube",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/publish",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"videoId\": \"{{videoId}}\",\n  \"platform\": \"youtube\",\n  \"title\": \"AI Trends 2026 – What You NEED to Know\",\n  \"description\": \"In this video we break down the top AI trends reshaping business in 2026.\\n\\n#AI #Technology #Business #Trending\",\n  \"tags\": [\"AI\", \"technology\", \"business\", \"2026\", \"trends\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Publish to Instagram",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/publish",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"videoId\": \"{{videoId}}\",\n  \"platform\": \"instagram\",\n  \"title\": \"AI Trends 2026\",\n  \"description\": \"Top AI trends you need to know! #AI #tech #trending\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔗 Hooks & Strategy",
+      "item": [
+        {
+          "name": "List Hook Templates",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/hooks"
+          }
+        },
+        {
+          "name": "Optimize Hashtags",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/strategy/hashtags",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"artificial intelligence\",\n  \"platform\": \"instagram\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Engines",
+      "item": [
+        {
+          "name": "Humanize Content",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/humanized",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"text\": \"Artificial intelligence systems are being utilized to optimize business processes at an unprecedented scale.\" }"
+            }
+          }
+        },
+        {
+          "name": "Score Quality",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/quality",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"script\": \"Did you know AI is about to change everything? Here are 3 shocking facts.\" }"
+            }
+          }
+        },
+        {
+          "name": "Predict Engagement",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/engagement",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"The AI Secret Big Tech is Hiding\",\n  \"description\": \"What they don't want you to know about AI\",\n  \"tags\": [\"AI\", \"tech\", \"secret\", \"viral\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Check Shadowban Risk",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/shadowban",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hashtags\": [\"#trending\", \"#viral\", \"#fyp\", \"#AI\"],\n  \"platform\": \"instagram\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Translate Content",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/translate",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"AI is transforming the world\",\n  \"targetLanguage\": \"es\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Analytics",
+      "item": [
+        {
+          "name": "Performance Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics?period=7d",
+              "query": [{ "key": "period", "value": "7d" }]
+            }
+          }
+        },
+        {
+          "name": "List A/B Tests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ab-testing"
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ System",
+      "item": [
+        {
+          "name": "List Tenants",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tenants"
+          }
+        },
+        {
+          "name": "Cost Summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/costs"
+          }
+        },
+        {
+          "name": "Queue Status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/queue"
+          }
+        },
+        {
+          "name": "List Webhooks",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/webhooks"
+          }
+        },
+        {
+          "name": "Get Branding",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/branding"
+          }
+        },
+        {
+          "name": "API Docs (JSON)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/docs.json"
+          }
+        }
+      ]
+    }
+  ]
+}
