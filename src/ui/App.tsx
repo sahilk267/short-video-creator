@@ -25,6 +25,16 @@ const CostTracker = lazy(() => import('./pages/CostTracker'));
 const StrategyDashboard = lazy(() => import('./pages/StrategyDashboard'));
 const WebhookDashboard = lazy(() => import('./pages/WebhookDashboard'));
 const BrandingDashboard = lazy(() => import('./pages/BrandingDashboard'));
+const HumanizedContentPage = lazy(() => import('./pages/HumanizedContentPage'));
+const ThumbnailPage = lazy(() => import('./pages/ThumbnailPage'));
+const EditingPage = lazy(() => import('./pages/EditingPage'));
+const VisualEnhancementPage = lazy(() => import('./pages/VisualEnhancementPage'));
+const AudioQualityPage = lazy(() => import('./pages/AudioQualityPage'));
+const EmotionalResonancePage = lazy(() => import('./pages/EmotionalResonancePage'));
+const AttentionOptimizerPage = lazy(() => import('./pages/AttentionOptimizerPage'));
+const QualityScoringPage = lazy(() => import('./pages/QualityScoringPage'));
+const EngagementPredictionPage = lazy(() => import('./pages/EngagementPredictionPage'));
+const AccountManagerPage = lazy(() => import('./pages/AccountManagerPage'));
 
 const App: React.FC = () => {
   return (
@@ -54,6 +64,16 @@ const App: React.FC = () => {
               <Route path="/strategy" element={<StrategyDashboard />} />
               <Route path="/webhooks" element={<WebhookDashboard />} />
               <Route path="/branding" element={<BrandingDashboard />} />
+              <Route path="/humanized" element={<HumanizedContentPage />} />
+              <Route path="/thumbnail" element={<ThumbnailPage />} />
+              <Route path="/editing" element={<EditingPage />} />
+              <Route path="/visual" element={<VisualEnhancementPage />} />
+              <Route path="/audio" element={<AudioQualityPage />} />
+              <Route path="/emotional" element={<EmotionalResonancePage />} />
+              <Route path="/attention" element={<AttentionOptimizerPage />} />
+              <Route path="/quality" element={<QualityScoringPage />} />
+              <Route path="/engagement" element={<EngagementPredictionPage />} />
+              <Route path="/account" element={<AccountManagerPage />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>

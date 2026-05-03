@@ -1,0 +1,46 @@
+import { Router } from "express";
+import { AttentionOptimizerEngine } from "../../services/AttentionOptimizerEngine.js";
+import { logger } from "../../logger";
+
+export class AttentionRouter {
+  readonly router: Router;
+  private engine: AttentionOptimizerEngine;
+
+  constructor() {
+    this.router = Router();
+    this.engine = new AttentionOptimizerEngine();
+    this.registerRoutes();
+  }
+
+  private registerRoutes() {
+    this.router.post("/analyze", (req, res) => {
+      try {
+        const { duration = 30, platform = "tiktok" } = req.body;
+        const span = this.engine.analyzeAttentionSpan(duration, platform);
+        res.json({ span });
+      } catch (err) {
+        logger.error({ err }, "POST /attention/analyze failed");
+        res.status(500).json({ error: "Failed to analyze attention span" });
+      }
+    });
+
+    this.router.post("/optimize", (req, res) => {
+      try {
+        const { duration = 30, platform = "tiktok" } = req.body;
+        const optimization = this.engine.optimizeForAttention(duration, platform);
+        res.json({ optimization });
+      } catch (err) {
+        res.status(500).json({ error: "Failed to optimize attention" });
+      }
+    });
+
+    this.router.get("/hook/:platform/:topic", (req, res) => {
+      try {
+        const hook = this.engine.generateHookScript(req.params.platform, req.params.topic);
+        res.json({ hook });
+      } catch (err) {
+        res.status(500).json({ error: "Failed to generate hook" });
+      }
+    });
+  }
+}

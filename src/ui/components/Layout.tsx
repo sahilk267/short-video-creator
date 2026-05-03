@@ -76,10 +76,25 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    title: 'Content Creation',
+    items: [
+      { path: '/humanized', label: 'Humanized Content', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/thumbnail', label: 'Thumbnail Generator', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/editing', label: 'Expert Editing', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/visual', label: 'Visual Enhancement', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/audio', label: 'Audio Quality', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/emotional', label: 'Emotional Resonance', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/attention', label: 'Attention Optimizer', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/quality', label: 'Quality Scoring', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/engagement', label: 'Engagement Prediction', icon: <BuildIcon />, badge: 'NEW' },
+      { path: '/account', label: 'Account Manager', icon: <BuildIcon />, badge: 'NEW' },
+    ],
+  },
+  {
     title: 'System',
     items: [
       { path: '/webhooks', label: 'Notifications', icon: <NotificationsActiveIcon /> },
-      { path: '/branding', label: 'White-Label Branding', icon: <ColorLensIcon />, badge: 'NEW' },
+      { path: '/branding', label: 'White-Label Branding', icon: <ColorLensIcon /> },
       { path: '/content-tools', label: 'Content Tools', icon: <BuildIcon /> },
       { path: '/mappings', label: 'Category Mapping', icon: <BusinessIcon /> },
       { path: '/health', label: 'Health', icon: <MonitorHeartIcon /> },
