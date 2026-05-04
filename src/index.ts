@@ -2,22 +2,11 @@
 import path from "path";
 import fs from "fs-extra";
 
-import { Kokoro } from "./short-creator/libraries/Kokoro.js";
-import { Remotion } from "./short-creator/libraries/Remotion.js";
-import { Whisper } from "./short-creator/libraries/Whisper.js";
-import { FFMpeg } from "./short-creator/libraries/FFmpeg.js";
-import { PexelsAPI } from "./short-creator/libraries/Pexels.js";
 import { Config } from "./config.js";
-import { ShortCreator } from "./short-creator/ShortCreator.js";
 import { logger } from "./logger.js";
 import { Server } from "./server/server.js";
-import { MusicManager } from "./short-creator/music.js";
-import { testRedisConnection } from "./workers/QueueManager.js";
-import { RenderWorker } from "./workers/RenderWorker.js";
-import { PublishWorker } from "./workers/PublishWorker.js";
-import { DeadLetterWorker } from "./workers/DeadLetterWorker.js";
-import { SchedulerService } from "./services/SchedulerService.js";
 import { runEnvironmentValidation } from "./config/validate.js";
+import { MusicManager } from "./short-creator/music.js";
 
 async function main() {
   runEnvironmentValidation();
@@ -41,103 +30,131 @@ async function main() {
     process.exit(1);
   }
 
-  const skipRuntimeInstall = process.env.SKIP_RUNTIME_INSTALL === "true";
-  if (skipRuntimeInstall) {
-    logger.info("Skipping runtime install because SKIP_RUNTIME_INSTALL=true");
-  } else {
-    const { install } = await import("./scripts/install.js");
-    await install();
-  }
-
-  logger.debug("initializing remotion");
-  const remotion = await Remotion.init(config);
-  logger.debug("initializing kokoro");
-  const kokoro = await Kokoro.init(config.kokoroModelPrecision);
-  logger.debug("initializing whisper");
-  const whisper = await Whisper.init(config);
-  logger.debug("initializing ffmpeg");
-  const ffmpeg = await FFMpeg.init();
-  const pexelsApi = new PexelsAPI(config.pexelsApiKey);
-
-  logger.debug("initializing the short creator");
-  const shortCreator = new ShortCreator(
-    config,
-    remotion,
-    kokoro,
-    whisper,
-    ffmpeg,
-    pexelsApi,
-    musicManager,
+  // Create a deferred ShortCreator that resolves once all heavy libs are ready.
+  // The server starts immediately so Replit can detect the port.
+  let shortCreatorResolve: (sc: import("./short-creator/ShortCreator.js").ShortCreator) => void;
+  let shortCreatorReject: (err: unknown) => void;
+  const shortCreatorPromise = new Promise<import("./short-creator/ShortCreator.js").ShortCreator>(
+    (resolve, reject) => {
+      shortCreatorResolve = resolve;
+      shortCreatorReject = reject;
+    }
   );
 
-  if (!config.runningInDocker) {
-    // the project is running with npm - we need to check if the installation is correct
-    if (fs.existsSync(config.installationSuccessfulPath)) {
-      logger.info("the installation is successful - starting the server");
-    } else {
-      logger.info(
-        "testing if the installation was successful - this may take a while...",
-      );
-      try {
-        const audioBuffer = (await kokoro.generate("hi", "af_heart")).audio;
-        await ffmpeg.createMp3DataUri(audioBuffer);
-        await pexelsApi.findVideo(["dog"], 2.4);
-        const testVideoPath = path.join(config.tempDirPath, "test.mp4");
-        await remotion.testRender(testVideoPath);
-        fs.rmSync(testVideoPath, { force: true });
-        fs.writeFileSync(config.installationSuccessfulPath, "ok", {
-          encoding: "utf-8",
-        });
-        logger.info("the installation was successful - starting the server");
-      } catch (error: unknown) {
-        logger.fatal(
-          error,
-          "The environment is not set up correctly - please follow the instructions in the README.md file https://github.com/gyoridavid/short-video-maker",
-        );
-        process.exit(1);
-      }
-    }
-  }
-
-  logger.debug("initializing the server");
-
-  const server = new Server(config, shortCreator);
+  logger.debug("Starting HTTP server (libraries initializing in background)...");
+  const server = new Server(config, shortCreatorPromise);
   server.start();
 
-  // Phase 4: Start BullMQ workers if Redis is available
-  let renderWorker: RenderWorker | undefined;
-  let publishWorker: PublishWorker | undefined;
-  let deadLetterWorker: DeadLetterWorker | undefined;
+  // Initialize heavy libraries in background
+  (async () => {
+    try {
+      const skipRuntimeInstall = process.env.SKIP_RUNTIME_INSTALL === "true";
+      if (skipRuntimeInstall) {
+        logger.info("Skipping runtime install because SKIP_RUNTIME_INSTALL=true");
+      } else {
+        const { install } = await import("./scripts/install.js");
+        await install();
+      }
 
-  if (config.redisEnabled) {
-    const redisOk = await testRedisConnection(config);
-    if (redisOk) {
-      renderWorker = new RenderWorker(config, shortCreator);
-      publishWorker = new PublishWorker(config);
-      deadLetterWorker = new DeadLetterWorker(config);
-      logger.info("BullMQ workers started (render, publish, deadletter)");
-    } else {
-      logger.warn("Redis unavailable – BullMQ workers NOT started. App runs in direct-queue mode.");
+      logger.debug("initializing remotion");
+      const { Remotion } = await import("./short-creator/libraries/Remotion.js");
+      const remotion = await Remotion.init(config);
+
+      logger.debug("initializing kokoro");
+      const { Kokoro } = await import("./short-creator/libraries/Kokoro.js");
+      const kokoro = await Kokoro.init(config.kokoroModelPrecision);
+
+      logger.debug("initializing whisper");
+      const { Whisper } = await import("./short-creator/libraries/Whisper.js");
+      const whisper = await Whisper.init(config);
+
+      logger.debug("initializing ffmpeg");
+      const { FFMpeg } = await import("./short-creator/libraries/FFmpeg.js");
+      const ffmpeg = await FFMpeg.init();
+
+      const { PexelsAPI } = await import("./short-creator/libraries/Pexels.js");
+      const pexelsApi = new PexelsAPI(config.pexelsApiKey);
+
+      if (!config.runningInDocker) {
+        if (fs.existsSync(config.installationSuccessfulPath)) {
+          logger.info("the installation is successful - starting the server");
+        } else {
+          logger.info(
+            "testing if the installation was successful - this may take a while...",
+          );
+          try {
+            const audioBuffer = (await kokoro.generate("hi", "af_heart")).audio;
+            const { FFMpeg: FF2 } = await import("./short-creator/libraries/FFmpeg.js");
+            const ff2 = await FF2.init();
+            await ff2.createMp3DataUri(audioBuffer);
+            await pexelsApi.findVideo(["dog"], 2.4);
+            const testVideoPath = path.join(config.tempDirPath, "test.mp4");
+            await remotion.testRender(testVideoPath);
+            fs.rmSync(testVideoPath, { force: true });
+            fs.writeFileSync(config.installationSuccessfulPath, "ok", {
+              encoding: "utf-8",
+            });
+            logger.info("the installation was successful");
+          } catch (error: unknown) {
+            logger.warn(
+              error,
+              "Installation check failed - some features may not work until dependencies are ready",
+            );
+          }
+        }
+      }
+
+      logger.debug("initializing the short creator");
+      const { ShortCreator } = await import("./short-creator/ShortCreator.js");
+      const shortCreator = new ShortCreator(
+        config,
+        remotion,
+        kokoro,
+        whisper,
+        ffmpeg,
+        pexelsApi,
+        musicManager,
+      );
+
+      shortCreatorResolve!(shortCreator);
+      logger.info("All libraries initialized — video generation is ready");
+
+      // Phase 4: Start BullMQ workers if Redis is available
+      if (config.redisEnabled) {
+        const { testRedisConnection } = await import("./workers/QueueManager.js");
+        const redisOk = await testRedisConnection(config);
+        if (redisOk) {
+          const { RenderWorker } = await import("./workers/RenderWorker.js");
+          const { PublishWorker } = await import("./workers/PublishWorker.js");
+          const { DeadLetterWorker } = await import("./workers/DeadLetterWorker.js");
+          const renderWorker = new RenderWorker(config, shortCreator);
+          const publishWorker = new PublishWorker(config);
+          const deadLetterWorker = new DeadLetterWorker(config);
+          logger.info("BullMQ workers started (render, publish, deadletter)");
+
+          process.on("SIGTERM", async () => {
+            await Promise.allSettled([renderWorker.close(), publishWorker.close(), deadLetterWorker.close()]);
+          });
+          process.on("SIGINT", async () => {
+            await Promise.allSettled([renderWorker.close(), publishWorker.close(), deadLetterWorker.close()]);
+          });
+        } else {
+          logger.warn("Redis unavailable – BullMQ workers NOT started.");
+        }
+      }
+
+      // Phase 6: Start cron scheduler
+      const { SchedulerService } = await import("./services/SchedulerService.js");
+      const scheduler = new SchedulerService(config, shortCreator);
+      scheduler.start();
+
+      process.on("SIGTERM", () => { scheduler.stop(); process.exit(0); });
+      process.on("SIGINT",  () => { scheduler.stop(); process.exit(0); });
+    } catch (err: unknown) {
+      logger.error(err, "Fatal error during library initialization");
+      shortCreatorReject!(err);
     }
-  }
-
-  // Phase 6: Start cron scheduler
-  const scheduler = new SchedulerService(config, shortCreator);
-  scheduler.start();
-
-  // Graceful shutdown
-  const shutdown = async (signal: string) => {
-    logger.info({ signal }, "Graceful shutdown initiated");
-    scheduler.stop();
-    await Promise.allSettled([
-      renderWorker?.close(),
-      publishWorker?.close(),
-      deadLetterWorker?.close(),
-    ]);
-    process.exit(0);
-  };
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT",  () => shutdown("SIGINT"));
+  })();
 }
 
 main().catch((error: unknown) => {

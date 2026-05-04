@@ -154,3 +154,18 @@ bash database/seed.sh      # Seed defaults
   - Full docs/ folder (ARCHITECTURE, API, DATABASE_SCHEMA, DEPLOYMENT, Postman)
   - README.md complete rewrite
   - Build: 0 TypeScript errors, 12,699 modules transformed
+- v12.0-replit (migration): Replit environment migration
+  - Workflow: `node dist/index.js` on port 5000 (SKIP_RUNTIME_INSTALL=true, PORT=5000 in userenv)
+  - Lazy server startup: HTTP server binds immediately, heavy AI libraries (Remotion, Kokoro TTS, Whisper.cpp) initialize in background
+  - Fixed Whisper.cpp detection: correctly identifies compiled binary path for v1.x vs v1.7.4+
+  - Fixed partial Whisper install recovery: removes corrupt directory before re-cloning
+  - Fixed HumanizedContentPage.tsx: added missing default export (caused React lazy() crash)
+  - Server returns 503 JSON (not HTML) for API routes during initialization
+  - PEXELS_API_KEY set via Replit Secrets
+  - Nix packages: nss, nspr, expat added for Chrome headless (Remotion)
+
+## Replit Run Configuration
+- **Workflow**: `Start application` → `node dist/index.js` (port 5000)
+- **Env vars set in Replit**: PORT=5000, SKIP_RUNTIME_INSTALL=true, PEXELS_API_KEY (secret)
+- **Rebuild after code changes**: `node_modules/.bin/tsc --project tsconfig.build.json && node_modules/.bin/vite build`
+- **Note**: First startup downloads AI models (~500MB Whisper + Kokoro). Subsequent starts are fast.

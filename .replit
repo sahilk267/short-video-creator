@@ -38,7 +38,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node_modules/.bin/tsc --project tsconfig.build.json && node_modules/.bin/vite build && node dist/index.js"
+args = "node dist/index.js"
 waitForPort = 5000
 
 [[ports]]

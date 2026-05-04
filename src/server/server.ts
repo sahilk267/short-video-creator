@@ -3,6 +3,7 @@ import express from "express";
 import type {
   Request as ExpressRequest,
   Response as ExpressResponse,
+  NextFunction,
 } from "express";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
@@ -47,17 +48,33 @@ import { Config } from "../config";
 export class Server {
   private app: express.Application;
   private config: Config;
+  private shortCreatorReady = false;
 
-  constructor(config: Config, shortCreator: ShortCreator) {
+  constructor(config: Config, shortCreatorPromise: Promise<ShortCreator>) {
     this.config = config;
     this.app = express();
     this.app.set("trust proxy", 1);
 
-    const apiRouter = new APIRouter(config, shortCreator);
-    const mcpRouter = new MCPRouter(shortCreator);
+    // Mark ready once the promise resolves
+    shortCreatorPromise.then(() => {
+      this.shortCreatorReady = true;
+    }).catch(() => {
+      // error already logged in index.ts
+    });
+
+    // Global guard: any /api or /mcp path not yet handled returns 503 until ready
+    // This middleware runs first for /api and /mcp.
+    // "Always available" routes below will handle their paths before it becomes relevant.
+    const initializingResponse = (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(503).json({
+        status: "initializing",
+        message: "Service is starting up. AI models are being loaded — this may take a few minutes on first launch.",
+      });
+    };
+
+    // Routers that do NOT need ShortCreator (always available)
     const healthRouter = new HealthRouter(config);
     const publishRouter = new PublishRouter(config);
-    const queueRouter = new QueueRouter(config, shortCreator);
     const tenantRouter = new TenantRouter(config);
     const marketingRouter = new MarketingRouter(config);
     const aiRouter = new AiRouter(config);
@@ -86,12 +103,9 @@ export class Server {
     const videoLibraryRouter = new VideoLibraryRouter(config);
     const scheduleRouter = new ScheduleRouter(config);
 
-    this.app.use("/api", apiRateLimiter);
-    this.app.use("/api", apiRouter.router);
-    this.app.use("/mcp", mcpRouter.router);
+    // Always-available routes (no ShortCreator dependency)
     this.app.use("/api/health", healthRouter.router);
     this.app.use("/api/publish", publishRouter.router);
-    this.app.use("/api/queue", queueRouter.router);
     this.app.use("/api/tenants", tenantRouter.router);
     this.app.use("/api/marketing", marketingRouter.router);
     this.app.use("/api/ai", aiRouter.router);
@@ -120,7 +134,7 @@ export class Server {
     this.app.use("/api/videolibrary", videoLibraryRouter.router);
     this.app.use("/api/schedule", scheduleRouter.router);
 
-    // API Documentation (Swagger UI)
+    // API Documentation (Swagger UI) — always available
     this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
       customSiteTitle: "AI Viral Content Empire – API Docs",
       customCss: ".swagger-ui .topbar { background-color: #6366f1; }",
@@ -128,6 +142,39 @@ export class Server {
     this.app.get("/api/docs.json", (_req: ExpressRequest, res: ExpressResponse) => {
       res.setHeader("Content-Type", "application/json");
       res.send(swaggerSpec);
+    });
+
+    // ShortCreator-dependent routes: registered dynamically once ready.
+    // While not ready, all remaining /api and /mcp requests get 503.
+    const deferredApiRouter = express.Router();
+    const deferredMcpRouter = express.Router();
+    const deferredQueueRouter = express.Router();
+
+    // Placeholder 503 handlers — replaced by real handlers once ready
+    let apiHandler: express.Router = express.Router().use(initializingResponse);
+    let mcpHandler: express.Router = express.Router().use(initializingResponse);
+    let queueHandler: express.Router = express.Router().use(initializingResponse);
+
+    deferredApiRouter.use(apiRateLimiter);
+    deferredApiRouter.use((req, res, next) => apiHandler(req, res, next));
+    deferredMcpRouter.use((req, res, next) => mcpHandler(req, res, next));
+    deferredQueueRouter.use((req, res, next) => queueHandler(req, res, next));
+
+    this.app.use("/api", deferredApiRouter);
+    this.app.use("/mcp", deferredMcpRouter);
+    this.app.use("/api/queue", deferredQueueRouter);
+
+    // When ShortCreator is ready, swap in the real handlers
+    shortCreatorPromise.then((shortCreator) => {
+      const apiRouter = new APIRouter(config, shortCreator);
+      const mcpRouter = new MCPRouter(shortCreator);
+      const queueRouter = new QueueRouter(config, shortCreator);
+      apiHandler = apiRouter.router;
+      mcpHandler = mcpRouter.router;
+      queueHandler = queueRouter.router;
+      logger.info("Video API routes are now active");
+    }).catch((err) => {
+      logger.error(err, "ShortCreator failed to initialize — video routes unavailable");
     });
 
     // Serve static files from the UI build

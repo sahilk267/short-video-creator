@@ -15,14 +15,33 @@ export const ErrorWhisper = new Error("There was an error with WhisperCpp");
 export class Whisper {
   constructor(private config: Config) {}
 
+  private static getWhisperBinPath(installPath: string, version: string): string {
+    // Mirror @remotion/install-whisper-cpp getWhisperExecutablePath logic
+    const semver = version.split(".").map(Number);
+    const is174plus =
+      semver[0] > 1 ||
+      (semver[0] === 1 && semver[1] > 7) ||
+      (semver[0] === 1 && semver[1] === 7 && (semver[2] ?? 0) >= 4);
+    if (is174plus) {
+      return path.join(installPath, "build", "bin", "whisper-cli");
+    }
+    return path.join(installPath, "main");
+  }
+
   private static async ensureInstalled(config: Config): Promise<void> {
     const modelFolder = path.join(config.whisperInstallPath, "models");
-    const hasWhisperBinary = fs.existsSync(config.whisperInstallPath);
+    const whisperBinPath = Whisper.getWhisperBinPath(config.whisperInstallPath, config.whisperVersion);
+    const hasWhisperBinary = fs.existsSync(whisperBinPath);
     const hasModelFolder =
       fs.existsSync(modelFolder) && fs.readdirSync(modelFolder).length > 0;
 
     if (!hasWhisperBinary) {
       logger.debug("Installing WhisperCpp");
+      // Remove partial/corrupt install (e.g. cloned source without compiled binary)
+      if (fs.existsSync(config.whisperInstallPath)) {
+        logger.debug("Removing existing partial whisper install");
+        fs.removeSync(config.whisperInstallPath);
+      }
       await installWhisperCpp({
         to: config.whisperInstallPath,
         version: config.whisperVersion,
