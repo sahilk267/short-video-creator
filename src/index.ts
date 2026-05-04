@@ -2,23 +2,22 @@
 import path from "path";
 import fs from "fs-extra";
 
-import { Kokoro } from "./short-creator/libraries/Kokoro";
-import { Remotion } from "./short-creator/libraries/Remotion";
-import { Whisper } from "./short-creator/libraries/Whisper";
-import { FFMpeg } from "./short-creator/libraries/FFmpeg";
-import { PexelsAPI } from "./short-creator/libraries/Pexels";
-import { Config } from "./config";
-import { ShortCreator } from "./short-creator/ShortCreator";
-import { install } from "./scripts/install";
-import { logger } from "./logger";
-import { Server } from "./server/server";
-import { MusicManager } from "./short-creator/music";
-import { testRedisConnection } from "./workers/QueueManager";
-import { RenderWorker } from "./workers/RenderWorker";
-import { PublishWorker } from "./workers/PublishWorker";
-import { DeadLetterWorker } from "./workers/DeadLetterWorker";
-import { SchedulerService } from "./services/SchedulerService";
-import { runEnvironmentValidation } from "./config/validate";
+import { Kokoro } from "./short-creator/libraries/Kokoro.js";
+import { Remotion } from "./short-creator/libraries/Remotion.js";
+import { Whisper } from "./short-creator/libraries/Whisper.js";
+import { FFMpeg } from "./short-creator/libraries/FFmpeg.js";
+import { PexelsAPI } from "./short-creator/libraries/Pexels.js";
+import { Config } from "./config.js";
+import { ShortCreator } from "./short-creator/ShortCreator.js";
+import { logger } from "./logger.js";
+import { Server } from "./server/server.js";
+import { MusicManager } from "./short-creator/music.js";
+import { testRedisConnection } from "./workers/QueueManager.js";
+import { RenderWorker } from "./workers/RenderWorker.js";
+import { PublishWorker } from "./workers/PublishWorker.js";
+import { DeadLetterWorker } from "./workers/DeadLetterWorker.js";
+import { SchedulerService } from "./services/SchedulerService.js";
+import { runEnvironmentValidation } from "./config/validate.js";
 
 async function main() {
   runEnvironmentValidation();
@@ -32,12 +31,6 @@ async function main() {
   }
 
   logger.info("Initializing applications...");
-  const skipRuntimeInstall = process.env.SKIP_RUNTIME_INSTALL === "true";
-  if (skipRuntimeInstall) {
-    logger.info("Skipping runtime install because SKIP_RUNTIME_INSTALL=true");
-  } else {
-    await install();
-  }
 
   const musicManager = new MusicManager(config);
   try {
@@ -46,6 +39,14 @@ async function main() {
   } catch (error: unknown) {
     logger.error(error, "Missing music files");
     process.exit(1);
+  }
+
+  const skipRuntimeInstall = process.env.SKIP_RUNTIME_INSTALL === "true";
+  if (skipRuntimeInstall) {
+    logger.info("Skipping runtime install because SKIP_RUNTIME_INSTALL=true");
+  } else {
+    const { install } = await import("./scripts/install.js");
+    await install();
   }
 
   logger.debug("initializing remotion");
@@ -101,7 +102,7 @@ async function main() {
   logger.debug("initializing the server");
 
   const server = new Server(config, shortCreator);
-  const app = server.start();
+  server.start();
 
   // Phase 4: Start BullMQ workers if Redis is available
   let renderWorker: RenderWorker | undefined;

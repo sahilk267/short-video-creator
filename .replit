@@ -33,13 +33,13 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node dist/index.js"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node_modules/.bin/tsc --project tsconfig.build.json && node_modules/.bin/vite build && node dist/index.js"
+waitForPort = 5000
 
 [[ports]]
 localPort = 3000
