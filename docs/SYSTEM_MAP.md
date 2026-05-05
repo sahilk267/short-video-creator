@@ -96,9 +96,10 @@ Generated: 2026-05-05
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | Pipeline Orchestrator | `src/services/PipelineOrchestrator.ts` | Central controller connecting all engines |
-| Pipeline Store | `src/db/PipelineStore.ts` | Stores pipeline_jobs, generated_variations, ai_scores |
-| Pipeline Router | `src/server/routers/pipeline.ts` | REST API: POST /api/pipeline/run |
+| Pipeline Store | `src/db/PipelineStore.ts` | Stores pipeline_jobs, generated_variations, ai_scores, comparison_runs |
+| Pipeline Router | `src/server/routers/pipeline.ts` | REST API: run, compare, jobs, comparisons, stats |
 | Auto Mode UI | `src/ui/pages/AutoModePage.tsx` | One-click full content generation |
+| Platform Comparison UI | `src/ui/pages/PipelineComparePage.tsx` | Real-time multi-platform side-by-side comparison |
 
 ### Pipeline Flow
 ```
@@ -147,7 +148,7 @@ Ready-to-post content package
 
 | Store | File | Contents |
 |-------|------|---------|
-| PipelineStore | `pipeline-jobs.json` + `pipeline-variations.json` | Pipeline job tracking + AI-scored variations |
+| PipelineStore | `pipeline-jobs.json` + `pipeline-variations.json` + `pipeline-comparisons.json` | Pipeline job tracking + AI-scored variations + comparison runs |
 | RenderJobStore | `renderJobs.json` | Video render queue |
 | ScriptPlanStore | `scriptPlans.json` | Generated script plans |
 | ScheduleStore | `schedules.json` | Persistent cron schedules |
@@ -160,7 +161,7 @@ Ready-to-post content package
 
 ---
 
-## API Endpoints Summary (35+ routes)
+## API Endpoints Summary (37+ routes)
 
 ```
 Core Video:
@@ -170,7 +171,10 @@ Core Video:
   GET    /api/music-tags               – List music categories (12)
 
 Pipeline (NEW):
-  POST   /api/pipeline/run             – Run full AI pipeline
+  POST   /api/pipeline/run             – Run full AI pipeline (single platform)
+  POST   /api/pipeline/compare         – Compare topic across multiple platforms (parallel)
+  GET    /api/pipeline/comparisons     – List comparison runs
+  GET    /api/pipeline/comparisons/:id – Poll live comparison status
   GET    /api/pipeline/jobs            – List pipeline jobs
   GET    /api/pipeline/jobs/:id        – Get job + variations
   GET    /api/pipeline/stats           – Aggregate statistics

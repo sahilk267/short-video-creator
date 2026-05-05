@@ -44,6 +44,7 @@ const VideoLibraryPage = lazy(() => import('./pages/VideoLibraryPage'));
 const SchedulePersistPage = lazy(() => import('./pages/SchedulePersistPage'));
 const ImageFilterPage = lazy(() => import('./pages/ImageFilterPage'));
 const AutoModePage = lazy(() => import('./pages/AutoModePage'));
+const PipelineComparePage = lazy(() => import('./pages/PipelineComparePage'));
 
 const App: React.FC = () => {
   return (
@@ -92,6 +93,7 @@ const App: React.FC = () => {
               <Route path="/schedule-manager" element={<SchedulePersistPage />} />
               <Route path="/image-filters" element={<ImageFilterPage />} />
               <Route path="/auto-mode" element={<AutoModePage />} />
+              <Route path="/compare" element={<PipelineComparePage />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>

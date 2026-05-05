@@ -34,6 +34,7 @@ import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import TuneIcon from '@mui/icons-material/Tune';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -59,6 +60,7 @@ const NAV_SECTIONS = [
     title: 'AI Pipeline',
     items: [
       { path: '/auto-mode', label: 'Auto Mode', icon: <AutoAwesomeIcon />, badge: '🤖' },
+      { path: '/compare', label: 'Platform Comparison', icon: <CompareArrowsIcon />, badge: 'NEW' },
     ],
   },
   {
@@ -162,10 +164,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 0.5 }}>
               {[
                 { path: '/auto-mode', label: '🤖 Auto Mode' },
+                { path: '/compare', label: '⚖️ Compare' },
                 { path: '/trends', label: '🔥 Trends' },
                 { path: '/create', label: '+ Create' },
                 { path: '/scheduler', label: 'Schedule' },
-                { path: '/strategy', label: 'Strategy' },
               ].map(({ path, label }) => (
                 <Button
                   key={path}

@@ -75,7 +75,7 @@ OUTPUT: { job, topVariations[3], allVariations[N] }
 
 ## API Reference
 
-### Run Pipeline
+### Run Pipeline (Single Platform)
 
 ```
 POST /api/pipeline/run
@@ -89,6 +89,98 @@ Content-Type: application/json
   "autoSchedule": false
 }
 ```
+
+---
+
+### Compare Across Platforms (NEW)
+
+Runs the same topic through all selected platforms **simultaneously** in parallel.
+Returns immediately with a run ID — use the poll endpoint to get live results.
+
+```
+POST /api/pipeline/compare
+Content-Type: application/json
+
+{
+  "topic": "crypto investing",
+  "tone": "excited",
+  "platforms": ["tiktok", "instagram", "youtube", "youtube_shorts", "linkedin"]
+}
+```
+
+**Response (202 Accepted — background running):**
+```json
+{
+  "status": "running",
+  "run": {
+    "id": "cmp_xxx",
+    "topic": "crypto investing",
+    "tone": "excited",
+    "platforms": ["tiktok", "instagram", "youtube", "youtube_shorts", "linkedin"],
+    "status": "running",
+    "entries": [
+      { "platform": "tiktok", "status": "pending" },
+      { "platform": "instagram", "status": "pending" },
+      ...
+    ],
+    "createdAt": "2026-05-05T..."
+  }
+}
+```
+
+### Poll Comparison Status
+
+Poll every 500–1000ms to get live per-platform results as they complete.
+
+```
+GET /api/pipeline/comparisons/:id
+```
+
+**Response when in-progress:**
+```json
+{
+  "status": "ok",
+  "run": {
+    "id": "cmp_xxx",
+    "status": "running",
+    "winner": null,
+    "entries": [
+      {
+        "platform": "tiktok",
+        "status": "done",
+        "scores": { "emotionalScore": 78, "qualityScore": 85, "attentionScore": 70, "engagementScore": 65, "overallScore": 74 },
+        "bestHook": "3 crypto investing mistakes you're making right now",
+        "bestHashtags": ["#fyp", "#crypto", "#investing", ...],
+        "emotionalTone": "anticipation",
+        "musicGenre": "building tension",
+        "pacing": "building",
+        "durationMs": 98
+      },
+      { "platform": "instagram", "status": "running" },
+      { "platform": "youtube", "status": "pending" }
+    ]
+  }
+}
+```
+
+**Response when complete:**
+```json
+{
+  "run": {
+    "status": "completed",
+    "winner": "instagram",
+    "entries": [ ... all done ... ]
+  }
+}
+```
+
+### List Comparison History
+
+```
+GET /api/pipeline/comparisons?limit=20
+```
+
+---
 
 **Response:**
 ```json
@@ -182,6 +274,90 @@ GET /api/pipeline/stats
   createdAt: string;
 }
 ```
+
+---
+
+## Platform Comparison Mode (NEW)
+
+The comparison mode runs the same topic across multiple platforms **simultaneously** — all pipelines fire in parallel, with results streaming in as each platform finishes.
+
+### How it works
+
+```
+POST /api/pipeline/compare
+{ topic, tone, platforms: [p1, p2, p3, ...] }
+        │
+        ▼
+Creates ComparisonRun with status: "running"
+Returns immediately with runId (202 Accepted)
+        │
+        ├──▶ Pipeline(topic, p1) ──▶ updateEntry(p1, scores)
+        ├──▶ Pipeline(topic, p2) ──▶ updateEntry(p2, scores)
+        ├──▶ Pipeline(topic, p3) ──▶ updateEntry(p3, scores)
+        └──▶ Pipeline(topic, pN) ──▶ updateEntry(pN, scores)
+                                            │
+                                            ▼
+                              All done? → determine winner
+                                        → status: "completed"
+
+Client polls GET /api/pipeline/comparisons/:id every 600ms
+→ UI updates cards in real-time as each platform finishes
+```
+
+### Winner determination
+
+The platform with the highest `overallScore` among all completed entries is declared the winner. The score is the average of:
+- Emotional Score (EmotionalResonanceEngine)
+- Quality Score (QualityScoringEngine)
+- Attention Score (AttentionOptimizerEngine)
+- Engagement Score (EngagementPredictionEngine)
+
+### Score Breakdown Visualization
+
+The UI renders a horizontal bar chart for each dimension showing all platforms ranked side-by-side, making it easy to see which platform excels in specific areas (e.g. TikTok might win on attention, but LinkedIn on quality).
+
+### Data Structure: ComparisonRun
+
+```typescript
+{
+  id: string;                   // "cmp_<cuid>"
+  topic: string;
+  tone: string;
+  platforms: string[];          // All requested platforms
+  status: "running" | "completed" | "partial";
+  winner?: string;              // Platform key of the best scorer
+  entries: PlatformComparisonEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PlatformComparisonEntry {
+  platform: string;
+  status: "pending" | "running" | "done" | "failed";
+  jobId?: string;               // References the underlying pipeline job
+  scores?: {
+    emotionalScore: number;
+    qualityScore: number;
+    attentionScore: number;
+    engagementScore: number;
+    overallScore: number;
+  };
+  bestHook?: string;
+  bestCaption?: string;
+  bestHashtags?: string[];
+  emotionalTone?: string;       // e.g. "anticipation", "joy"
+  musicGenre?: string;          // e.g. "upbeat pop"
+  colorPalette?: string[];      // Hex colors for mood
+  pacing?: string;              // "fast" | "moderate" | "slow"
+  estimatedViralScore?: number;
+  durationMs?: number;
+  error?: string;
+}
+```
+
+### Persisted in
+
+`pipeline-comparisons.json` — all runs are saved, accessible in history.
 
 ---
 
