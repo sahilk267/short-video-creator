@@ -54,7 +54,7 @@ An AI-powered SaaS that generates short-form videos (TikTok/Instagram Reels/YouT
 - **Redis optional**: BullMQ queue workers only start if `REDIS_ENABLED=true` and Redis is reachable.
 - **First-run installs**: On first launch (without `SKIP_RUNTIME_INSTALL=true`), the app downloads Chrome Headless Shell and compiles Whisper.cpp from source — this takes several minutes.
 
-## Product (v13.0 — all 60 engines complete)
+## Product (v13.1 — COMBINED FIX applied)
 
 - Generate AI short-form videos with scripts, hooks, TTS voiceover, captions, and background clips
 - 60 AI engines across 6 router groups: competitor, engines (trend-hijack/category/content/caption/voice/image), abtesting, approval (moderation+validation), system (resource/throttle/assets/export/compliance/auth/errorrecovery/credentials/kb/marketing), content-buckets
@@ -63,11 +63,25 @@ An AI-powered SaaS that generates short-form videos (TikTok/Instagram Reels/YouT
 - Scheduled/automated publishing with BullMQ + Redis
 - Multi-tenant support with API key management + JWT auth
 - MCP (Model Context Protocol) server at `/mcp` for AI agent integration
-- Shadowban detection + auto recovery plan generation (`ShadowbanDetectionEngine.generateRecoveryPlan()`)
+- Shadowban detection + auto recovery plan generation
 - A/B testing with statistical significance (chi-squared, p-value, confidence %)
-- Compliance audit log + report generation
-- Credential rotation engine with expiry detection
-- Creator knowledge base with 10 built-in rules + search
+- Compliance audit log + report generation; Credential rotation; Creator knowledge base
+
+### Create Video Page (v13.1 fixes)
+- Content Category chip selector (General/Motivation/Business/Education/Entertainment/Tech/News/Health/Finance/Lifestyle/Religion)
+- Short (≤60s) / Long-form (1–10 min) quick toggle with estimated scene length
+- Platform Psychology dropdown (YouTube/TikTok/Instagram/LinkedIn/Facebook focus modes)
+- Collapsible Accordion sections: Content Setup → AI Script Generator → Scenes → Advanced Video Settings
+- Validation: Create button disabled until ≥1 scene has 10+ chars of text; warning shown for long video + short script
+- `contentCategory` and `platformPsychology` passed in POST /api/short-video body
+
+### Scheduler (v13.1 fixes)
+- SchedulerDashboard: 4th "Upcoming" tab — shows active schedules due in next 24h with best-time recommendations
+- SchedulePersistPage: `contentType` dropdown (Video/Image/Carousel/Banner); `alsoGenerate` checkboxes (Quote Card/Thumbnail/Carousel); Smart Schedule button (BestTimeLearningEngine); Preview dialog; InfoOutlined tooltip on all engine toggles
+- schedule.ts `executeSchedule` stub replaced with real generation: ImageEngine for image/carousel/banner, ShortCreator.addToQueue for video; ContentFreshnessEngine freshness check; Human Mimicry ±45 min timing variation
+- New API endpoints: `GET /api/schedule/upcoming` (next N hours, enriched with best-time data); `GET /api/schedule/best-times` (per platform/category recommendations)
+- `contentType` + `alsoGenerate` stored in schedule metadata; `smartSchedule` flag auto-adjusts publishAt via BestTimeLearningEngine
+- ShortCreator injected into ScheduleRouter via `setShortCreator()` after initialization
 
 ## User preferences
 

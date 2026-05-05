@@ -193,6 +193,8 @@ export class Server {
       apiHandler = apiRouter.router;
       mcpHandler = mcpRouter.router;
       queueHandler = queueRouter.router;
+      // Inject ShortCreator into ScheduleRouter for video-type schedule execution
+      scheduleRouter.setShortCreator(shortCreator);
       logger.info("Video API routes are now active");
     }).catch((err) => {
       logger.error(err, "ShortCreator failed to initialize — video routes unavailable");

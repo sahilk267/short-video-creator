@@ -5,6 +5,8 @@
  * POST   /api/schedule              – create schedule
  * GET    /api/schedule/stats        – schedule statistics
  * GET    /api/schedule/due          – get schedules due now
+ * GET    /api/schedule/upcoming     – upcoming schedules (next 24h) with best-time metadata
+ * GET    /api/schedule/best-times   – best posting times per platform (BestTimeLearningEngine)
  * GET    /api/schedule/:id          – get single schedule
  * PATCH  /api/schedule/:id          – update schedule
  * PATCH  /api/schedule/:id/status   – pause/resume/complete
@@ -17,23 +19,43 @@ import express from "express";
 import type { Config } from "../../config";
 import { ScheduleStore } from "../../db/ScheduleStore";
 import { logger } from "../../logger";
+import { ImageEngine } from "../../services/ImageEngine";
+import { ContentFreshnessEngine } from "../../services/ContentFreshnessEngine";
+import { BestTimeLearningEngine } from "../../services/BestTimeLearningEngine";
+import type { ShortCreator } from "../../short-creator/ShortCreator";
+import { LanguageEnum, VideoTypeEnum } from "../../types/shorts";
 
 export class ScheduleRouter {
   public router: Router;
   private store: ScheduleStore;
   private runnerInterval: NodeJS.Timeout | null = null;
+  private imageEngine: ImageEngine;
+  private freshnessEngine: ContentFreshnessEngine;
+  private bestTimeEngine: BestTimeLearningEngine;
+  private shortCreator: ShortCreator | null = null;
 
   constructor(config: Config) {
     this.router = Router();
     this.store = new ScheduleStore(config.dataDirPath);
+    this.imageEngine = new ImageEngine();
+    this.freshnessEngine = new ContentFreshnessEngine(config.dataDirPath);
+    this.bestTimeEngine = new BestTimeLearningEngine(config.dataDirPath);
     this.router.use(express.json());
     this.registerRoutes();
     this.startRunner();
   }
 
+  /** Called by server.ts once ShortCreator finishes initializing */
+  public setShortCreator(sc: ShortCreator): void {
+    this.shortCreator = sc;
+    logger.info("ScheduleRouter: ShortCreator injected — video schedules now fully supported");
+  }
+
   private registerRoutes(): void {
     this.router.get("/stats", (req: Request, res: Response) => this.getStats(req, res));
     this.router.get("/due", (req: Request, res: Response) => this.getDue(req, res));
+    this.router.get("/upcoming", (req: Request, res: Response) => this.getUpcoming(req, res));
+    this.router.get("/best-times", (req: Request, res: Response) => this.getBestTimes(req, res));
     this.router.get("/", (req: Request, res: Response) => this.listSchedules(req, res));
     this.router.post("/", (req: Request, res: Response) => this.createSchedule(req, res));
     this.router.get("/:id", (req: Request, res: Response) => this.getSchedule(req, res));
@@ -61,8 +83,117 @@ export class ScheduleRouter {
   private async executeSchedule(scheduleId: string): Promise<boolean> {
     const sched = await this.store.get(scheduleId);
     if (!sched || sched.status !== "active") return false;
+
     try {
-      logger.info({ scheduleId, name: sched.name, platforms: sched.platforms }, "Executing schedule");
+      const meta = sched.metadata as any;
+      const contentType: string = meta?.contentType || "video";
+      const alsoGenerate: Record<string, boolean> = meta?.alsoGenerate || {};
+      const category = sched.categories?.[0] || "General";
+      const platform = sched.platforms?.[0] || "youtube";
+      const language = (sched.languages?.[0] || "en") as LanguageEnum;
+
+      // ── Freshness check ──────────────────────────────────────────
+      const freshnessResult = this.freshnessEngine.check(sched.name, category);
+      if (!freshnessResult.allowed) {
+        logger.warn(
+          { scheduleId, reason: freshnessResult.reason, waitMs: freshnessResult.waitMs },
+          "Schedule: content not fresh — skipping this run",
+        );
+        await this.store.recordRun(scheduleId, false);
+        return false;
+      }
+
+      // ── Human Mimicry: random ±45 min timing variation ───────────
+      if (sched.engines?.enableHumanMimicry) {
+        const variationMs = Math.floor((Math.random() * 2 - 1) * 45 * 60 * 1000);
+        if (variationMs > 3 * 60 * 1000) {
+          logger.info({ scheduleId, variationMinutes: Math.round(variationMs / 60000) }, "Human mimicry: delaying schedule execution");
+          setTimeout(() => void this.executeSchedule(scheduleId), Math.abs(variationMs));
+          return true;
+        }
+      }
+
+      logger.info({ scheduleId, name: sched.name, contentType, platform }, "Executing schedule");
+
+      // ── Content generation by type ───────────────────────────────
+      if (contentType === "image") {
+        const result = this.imageEngine.generateQuoteCard({
+          quote: sched.name,
+          author: category,
+        });
+        logger.info({ scheduleId, contentType, success: result.success }, "Schedule: quote card generated");
+
+      } else if (contentType === "carousel") {
+        const result = this.imageEngine.generateCarousel({
+          topic: sched.name,
+          slides: [{ slideNumber: 1, title: sched.name, body: `${category} content` }],
+        });
+        logger.info({ scheduleId, contentType, success: result.success }, "Schedule: carousel generated");
+
+      } else if (contentType === "banner") {
+        const result = this.imageEngine.generateBanner({
+          title: sched.name,
+          tagline: category,
+          width: platform === "youtube" ? 2560 : 1080,
+          height: platform === "youtube" ? 1440 : 1080,
+          platform,
+        });
+        logger.info({ scheduleId, contentType, success: result.success }, "Schedule: banner generated");
+
+      } else {
+        // contentType === "video" (default)
+        if (this.shortCreator) {
+          const scene = {
+            text: `${sched.name}. Auto-generated ${category} content for ${platform}.`,
+            searchTerms: [category.toLowerCase(), sched.name.toLowerCase().split(" ")[0] || "video"],
+            keywords: [category.toLowerCase()],
+            language,
+            sourceLanguage: language,
+          };
+          const videoId = this.shortCreator.addToQueue(
+            [scene],
+            {
+              videoType: VideoTypeEnum.short,
+              durationLimit: 60,
+              voice: "af_heart" as any,
+              scriptLanguage: language,
+              audioLanguage: language,
+              overlayLanguage: language,
+              captionLanguage: language,
+              subtitleLanguage: language,
+              music: "chill" as any,
+              captionPosition: "bottom" as any,
+              captionBackgroundColor: "blue",
+              textMode: "hybrid" as any,
+              orientation: "portrait" as any,
+              musicVolume: "high" as any,
+              subtitleLineCount: 1,
+              subtitleFontScale: 1,
+              paddingBack: 1500,
+              useAiImages: false,
+            },
+            VideoTypeEnum.short,
+            language,
+          );
+          logger.info({ scheduleId, videoId }, "Schedule: video job queued via ShortCreator");
+        } else {
+          logger.info({ scheduleId }, "Schedule: video type — ShortCreator not yet ready, will retry next cycle");
+        }
+      }
+
+      // ── alsoGenerate: optional supplementary assets ──────────────
+      if (alsoGenerate.quoteCard) {
+        this.imageEngine.generateQuoteCard({ quote: sched.name, author: category });
+        logger.debug({ scheduleId }, "alsoGenerate: quote card done");
+      }
+      if (alsoGenerate.thumbnail) {
+        this.imageEngine.generatePoster({ headline: sched.name, category });
+        logger.debug({ scheduleId }, "alsoGenerate: thumbnail/poster done");
+      }
+
+      // ── Record freshness so this topic isn't repeated too soon ───
+      this.freshnessEngine.record(sched.name, category);
+
       await this.store.recordRun(scheduleId, true);
       return true;
     } catch (err) {
@@ -103,6 +234,9 @@ export class ScheduleRouter {
         cronExpression = "0 9 * * *",
         publishAt,
         metadata = {},
+        contentType = "video",
+        alsoGenerate = {},
+        smartSchedule = false,
       } = req.body as any;
 
       if (!name || typeof name !== "string") {
@@ -114,7 +248,19 @@ export class ScheduleRouter {
         return;
       }
 
-      const now = new Date().toISOString();
+      // Smart schedule: adjust publish time using BestTimeLearningEngine
+      let resolvedPublishAt = new Date(publishAt).toISOString();
+      if (smartSchedule && Array.isArray(platforms) && platforms.length > 0) {
+        const bestTime = this.bestTimeEngine.getBestTimes(platforms[0], categories[0] || "General");
+        const bestHour = bestTime?.bestHours?.[0]?.hour;
+        if (bestHour !== undefined) {
+          const base = new Date(publishAt);
+          base.setHours(bestHour, 0, 0, 0);
+          resolvedPublishAt = base.toISOString();
+          logger.info({ platform: platforms[0], bestHour }, "Smart schedule: adjusted publish time");
+        }
+      }
+
       const record = await this.store.create({
         name,
         videoId,
@@ -136,10 +282,14 @@ export class ScheduleRouter {
           visualQualityTier: quality.visualQualityTier ?? "standard",
         },
         cronExpression,
-        publishAt: new Date(publishAt).toISOString(),
+        publishAt: resolvedPublishAt,
         status: "active",
-        nextRun: new Date(publishAt).toISOString(),
-        metadata,
+        nextRun: resolvedPublishAt,
+        metadata: {
+          ...metadata,
+          contentType,
+          alsoGenerate,
+        } as any,
       });
 
       res.status(201).json({ status: "ok", schedule: record });
@@ -243,6 +393,70 @@ export class ScheduleRouter {
     } catch (err) {
       logger.error(err, "Schedule: getDue failed");
       res.status(500).json({ status: "error", error: "Failed to get due schedules" });
+    }
+  }
+
+  /** GET /api/schedule/upcoming – active schedules in the next N hours with best-time metadata */
+  private async getUpcoming(req: Request, res: Response): Promise<void> {
+    try {
+      const hoursAhead = Math.min(parseInt(String(req.query["hours"] || "24")), 168);
+      const cutoff = new Date(Date.now() + hoursAhead * 3600 * 1000).toISOString();
+      const { schedules: all } = await this.store.list(200, 0);
+      const upcoming = all
+        .filter((s) => s.status === "active" && s.nextRun && s.nextRun <= cutoff)
+        .sort((a, b) => (a.nextRun ?? "").localeCompare(b.nextRun ?? ""));
+
+      const enriched = upcoming.map((s) => {
+        const platform = s.platforms?.[0] || "youtube";
+        const category = s.categories?.[0] || "General";
+        const bestTime = this.bestTimeEngine.getBestTimes(platform, category);
+        const meta = s.metadata as any;
+        return {
+          ...s,
+          bestTimeRecommendation: {
+            hour: bestTime?.bestHours?.[0]?.hour,
+            dayName: bestTime?.bestHours?.[0]?.dayName,
+            confidence: bestTime?.confidence,
+          },
+          contentType: meta?.contentType || "video",
+        };
+      });
+
+      res.json({ status: "ok", schedules: enriched, count: enriched.length, hoursAhead });
+    } catch (err) {
+      logger.error(err, "Schedule: getUpcoming failed");
+      res.status(500).json({ status: "error", error: "Failed to get upcoming schedules" });
+    }
+  }
+
+  /** GET /api/schedule/best-times?platform=youtube&category=General */
+  private async getBestTimes(req: Request, res: Response): Promise<void> {
+    try {
+      const platform = String(req.query["platform"] || "youtube");
+      const category = String(req.query["category"] || "General");
+      const allPlatforms = ["youtube", "tiktok", "instagram", "linkedin", "facebook", "telegram", "twitter"];
+      const results: Record<string, any> = {};
+      const targetPlatforms = platform === "all" ? allPlatforms : [platform];
+      for (const p of targetPlatforms) {
+        const rec = this.bestTimeEngine.getBestTimes(p, category);
+        results[p] = {
+          platform: p,
+          category,
+          bestHours: rec?.bestHours || [],
+          confidence: rec?.confidence || "low",
+          timezone: rec?.timezone || "UTC",
+          hour: rec?.bestHours?.[0]?.hour,
+        };
+      }
+      res.json({
+        status: "ok",
+        platform,
+        category,
+        bestTimes: platform === "all" ? results : results[platform],
+      });
+    } catch (err) {
+      logger.error(err, "Schedule: getBestTimes failed");
+      res.status(500).json({ status: "error", error: "Failed to get best times" });
     }
   }
 }

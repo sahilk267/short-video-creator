@@ -3,7 +3,7 @@
  * Manage automated video creation scheduling, queue health, and job history.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -23,6 +23,11 @@ import {
   IconButton,
   FormControlLabel,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -34,6 +39,7 @@ import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import HistoryIcon from "@mui/icons-material/History";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { useScheduledJobs, type QueueCounts } from "../hooks/useScheduledJobs";
 import { useAutoRefresh } from "../hooks/useAutoRefresh";
 import { ScheduleForm } from "../components/scheduler/ScheduleForm";
@@ -99,6 +105,152 @@ const TabPanel: React.FC<TabPanelProps> = ({ value, index, children }) => (
     {value === index && children}
   </Box>
 );
+
+// ─── Upcoming Schedules Tab ───────────────────────────────────────────────────
+
+interface UpcomingSchedule {
+  id: string;
+  name: string;
+  platforms: string[];
+  categories: string[];
+  nextRun?: string;
+  contentType?: string;
+  bestTimeRecommendation?: { hour?: number; dayOfWeek?: number; confidence?: number };
+  engines?: { enableHumanMimicry?: boolean; enableHashtagOptimization?: boolean };
+}
+
+const UpcomingTab: React.FC = () => {
+  const [schedules, setSchedules] = useState<UpcomingSchedule[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUpcoming = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/schedule/upcoming?hours=24");
+      const data = await res.json();
+      setSchedules(Array.isArray(data.schedules) ? data.schedules : []);
+    } catch {
+      setError("Failed to load upcoming schedules.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void fetchUpcoming(); }, [fetchUpcoming]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" py={4}>
+        <CircularProgress size={28} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  if (schedules.length === 0) {
+    return (
+      <EmptyState
+        title="No upcoming schedules in the next 24 hours"
+        description="Create a schedule with a publishAt time in the next 24 hours to see it here."
+        actionLabel="Refresh"
+        onAction={() => void fetchUpcoming()}
+      />
+    );
+  }
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" color="text.secondary">
+          {schedules.length} schedule{schedules.length !== 1 ? "s" : ""} due in the next 24 hours
+        </Typography>
+        <Tooltip title="Refresh">
+          <IconButton size="small" onClick={() => void fetchUpcoming()}>
+            <RefreshIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell><Typography variant="caption" fontWeight={700}>Name</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={700}>Platforms</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={700}>Content Type</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={700}>Next Run</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={700}>Best Time</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={700}>Flags</Typography></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {schedules.map((s) => {
+            const bestHour = s.bestTimeRecommendation?.hour;
+            const bestConfidence = s.bestTimeRecommendation?.confidence;
+            return (
+              <TableRow key={s.id} hover>
+                <TableCell>
+                  <Typography variant="body2" fontWeight={600}>{s.name}</Typography>
+                  {s.categories?.[0] && (
+                    <Typography variant="caption" color="text.secondary">{s.categories[0]}</Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                    {(s.platforms || []).map((p) => (
+                      <Chip key={p} label={p} size="small" variant="outlined" sx={{ fontSize: "0.65rem" }} />
+                    ))}
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={s.contentType || "video"}
+                    size="small"
+                    color={s.contentType === "image" ? "info" : s.contentType === "carousel" ? "secondary" : "primary"}
+                    variant="outlined"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {s.nextRun ? new Date(s.nextRun).toLocaleString() : "—"}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  {bestHour !== undefined ? (
+                    <Tooltip title={`Confidence: ${Math.round((bestConfidence ?? 0) * 100)}%`}>
+                      <Chip
+                        label={`${bestHour}:00`}
+                        size="small"
+                        color="success"
+                        variant="outlined"
+                        sx={{ fontSize: "0.65rem" }}
+                      />
+                    </Tooltip>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">—</Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={0.5}>
+                    {s.engines?.enableHumanMimicry && (
+                      <Chip label="Humanize" size="small" sx={{ fontSize: "0.6rem", bgcolor: "rgba(236,72,153,0.1)", color: "#ec4899" }} />
+                    )}
+                    {s.engines?.enableHashtagOptimization && (
+                      <Chip label="#" size="small" sx={{ fontSize: "0.6rem", bgcolor: "rgba(34,197,94,0.1)", color: "#22c55e" }} />
+                    )}
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Box>
+  );
+};
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -216,7 +368,7 @@ const SchedulerDashboard: React.FC = () => {
 
           <Divider sx={{ mb: 2 }} />
 
-          {/* Tabs: New Job | Jobs List | History */}
+          {/* Tabs: New Job | Jobs List | History | Upcoming */}
           <Paper variant="outlined" sx={{ p: 0 }}>
             <Tabs
               value={tab}
@@ -239,6 +391,11 @@ const SchedulerDashboard: React.FC = () => {
                 icon={<HistoryIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
                 label="History"
+              />
+              <Tab
+                icon={<CalendarMonthIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+                label="Upcoming"
               />
             </Tabs>
 
@@ -265,6 +422,11 @@ const SchedulerDashboard: React.FC = () => {
                   publishJobs={data.publishJobs}
                   loading={loading}
                 />
+              </TabPanel>
+
+              {/* Upcoming Scheduled Tab */}
+              <TabPanel value={tab} index={3}>
+                <UpcomingTab />
               </TabPanel>
             </Box>
           </Paper>

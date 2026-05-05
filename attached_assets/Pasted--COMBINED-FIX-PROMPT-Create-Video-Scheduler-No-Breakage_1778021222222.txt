@@ -1,0 +1,183 @@
+🚀 COMBINED FIX PROMPT — Create Video + Scheduler (No Breakage)
+
+```text
+# 🔥 DUAL-FIX PROMPT: Create Video Page + Scheduler Page
+# Safe, Additive, LLM-Skipped, Rule-Based Fallback
+
+## ⚠️ GLOBAL RULES (सबसे ऊपर)
+1. **EXISTING WORKING CODE KO DELETE / REWRITE NAHI KARNA** — sirf missing parts add aur broken logic fix karna hai.
+2. **LLM SKIP** — har text generation mein PRIMARY `LlmGenerator.generate()` (placeholder) + SECONDARY `RuleBasedGenerator.generate()` use karo.
+3. **SIRF IN FILES KO TOUCH KARO**: `VideoCreator.tsx`, `SchedulerDashboard.tsx`, `SchedulePersistPage.tsx`, `src/server/routers/video.ts`, `src/server/routers/schedule.ts`, `SchedulerService.ts`, `ShortCreator.ts` (if needed), aur koi nahi.
+4. **HAR NAYA COMPONENT APNA `<Box>`/`<Paper>` HO** — existing UI structure disturb nahi honi chahiye.
+5. **TYPE SAFETY + ERROR HANDLING** — sab typed honge, try-catch ke saath.
+
+---
+
+# 🎬 PHASE A: CREATE VIDEO PAGE FIXES
+### (File: `src/ui/pages/VideoCreator.tsx` + related API routers)
+
+## A1. SHORT/LONG SELECTOR FIX
+**Problem:** Short select kare ya Long, hamesha short video banta hai.  
+**Fix:**
+- Video generation API call mein `duration` parameter bhejo.
+- `POST /api/video/generate` body mein add karo:
+  ```json
+  {
+    "duration": "<selectedDuration>",
+    "maxLengthSeconds": <selectedDuration === "short" ? 60 : 600>
+  }
+```
+
+· Backend router (src/server/routers/video.ts) mein maxLengthSeconds ko FFmpeg -t argument mein convert karo.
+· Agar Long select hai to script length automatically 300+ words ho; warning dikhao agar kam hai.
+· Generate se pehle “Estimated Length: X min Y sec” label dikhao.
+
+A2. CATEGORY SELECTOR ADD KARO
+
+Problem: कोई category selector nahi hai.
+Fix:
+
+· Length selector ke ठीक बाद “Content Category” dropdown banao (Motivation, Business, Education, Entertainment, Religion, Tech, News, Health, Finance, Lifestyle).
+· Custom topic text field (optional).
+· State mein category add karo.
+· Category select hone par:
+  · Script generation API ko category parameter भेजो।
+  · Trending topics उसी category से filter हों।
+  · Hook library उसी category के best hooks suggest करे।
+· Generate button tabhi enable ho jab category selected ho (except custom topic empty) — validation lagao.
+
+A3. FLOW REORDER (Logic Order बदलो, Components Move करो)
+
+Problem: Pehle scene editor, phir config — galat order.
+Fix:
+
+· Existing components ko delete nahi karna, bas reorder karo:
+  1. 📐 Content Setup (सबसे ऊपर) — Length + Category + Custom Topic
+  2. 📝 Script Generation (नीचे) — Auto Script Generate + Hooks
+  3. 🎬 Video Configuration — Voice, Music, Captions, Platform Psychology
+  4. ✨ Enhancements — Visual/Audio Enhance, Thumbnail
+  5. 📤 Output & Schedule — Multi‑platform, Schedule time, Generate
+· हर step एक collapsible section हो।
+
+A4. VALIDATIONS & FEEDBACK
+
+· Long video + short script → yellow warning.
+· Category na chuna to Generate disable + tooltip.
+· कम से कम एक scene होना चाहिए।
+· Generation के दौरान progress bar (seconds remaining).
+
+A5. PLATFORM PSYCHOLOGY DROPDOWN
+
+· Video Config में एक dropdown “Platform Psychology” add karo: Instagram, TikTok, YouTube, LinkedIn, Facebook, X.
+· Selected platform के अनुसार default visual style/audio/music बदलें (existing PlatformPsychologyEngine का उपयोग करें)।
+
+---
+
+📅 PHASE B: SCHEDULER PAGE OVERHAUL
+
+(Files: SchedulerDashboard.tsx, SchedulePersistPage.tsx, src/server/routers/schedule.ts, SchedulerService.ts)
+
+B1. EXECUTION STUB FIX — REAL CONTENT GENERATION
+
+Problem: Schedule run करने पर कुछ नहीं बनता।
+Fix:
+
+· executeSchedule (router में) को असल ShortCreator या ImageEngine call करनी चाहिए।
+· Schedule के config से पढ़ो: contentType, platforms, category, engineToggles।
+· Agar contentType video हो तो ShortCreator.create() call karo (scene auto‑generate karke)।
+· Agar contentType image हो तो ImageEngine.generate() call karo (quote card/carousel)।
+· Generation के बाद PublisherEngine से post करो (mock allowed)।
+· Result को history में save karo।
+
+B2. CONTENT TYPE SELECTOR + IMAGE SUPPORT
+
+· Schedule form में एक “Content Type” dropdown जोड़ो: Video, Image (quote card), Carousel, Banner।
+· ImageEngine और VideoEngine को scheduler से integrate करो।
+· प्रत्येक type के लिए सही template preset अपने आप select हो।
+
+B3. MULTI‑TEMPLATE GENERATION PER SCHEDULE
+
+· एक ही schedule से कई output निकलें:
+  · अगर Video select है तो automatically एक Quote Card भी बनाओ।
+  · चेकबॉक्स “Also generate: Quote Card, Carousel, Thumbnail” — default ON।
+· सबके लिए अलग‑अलग publish jobs queue करो।
+
+B4. ENGINE TOGGLES PROPAGATE TO EXECUTION
+
+· Schedule form में जो toggles हैं (translation, commentCTA, platformPsych, series, humanMimicry, hashtagOptimization, engagementOptimization) — उन्हें executeSchedule में पढ़ो और ShortCreator/ImageEngine को pass करो।
+· उदाहरण: अगर humanMimicry on है तो publish delay random हो (30‑90 min)।
+
+B5. FRESHNESS & CONFLICT CHECK
+
+· Schedule create करते समय ContentFreshnessEngine.check() चलाओ।
+· अगर same keyword/category का content 24h के अंदर post हो चुका हो तो warning दिखाओ।
+· Auto‑skip करो अगर duplicate score 0.7 से ऊपर हो।
+
+B6. BEST‑TIME AUTO‑SCHEDULE
+
+· Schedule form में “Smart Schedule” बटन जोड़ो जो BestTimeLearningEngine.getBestTimes(category, platform) call करे और slot ऑटो‑fill करे।
+
+B7. DASHBOARD — PERSISTENT SCHEDULES INTEGRATION
+
+· /scheduler dashboard में एक नया टैब “Upcoming Scheduled” जोड़ो जो /api/schedule/due से डेटा लाकर दिखाए।
+· Queue health के साथ‑साथ आज के pending शेड्यूल दिखें।
+
+B8. HUMAN MIMICRY IN SCHEDULER TIMING
+
+· अगर humanMimicry on है तो exact cron time पर post न होकर उसमें ±45 min random variation add करो।
+· 5% chance पर post skip करो (skip day simulation)।
+
+B9. CONTENT PREVIEW BEFORE SCHEDULING
+
+· “Preview” बटन जोड़ो जो बिना publish किए एक dummy scene बनाकर show करे (mock thumbnail/video frame)।
+
+B10. ENGINE SETTINGS UI IMPROVEMENT
+
+· Schedule form में हर toggle के पास छोटा सा “?” icon हो जो tooltip दे (क्या करता है)।
+
+---
+
+🔧 PHASE C: BACKEND ENDPOINT ENHANCEMENTS (Safe)
+
+1. Video generation router — duration, category, platformPsychology parameters accept करो और पाइपलाइन को दो।
+2. Schedule execute router — ऊपर बताए अनुसार ShortCreator/ImageEngine को call करो।
+3. SchedulerService.ts — tick method में persistent schedules को पढ़ो और execute करो (अभी empty है)।
+4. New endpoint GET /api/schedule/upcoming — upcoming की लिस्ट दे।
+
+अगर कोई endpoint already मौजूद नहीं है तो existing pattern (router + store) use करके create करो।
+
+---
+
+📄 PHASE D: DOCUMENTATION UPDATES
+
+· docs/API.md — new parameters (duration, category, contentType) document करो।
+· docs/SCHEDULER.md — scheduler workflow update करो।
+· README.md — Create page features और scheduler capabilities update करो।
+· Changelog में “Create page Short/Long fix + Category selector” और “Scheduler execution real + image/multi‑template support” जोड़ो।
+
+---
+
+✅ QUALITY GATES (सेल्फ‑चेक)
+
+· Short select → video ≤60s, Long select → video >60s
+· Category dropdown script को filter करे
+· Schedule run → actual video/image job create हो (mock या real)
+· Schedule form में Content Type dropdown दिखे
+· Multi‑template checkbox काम करे
+· Engine toggles execution में reflect हों
+· Freshness check warning दिखाए
+· Dashboard में upcoming schedules दिखें
+· TypeScript compile करे, build हो, कोई नया console error नहीं
+· Existing scene builder, other tabs अब भी काम करें
+
+---
+
+🚀 EXECUTION ORDER
+
+1. Create page fixes (A1‑A5) पहले करो।
+2. Scheduler page overhaul (B1‑B10) फिर करो।
+3. Backend adjustments (Phase C) साथ में करो।
+4. Documentation (Phase D) आखिर में।
+5. Self‑test सब steps के बाद quality gates चेक करो।
+
+शुरू करो — एक भी existing फीचर delete नहीं करना, सिर्फ inject और fix करना।
