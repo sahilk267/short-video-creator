@@ -33,6 +33,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import TuneIcon from '@mui/icons-material/Tune';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -54,6 +55,12 @@ const theme = createTheme({
 });
 
 const NAV_SECTIONS = [
+  {
+    title: 'AI Pipeline',
+    items: [
+      { path: '/auto-mode', label: 'Auto Mode', icon: <AutoAwesomeIcon />, badge: '🤖' },
+    ],
+  },
   {
     title: 'Content Creation',
     items: [
@@ -154,11 +161,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Quick nav bar - most used */}
             <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 0.5 }}>
               {[
+                { path: '/auto-mode', label: '🤖 Auto Mode' },
                 { path: '/trends', label: '🔥 Trends' },
                 { path: '/create', label: '+ Create' },
                 { path: '/scheduler', label: 'Schedule' },
                 { path: '/strategy', label: 'Strategy' },
-                { path: '/humanized', label: 'AI Tools' },
               ].map(({ path, label }) => (
                 <Button
                   key={path}

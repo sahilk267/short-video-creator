@@ -1,0 +1,194 @@
+You are a senior full-stack AI architect.
+
+Your task is NOT to rebuild the project.
+
+Your task is to ANALYZE, CONNECT, and UPGRADE the existing system into a fully automated AI Content Pipeline.
+
+---
+
+## 🎯 CORE OBJECTIVE
+
+Transform the current system into a unified workflow engine where ALL existing features and AI modules work together automatically.
+
+DO NOT remove or replace existing working features.
+
+---
+
+## ⚠️ CRITICAL RULES
+
+1. DO NOT rewrite the project from scratch
+2. REUSE all existing modules:
+
+   * AI Engines
+   * Content Tools
+   * Scheduler
+   * Analytics
+   * Bulk Queue
+3. Only EXTEND and CONNECT features
+4. Maintain backward compatibility
+5. Update documentation after each step
+
+---
+
+## 🧠 STEP 1: SYSTEM MAPPING
+
+Analyze and document:
+
+* All existing modules
+* AI Engines list:
+
+  * Humanized Content
+  * Thumbnail Generator
+  * Emotional Resonance
+  * Engagement Prediction
+  * Quality Scoring
+  * Attention Optimizer
+* Content Tools:
+
+  * Translation Engine
+  * Comment CTA
+  * Series Builder
+  * Watermark Engine
+
+Create:
+👉 /docs/SYSTEM_MAP.md
+
+---
+
+## 🔗 STEP 2: BUILD "AI CONTENT PIPELINE"
+
+Create a central pipeline system:
+
+INPUT:
+
+* Topic
+* Platform
+* Tone
+
+FLOW:
+
+1. Generate Quotes (existing or new module)
+2. Pass to Humanized Content Engine
+3. Apply Emotional Resonance Engine
+4. Score with Quality Scoring
+5. Optimize with Attention Optimizer
+6. Predict engagement
+7. Send best outputs to Image Generator
+8. Apply Template + Watermark Engine
+9. Generate Caption + Hashtags
+10. Send to Scheduler / Bulk Queue
+
+---
+
+## 🧩 STEP 3: ORCHESTRATOR MODULE
+
+Create a new module:
+
+👉 /core/pipeline_orchestrator.py (or equivalent)
+
+Responsibilities:
+
+* Connect all engines
+* Manage execution order
+* Handle errors
+* Support bulk processing
+
+---
+
+## 🎛️ STEP 4: UI UPGRADE (WITHOUT BREAKING CURRENT UI)
+
+Add new section:
+
+👉 "Auto Mode"
+
+Features:
+
+* Input topic
+* Select platform
+* Select tone
+* Button: "Generate Full Content"
+
+Output:
+
+* Quotes
+* Images
+* Captions
+* Ready-to-post content
+
+---
+
+## 🔁 STEP 5: BULK AUTOMATION MODE
+
+* Input: 1 topic
+* Output:
+
+  * 30 posts
+  * auto scheduled
+
+Use existing:
+
+* Bulk Queue
+* Scheduler
+
+---
+
+## 🧠 STEP 6: INTELLIGENT SELECTION SYSTEM
+
+Use existing AI Engines:
+
+* Rank generated content
+* Select top 3 variations
+* Store all scores
+
+---
+
+## 📦 STEP 7: DATABASE UPDATE
+
+Add tables if missing:
+
+* pipeline_jobs
+* generated_variations
+* ai_scores
+
+Ensure compatibility with existing DB
+
+---
+
+## 📊 STEP 8: ANALYTICS CONNECTION
+
+* Track:
+
+  * which content performs best
+  * engine scores vs performance
+
+---
+
+## 📚 STEP 9: DOCUMENTATION
+
+Update:
+
+* README.md
+* /docs/PIPELINE.md
+* /docs/AI_ENGINES_USAGE.md
+
+---
+
+## 🚀 FINAL RESULT
+
+A fully connected AI system where:
+
+User gives → Topic
+System returns → Ready content (image + caption + schedule)
+
+---
+
+## ⚡ EXECUTION STRATEGY
+
+* DO NOT implement everything at once
+* Execute step-by-step
+* After each step:
+
+  * test
+  * update docs
+
+Start with STEP 1: SYSTEM MAPPING

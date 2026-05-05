@@ -164,6 +164,18 @@ bash database/seed.sh      # Seed defaults
   - PEXELS_API_KEY set via Replit Secrets
   - Nix packages: nss, nspr, expat added for Chrome headless (Remotion)
 
+## AI Content Pipeline (Phase 9 — NEW)
+
+**Auto Mode** (`/auto-mode`) — Central orchestration UI connecting all AI engines:
+- **Input**: Topic + Platform + Tone + Variation count (1–30) + Auto-schedule toggle
+- **Steps**: Hook generation → Humanization → Emotional resonance → Quality scoring → Attention optimization → Engagement prediction → Thumbnail directives → Watermark → Caption/hashtags → AI ranking
+- **Output**: Ranked content variations with scores, captions, hashtags, color palette, music genre
+- **Bulk mode**: Up to 30 variations per run; auto-schedules top 3 over next 3 days
+- **API**: `POST /api/pipeline/run`, `GET /api/pipeline/jobs`, `GET /api/pipeline/stats`
+- **New files**: `src/services/PipelineOrchestrator.ts`, `src/db/PipelineStore.ts`, `src/server/routers/pipeline.ts`, `src/ui/pages/AutoModePage.tsx`
+- **New DB stores**: `pipeline-jobs.json`, `pipeline-variations.json`
+- **Docs**: `docs/SYSTEM_MAP.md`, `docs/PIPELINE.md`, `docs/AI_ENGINES_USAGE.md`
+
 ## Replit Run Configuration
 - **Workflow**: `Start application` → `node dist/index.js` (port 5000)
 - **Env vars set in Replit**: PORT=5000, SKIP_RUNTIME_INSTALL=true, PEXELS_API_KEY (secret)

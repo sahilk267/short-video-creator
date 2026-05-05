@@ -41,6 +41,7 @@ import { AccountRouter } from "./routers/account";
 import { WatermarkRouter } from "./routers/watermark";
 import { VideoLibraryRouter } from "./routers/videolibrary";
 import { ScheduleRouter } from "./routers/schedule";
+import { PipelineRouter } from "./routers/pipeline";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
@@ -102,6 +103,7 @@ export class Server {
     const watermarkRouter = new WatermarkRouter();
     const videoLibraryRouter = new VideoLibraryRouter(config);
     const scheduleRouter = new ScheduleRouter(config);
+    const pipelineRouter = new PipelineRouter(config);
 
     // Always-available routes (no ShortCreator dependency)
     this.app.use("/api/health", healthRouter.router);
@@ -133,6 +135,7 @@ export class Server {
     this.app.use("/api/watermark", watermarkRouter.router);
     this.app.use("/api/videolibrary", videoLibraryRouter.router);
     this.app.use("/api/schedule", scheduleRouter.router);
+    this.app.use("/api/pipeline", pipelineRouter.router);
 
     // API Documentation (Swagger UI) — always available
     this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
