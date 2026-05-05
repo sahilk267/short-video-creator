@@ -121,6 +121,12 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    title: 'Engines v13 (Phase 2-3)',
+    items: [
+      { path: '/engines-dashboard', label: 'All Engines Dashboard', icon: <BuildIcon />, badge: 'v13' },
+    ],
+  },
+  {
     title: 'System',
     items: [
       { path: '/webhooks', label: 'Notifications', icon: <NotificationsActiveIcon /> },

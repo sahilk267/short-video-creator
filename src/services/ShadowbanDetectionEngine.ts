@@ -130,4 +130,113 @@ export class ShadowbanDetectionEngine {
   getStatus(platform: string, accountId: string): ShadowbanStatus | undefined {
     return this.statuses.find((s) => s.platform === platform && s.accountId === accountId);
   }
+
+  generateRecoveryPlan(platform: string, accountId: string): RecoveryPlan {
+    const status = this.analyze(platform, accountId);
+    if (!status.isSuspected) {
+      return {
+        platform, accountId, severity: "none",
+        steps: ["No recovery needed — account is performing normally"],
+        estimatedRecoveryDays: 0,
+        postingRestrictions: "Normal posting schedule",
+        contentGuidelines: [],
+        warmupSchedule: [],
+      };
+    }
+
+    const warmupSchedule: WarmupDay[] = [];
+    if (status.severity === "severe") {
+      warmupSchedule.push(
+        { day: 1, postsAllowed: 0, note: "Complete posting pause — no content" },
+        { day: 2, postsAllowed: 0, note: "Continue pause — engage with other content only" },
+        { day: 3, postsAllowed: 0, note: "Continue pause" },
+        { day: 4, postsAllowed: 1, note: "1 evergreen post, NO hashtags" },
+        { day: 5, postsAllowed: 1, note: "1 post, max 3 hashtags (niche only)" },
+        { day: 6, postsAllowed: 1, note: "1 post, max 5 hashtags" },
+        { day: 7, postsAllowed: 2, note: "Resume cautiously — 2 posts/day max" },
+        { day: 10, postsAllowed: 3, note: "Gradual ramp up — 3 posts/day" },
+        { day: 14, postsAllowed: 4, note: "Normal schedule resume if metrics improve" }
+      );
+    } else if (status.severity === "moderate") {
+      warmupSchedule.push(
+        { day: 1, postsAllowed: 1, note: "Reduce to 1 post/day, change hashtags" },
+        { day: 3, postsAllowed: 1, note: "Continue reduced posting" },
+        { day: 5, postsAllowed: 2, note: "Slowly increase if engagement recovers" },
+        { day: 7, postsAllowed: 3, note: "Resume if metrics normalize" }
+      );
+    } else {
+      warmupSchedule.push(
+        { day: 1, postsAllowed: 2, note: "Slight reduction — change hashtag set" },
+        { day: 3, postsAllowed: 3, note: "Monitor and adjust" }
+      );
+    }
+
+    const steps: string[] = [];
+    if (status.severity === "severe") {
+      steps.push(
+        "IMMEDIATE: Stop all posting for 48-72 hours",
+        "Delete any content that may have triggered the ban",
+        "Clear all hashtags from recent posts if platform allows",
+        "Engage authentically — comment, like, and watch other content",
+        "Review community guidelines and remove any borderline content",
+        "After pause: resume with evergreen content, no trending hashtags",
+        "Gradually increase posting frequency over 2 weeks"
+      );
+    } else if (status.severity === "moderate") {
+      steps.push(
+        "Reduce posting to 1x/day for the next 5-7 days",
+        "Switch to a completely new hashtag set (avoid previously used tags)",
+        "Post only high-quality evergreen content",
+        "Avoid trending or controversial topics temporarily",
+        "Engage with your audience's comments immediately after posting"
+      );
+    } else {
+      steps.push(
+        "Reduce hashtag count by 50% in next 3 posts",
+        "Vary content format — try a new style or template",
+        "Post at different times to test audience response",
+        "Monitor engagement metrics daily"
+      );
+    }
+
+    const plan: RecoveryPlan = {
+      platform, accountId, severity: status.severity,
+      steps,
+      estimatedRecoveryDays: status.severity === "severe" ? 14 : status.severity === "moderate" ? 7 : 3,
+      postingRestrictions: status.severity === "severe" ? "Pause for 3 days, then 1/day for 7 days" : "Reduce to 1-2/day",
+      contentGuidelines: [
+        "Use only original, high-quality content",
+        "Avoid recycled or watermarked content",
+        "Keep captions natural — no keyword stuffing",
+        status.severity === "severe" ? "Avoid all hashtags for first 3 days" : "Use max 5 niche-specific hashtags",
+      ],
+      warmupSchedule,
+    };
+
+    const existingStatus = this.statuses.find((s) => s.platform === platform && s.accountId === accountId);
+    if (existingStatus) {
+      (existingStatus as ShadowbanStatus & { recoveryPlan?: RecoveryPlan }).recoveryPlan = plan;
+      this.save();
+    }
+
+    logger.info({ platform, accountId, severity: status.severity }, "Shadowban recovery plan generated");
+    return plan;
+  }
+}
+
+export interface WarmupDay {
+  day: number;
+  postsAllowed: number;
+  note: string;
+}
+
+export interface RecoveryPlan {
+  platform: string;
+  accountId: string;
+  severity: ShadowbanStatus["severity"];
+  steps: string[];
+  estimatedRecoveryDays: number;
+  postingRestrictions: string;
+  contentGuidelines: string[];
+  warmupSchedule: WarmupDay[];
 }

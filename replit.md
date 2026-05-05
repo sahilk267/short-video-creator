@@ -35,12 +35,12 @@ An AI-powered SaaS that generates short-form videos (TikTok/Instagram Reels/YouT
 
 - `src/index.ts` — app entry point, starts server + background library init
 - `src/server/server.ts` — Express server, route registration
-- `src/server/routers/` — all API route handlers
+- `src/server/routers/` — all API route handlers (competitor, engines, abtesting, approval, systemengines, contentbuckets + legacy)
 - `src/short-creator/` — core video generation engine
-- `src/services/` — AI engines (hooks, trends, humanization, quality scoring, etc.)
+- `src/services/` — 60 AI engines (see Product section)
 - `src/publishers/` — YouTube, Telegram, Instagram, Facebook, X, LinkedIn publishers
 - `src/workers/` — BullMQ workers (render, publish, dead-letter)
-- `src/ui/` — React frontend (pages, components, hooks, store)
+- `src/ui/pages/` — React pages; `EnginesDashboard.tsx` covers 16 v13 engine tabs
 - `src/db/` — file-based JSON data stores
 - `static/music/` — bundled background music tracks
 - `dist/` — compiled output (gitignored; run `pnpm build` to generate)
@@ -50,17 +50,24 @@ An AI-powered SaaS that generates short-form videos (TikTok/Instagram Reels/YouT
 - **Single-port server**: Express serves both the API and the built React SPA on port 5000. No separate dev server in production.
 - **Deferred ShortCreator**: The HTTP server starts immediately; heavy AI libs (Remotion, Kokoro, Whisper, FFmpeg) load in the background. Routes return 503 "initializing" until ready.
 - **File-based storage**: No external database — data is stored as JSON files under `~/.ai-agents-az-video-generator/` (configurable via `DATA_DIR_PATH`).
+- **LLM + rule-based fallback pattern**: Every AI engine uses `LlmGenerator` as primary and `RuleBasedGenerator` as fallback — no silent failures.
 - **Redis optional**: BullMQ queue workers only start if `REDIS_ENABLED=true` and Redis is reachable.
 - **First-run installs**: On first launch (without `SKIP_RUNTIME_INSTALL=true`), the app downloads Chrome Headless Shell and compiles Whisper.cpp from source — this takes several minutes.
 
-## Product
+## Product (v13.0 — all 60 engines complete)
 
 - Generate AI short-form videos with scripts, hooks, TTS voiceover, captions, and background clips
-- 60+ AI engines: trend intelligence, hook optimization, humanization, quality scoring, emotional resonance, attention optimization, and more
+- 60 AI engines across 6 router groups: competitor, engines (trend-hijack/category/content/caption/voice/image), abtesting, approval (moderation+validation), system (resource/throttle/assets/export/compliance/auth/errorrecovery/credentials/kb/marketing), content-buckets
+- Engines Dashboard at `/engines-dashboard` — 16 tabs covering all Phase 2-3 engines
 - Publish to YouTube, TikTok, Instagram, Facebook, Telegram, LinkedIn, X
 - Scheduled/automated publishing with BullMQ + Redis
-- Multi-tenant support with API key management
+- Multi-tenant support with API key management + JWT auth
 - MCP (Model Context Protocol) server at `/mcp` for AI agent integration
+- Shadowban detection + auto recovery plan generation (`ShadowbanDetectionEngine.generateRecoveryPlan()`)
+- A/B testing with statistical significance (chi-squared, p-value, confidence %)
+- Compliance audit log + report generation
+- Credential rotation engine with expiry detection
+- Creator knowledge base with 10 built-in rules + search
 
 ## User preferences
 
@@ -71,9 +78,11 @@ An AI-powered SaaS that generates short-form videos (TikTok/Instagram Reels/YouT
 - **First run is slow**: Whisper.cpp compiles from source and Chrome Headless Shell downloads (~87 MB) — can take 5–10 minutes. Subsequent restarts are fast once `installation-successful` marker file exists.
 - **Build before run**: The workflow runs `node dist/index.js` — always run `pnpm build` after TypeScript changes.
 - **Port must be 5000**: Replit webview requires port 5000; configured via `PORT` env var.
+- **Content-buckets route**: mounted at `/api/system/content-buckets` (not `/api/content-buckets`) so that the UI's `/api/system/*` prefix stays consistent.
 
 ## Pointers
 
 - API docs: `http://localhost:5000/api/docs` (Swagger UI)
+- Engines Dashboard: `/engines-dashboard`
 - Pexels API key: https://www.pexels.com/api/key/
 - Remotion docs: https://www.remotion.dev/docs

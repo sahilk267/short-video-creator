@@ -42,6 +42,12 @@ import { WatermarkRouter } from "./routers/watermark";
 import { VideoLibraryRouter } from "./routers/videolibrary";
 import { ScheduleRouter } from "./routers/schedule";
 import { PipelineRouter } from "./routers/pipeline";
+import { CompetitorRouter } from "./routers/competitor";
+import { EnginesRouter } from "./routers/engines";
+import { ABTestingRouter } from "./routers/abtesting";
+import { ApprovalRouter } from "./routers/approval";
+import { SystemEnginesRouter } from "./routers/systemengines";
+import { ContentBucketsRouter } from "./routers/contentbuckets";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
@@ -104,6 +110,12 @@ export class Server {
     const videoLibraryRouter = new VideoLibraryRouter(config);
     const scheduleRouter = new ScheduleRouter(config);
     const pipelineRouter = new PipelineRouter(config);
+    const competitorRouter = new CompetitorRouter(config);
+    const enginesRouter = new EnginesRouter(config);
+    const abTestingRouter = new ABTestingRouter(config);
+    const approvalRouter = new ApprovalRouter(config);
+    const systemEnginesRouter = new SystemEnginesRouter(config);
+    const contentBucketsRouter = new ContentBucketsRouter(config);
 
     // Always-available routes (no ShortCreator dependency)
     this.app.use("/api/health", healthRouter.router);
@@ -136,6 +148,12 @@ export class Server {
     this.app.use("/api/videolibrary", videoLibraryRouter.router);
     this.app.use("/api/schedule", scheduleRouter.router);
     this.app.use("/api/pipeline", pipelineRouter.router);
+    this.app.use("/api/competitor", competitorRouter.router);
+    this.app.use("/api/engines", enginesRouter.router);
+    this.app.use("/api/abtesting", abTestingRouter.router);
+    this.app.use("/api/approval", approvalRouter.router);
+    this.app.use("/api/system", systemEnginesRouter.router);
+    this.app.use("/api/system/content-buckets", contentBucketsRouter.router);
 
     // API Documentation (Swagger UI) — always available
     this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
