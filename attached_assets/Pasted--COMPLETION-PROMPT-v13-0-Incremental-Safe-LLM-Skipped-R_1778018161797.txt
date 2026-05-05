@@ -1,0 +1,196 @@
+# 🚀 COMPLETION PROMPT v13.0 — Incremental, Safe, LLM-Skipped, Rule-Based Fallback
+
+## 🔰 MEGA RULES (सबसे ज़रूरी)
+1. **EXISTING WORKING CODE KO KABHI DELETE/REPLACE NA KARO** — sirf new files create ya existing mein `if missing` logic add karo.
+2. **LLM INTEGRATION ABHI MAT KARO** — har text generation ke liye ek PRIMARY `LlmGenerator.generate(prompt)` function call rakho jo placeholder text return kare, aur ek SECONDARY `RuleBasedGenerator.generate(type, inputs)` function jo pure algorithmic logic se script, hook, caption, etc. banaye. Engine ko aise banao ki agar LlmGenerator available ho to use kare, warna RuleBasedGenerator use kare (fallback).
+3. **SIRF MISSING & PARTIAL ENGINES COMPLETE KARO** — audit table follow karo jo maine neeche diya hai.
+4. **PURA CODE TYPE-SAFE, PRODUCTION‑READY, ERROR‑HANDLED** — har function mein try-catch, logging, aur typed return ho.
+5. **HAR ENGINE KA UNIT TEST (vitest) + API ROUTER BANAO** — test ko Create page se bhi trigger kar sako.
+6. **DOCUMENTATION UPDATE KARO** — `docs/ENGINE_STATUS.md`, `docs/API.md`, `README.md` update karo.
+
+---
+
+## 📊 AUDIT TABLE (यही आधार है — हर चीज़ इसी के अनुसार बनानी है)
+
+| # | Engine | Status | Action |
+|---|--------|--------|--------|
+| 1 | TrendEngine | COMPLETE | — |
+| 2 | Real-Time Viral Radar Engine | COMPLETE | — |
+| 3 | Competitor Analysis Engine | MISSING | ➕ CREATE |
+| 4 | Trend Hijacking Engine | PARTIAL | 🔧 COMPLETE |
+| 5 | Category Engine | PARTIAL | 🔧 COMPLETE |
+| 6 | Category Router | PARTIAL | 🔧 COMPLETE |
+| 7 | Content Engine | PARTIAL | 🔧 COMPLETE (LLM+Rule fallback) |
+| 8 | Viral Hook Engine | COMPLETE | — |
+| 9 | Hook Library Engine | COMPLETE | — |
+| 10 | Translation Engine | COMPLETE | — |
+| 11 | Caption Engine | PARTIAL | 🔧 COMPLETE (dedicated file) |
+| 12 | Comment CTA Engine | COMPLETE | — |
+| 13 | Voice Engine | PARTIAL | 🔧 COMPLETE (Coqui adapter) |
+| 14 | Subtitle Engine | COMPLETE | — |
+| 15 | Asset Fetch Engine | COMPLETE | — |
+| 16 | Image Generation Engine | COMPLETE | — |
+| 17 | Image Engine | PARTIAL | 🔧 COMPLETE (quotes/carousel) |
+| 18 | Video Engine | COMPLETE | — |
+| 19 | Humanized Content Engine | COMPLETE | — |
+| 20 | Thumbnail Engine | COMPLETE | — |
+| 21 | Expert Editing Techniques Engine | PARTIAL | 🔧 COMPLETE |
+| 22 | Visual Enhancement Engine | COMPLETE | — |
+| 23 | Audio Quality Engine | COMPLETE | — |
+| 24 | Platform Psychology Engine | COMPLETE | — |
+| 25 | Series Builder Engine | COMPLETE | — |
+| 26 | Content Bucket Engine | MISSING | ➕ CREATE |
+| 27 | Emotional Resonance Engine | COMPLETE | — |
+| 28 | Attention Optimizer | COMPLETE | — |
+| 29 | Quality Scoring Engine | COMPLETE | — |
+| 30 | Engagement Prediction Engine | COMPLETE | — |
+| 31 | A/B Testing Engine | PARTIAL | 🔧 COMPLETE (dedicated) |
+| 32 | Skip Analysis Engine | PARTIAL | 🔧 COMPLETE |
+| 33 | Best Time Learning Engine | COMPLETE | — |
+| 34 | Hashtag Learning Engine | COMPLETE | — |
+| 35 | Content Freshness Engine | PARTIAL | 🔧 COMPLETE |
+| 36 | Anti-Duplication Engine | PARTIAL | 🔧 COMPLETE |
+| 37 | Content Decay / Recycle Engine | COMPLETE | — |
+| 38 | Account Manager Engine | COMPLETE | — |
+| 39 | Human Mimicry Engine | COMPLETE | — |
+| 40 | Publisher Engine | COMPLETE | — |
+| 41 | Scheduler Engine | COMPLETE | — |
+| 42 | Shadowban Detection & Recovery | PARTIAL | 🔧 COMPLETE (add recovery) |
+| 43 | Marketing Engine | PARTIAL | 🔧 COMPLETE |
+| 44 | Analytics Engine | COMPLETE | — |
+| 45 | Approval Engine | PARTIAL | 🔧 COMPLETE |
+| 46 | Moderation Engine | PARTIAL | 🔧 COMPLETE |
+| 47 | Validation Engine | PARTIAL | 🔧 COMPLETE |
+| 48 | Watermark Engine | COMPLETE | — |
+| 49 | Cost Engine | COMPLETE | — |
+| 50 | Resource Engine | MISSING | ➕ CREATE |
+| 51 | Throttling Engine | PARTIAL | 🔧 COMPLETE |
+| 52 | Asset Library Engine | PARTIAL | 🔧 COMPLETE |
+| 53 | Export Engine | MISSING | ➕ CREATE |
+| 54 | Webhook Engine | COMPLETE | — |
+| 55 | Compliance Engine | PARTIAL | 🔧 COMPLETE |
+| 56 | Auth Engine | MISSING | ➕ CREATE (multi-tenant JWT) |
+| 57 | Error Recovery Engine | PARTIAL | 🔧 COMPLETE (dead letter) |
+| 58 | Credential Rotation Engine | MISSING | ➕ CREATE |
+| 59 | First Run Setup Engine | COMPLETE | — |
+| 60 | Creator Knowledge Base | PARTIAL | 🔧 COMPLETE |
+
+---
+
+## 🏗️ PHASE 1: MISSING ENGINES CREATE KARO (6 Engines)
+
+Har engine ke liye:
+- `src/services/<EngineName>.ts` (class with rule‑based logic)
+- `src/services/__tests__/<EngineName>.test.ts` (vitest)
+- `src/server/routers/<engine>.ts` (Express router)
+- `src/db/<Engine>Store.ts` (JSON file store in ~/.ai-content-empire/)
+- Create Page mein ek tab (“<Tab Name>”) jo us engine ko test kar sake.
+
+### Engine specifications (saare rule‑based, NO AI):
+
+1. **CompetitorAnalysisEngine** — Niche aur platform ke hissab se simulated top 10 creators, viral patterns, audio/format trends analyse kare (saari internal arrays se, no external API). Method: `analyzeCompetitor(niche, platform)`, `detectViralPatterns()`, `generateStrategy()`.
+2. **ContentBucketEngine** — Content ko buckets mein baate: viral (40%), evergreen (25%), educational (20%), personal (15%). Input: total slots, returns bucket plan.
+3. **ResourceEngine** — System resources monitor: CPU, RAM, disk ka snapshot le. Methods: `getSnapshot()`, `optimize()`, `predictNeeds()`.
+4. **ExportEngine** — Content/backup export: zip/tar.gz banao (mock file list). Methods: `exportContent()`, `backupAll()`, `restore()`.
+5. **AuthEngine** — JWT-based multi-tenant auth: `registerTenant()`, `authenticate(apiKey)`, `rotateCredentials()`. JSON store mein tenant data.
+6. **CredentialRotationEngine** — Platform tokens rotate kare: `scheduleRotation()`, `rotateNow()`, `detectExpiring()`.
+
+---
+
+## 🔧 PHASE 2: PARTIAL ENGINES COMPLETE KARO (17 Engines)
+
+Existing code base mein jaakar incomplete logic ko full class banao, dedicated file mein extract karo agar needed ho. 
+- **LLM fallback rule**: Har text generation mein `LlmGenerator` ko primary call karo (jo placeholder text lauta sakta hai), agar wo unavailable ho/vowel ho to `RuleBasedGenerator` use karo.
+- Ensure each engine has its own file and is not scattered.
+
+**Specific instructions for notable ones:**
+
+- **ContentEngine** — `generateScript(topic, platform)` implement karo jo LLM (placeholder) ya rule-based script banaye.
+- **TrendHijackingEngine** — TrendEngine data use kare, format hijack kare, evergreen fallback de.
+- **CategoryRouter** — Category → platform mapping table ke hissab se route kare.
+- **ImageEngine** — Template system: JSON based quote card, carousel renderer (Pillow/Sharp).
+- **ExpertEditingEngine** — FFmpeg filter chains: zoom, glitch, speed ramp etc. (non-GPU).
+- **AbTestingEngine** — Statistical significance calculator (Chi-square, t-test approximations).
+- **SkipAnalysisEngine** — Video ke 3s, 10s, 30s skip points track kare (simulated tracker).
+- **ValidationEngine** — Video, image, metadata validation before publish.
+- **ApprovalEngine**, **ModerationEngine** — Purely rule-based checklist/policy check.
+- **ComplianceEngine** — Action logging.
+- **ErrorRecoveryEngine** — Dead letter queue handler.
+- **CreatorKnowledgeBase** — Static rules store (editor/designer guidelines).
+- **ThrottlingEngine** — Per-tenant rate limits.
+- **AssetLibraryEngine** — Asset import, organize, search (local folder).
+- **MarketingEngine** — Website scrape simulate kar ke variant banners create kare (rule-based).
+- **ShadowbanDetection (add recovery)** — Agar engagement 70% drop, pause + warm-up plan.
+
+---
+
+## 🖥️ PHASE 3: CREATE PAGE UI COMPLETION
+
+`src/ui/pages/CreatePage.tsx` mein ye tabs ADD karo (existing koi tab delete mat karo):
+
+1. **Competitor Analysis** — Input niche, platform; analyze button; results table.
+2. **Content Buckets** — Slots input; generate bucket plan.
+3. **Resource Monitor** — Live CPU/RAM bars (simulate).
+4. **Export / Backup** — Export buttons (video, all, restore).
+5. **Authentication** — Tenant management (add, rotate key).
+6. **Credentials** — Platform token rotation trigger.
+7. **Trend Hijack** — Detect trending formats; adapt button.
+8. **A/B Test** — Create test, view results.
+9. **Approval Queue** — Submit, review, approve/reject.
+10. **Moderation Scan** — Scan content button, report.
+11. **Validation** — Validate video/image before publish.
+12. **Knowledge Base** — Search creator rules.
+13. **Throttling** — View rate limits.
+14. **Asset Library** — Upload, search assets.
+15. **Marketing** — Generate banners from mock website data.
+16. **System Health** — Error recovery, dead letter queue.
+(Total around 16 tabs; add neatly)
+
+Har tab mein corresponding API call kare aur data display kare.
+
+---
+
+## ✅ PHASE 4: TESTING & DOCUMENTATION
+
+1. **Tests**: Har engine ke liye vitest suite likho jo:
+   - Happy path check kare
+   - Fallback behavior verify kare (LLM unavailable)
+   - Error handling check kare
+   - JSON store read/write verify kare
+
+2. **Master test script**: `npm run test:all` jo saare tests run kare aur end mein summary de.
+
+3. **Documentation update**:
+   - `docs/ENGINE_STATUS.md` — table update: ab sab “COMPLETE” dikhe.
+   - `docs/API.md` — saare new endpoints document karo.
+   - `docs/LLM_INTEGRATION.md` — guide likho ki baad mein `LlmGenerator.ts` mein real LLM kaise plug karein.
+   - `README.md` — status badge 60/60, architecture diagram update.
+
+4. **Quality Check**:
+   - `npm run typecheck` ke errors zero.
+   - `npm run lint` pass.
+   - `npm run build` success.
+   - Koi bhi console.log na ho (use logger utility).
+
+---
+
+## ⚠️ IMPORTANT: LLM PLACEHOLDER RULE
+
+Har text generation function (script, hook, caption, translation) mein:
+
+```typescript
+import { LlmGenerator } from './LlmGenerator';
+import { RuleBasedGenerator } from './RuleBasedGenerator';
+
+async function generateText(type: string, prompt: string): Promise<string> {
+  try {
+    // Primary: Try LLM if configured (abhi placeholder)
+    if (LlmGenerator.isAvailable()) {
+      return await LlmGenerator.generate(prompt);
+    }
+  } catch (e) {
+    logger.warn('LLM failed, falling back to rule-based');
+  }
+  // Secondary: Rule-based deterministic
+  return RuleBasedGenerator.generate(type, prompt);
+}
