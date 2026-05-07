@@ -40,11 +40,13 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import HistoryIcon from "@mui/icons-material/History";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
 import { useScheduledJobs, type QueueCounts } from "../hooks/useScheduledJobs";
 import { useAutoRefresh } from "../hooks/useAutoRefresh";
 import { ScheduleForm } from "../components/scheduler/ScheduleForm";
 import { ScheduledJobsList } from "../components/scheduler/ScheduledJobsList";
 import { ScheduleHistory } from "../components/scheduler/ScheduleHistory";
+import { ScheduleCalendar } from "../components/scheduler/ScheduleCalendar";
 import EmptyState from "../components/shared/EmptyState";
 
 // ─── Queue Stats Cards ────────────────────────────────────────────────────────
@@ -397,6 +399,11 @@ const SchedulerDashboard: React.FC = () => {
                 iconPosition="start"
                 label="Upcoming"
               />
+              <Tab
+                icon={<CalendarViewWeekIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+                label="Calendar"
+              />
             </Tabs>
 
             <Box sx={{ p: 2 }}>
@@ -427,6 +434,11 @@ const SchedulerDashboard: React.FC = () => {
               {/* Upcoming Scheduled Tab */}
               <TabPanel value={tab} index={3}>
                 <UpcomingTab />
+              </TabPanel>
+
+              {/* Calendar Tab */}
+              <TabPanel value={tab} index={4}>
+                <ScheduleCalendar />
               </TabPanel>
             </Box>
           </Paper>
