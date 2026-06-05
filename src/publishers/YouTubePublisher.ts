@@ -95,9 +95,10 @@ export class YouTubePublisher implements PlatformPublisher {
         externalId: videoId ?? undefined,
         publishedUrl: videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined,
       };
-    } catch (err: any) {
-      logger.error({ err: err.message }, "YouTube upload failed");
-      return { success: false, error: err.message };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error({ err: message }, "YouTube upload failed");
+      return { success: false, error: message };
     }
   }
 

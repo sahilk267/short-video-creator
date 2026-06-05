@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AudioQualityEngine } from "../../services/AudioQualityEngine.js";
+import { AudioQualityEngine } from "../../services/AudioQualityEngine";
 import { logger } from "../../logger";
 
 export class AudioRouter {
@@ -39,6 +39,7 @@ export class AudioRouter {
         const chain = this.engine.generateFfmpegAudioChain(baseEnhancement);
         res.json({ ffmpegChain: chain });
       } catch (err) {
+        logger.error({ err }, "GET /audio/ffmpeg-chain failed");
         res.status(500).json({ error: "Failed to generate audio chain" });
       }
     });
@@ -53,6 +54,7 @@ export class AudioRouter {
 
         res.json({ levels, isOptimal });
       } catch (err) {
+        logger.error({ err }, "POST /audio/detect-levels failed");
         res.status(500).json({ error: "Failed to detect levels" });
       }
     });

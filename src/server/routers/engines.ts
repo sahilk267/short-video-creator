@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import type { Request, Response } from "express";
 import { TrendHijackingEngine } from "../../services/TrendHijackingEngine";
 import { CategoryEngine } from "../../services/CategoryEngine";
@@ -7,8 +7,6 @@ import { CaptionEngine } from "../../services/CaptionEngine";
 import { VoiceEngine } from "../../services/VoiceEngine";
 import { ImageEngine } from "../../services/ImageEngine";
 import type { Config } from "../../config";
-
-const express = require("express") as typeof import("express");
 
 export class EnginesRouter {
   public router: Router;
@@ -21,7 +19,7 @@ export class EnginesRouter {
 
   constructor(config: Config) {
     this.router = Router();
-    this.router.use(express.json());
+    this.router.use(json());
     this.trendHijack = new TrendHijackingEngine(config.dataDirPath);
     this.category = new CategoryEngine();
     this.content = new ContentEngine();

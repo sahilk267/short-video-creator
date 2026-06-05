@@ -156,7 +156,6 @@ export class PlatformPsychologyEngine {
   }
 
   adaptScriptForPlatform(script: string, platform: Platform): string {
-    const profile = PROFILES[platform];
     if (platform === "linkedin") {
       return script.replace(/\b(bro|guys|lol|omg)\b/gi, "").trim();
     }

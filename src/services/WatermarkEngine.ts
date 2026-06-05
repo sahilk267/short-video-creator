@@ -1,5 +1,3 @@
-import { logger } from "../logger";
-
 export interface WatermarkConfig {
   text?: string;
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";

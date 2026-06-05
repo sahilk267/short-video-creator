@@ -48,9 +48,6 @@ export class SubtitleBuilder {
 
     // Validate coverage
     const wordCount = processedCaptions.reduce((acc, c) => acc + c.text.trim().split(/\s+/).length, 0);
-    const totalDurationMs = processedCaptions.length > 0
-      ? processedCaptions[processedCaptions.length - 1].endMs - processedCaptions[0].startMs
-      : 0;
 
     // Check for timestamp drift between consecutive captions
     for (let i = 1; i < processedCaptions.length; i++) {

@@ -3,7 +3,6 @@ import express from "express";
 import type {
   Request as ExpressRequest,
   Response as ExpressResponse,
-  NextFunction,
 } from "express";
 import path from "path";
 import swaggerUi from "swagger-ui-express";

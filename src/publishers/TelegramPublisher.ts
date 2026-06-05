@@ -86,14 +86,16 @@ export class TelegramPublisher implements PlatformPublisher {
         externalId: messageId,
         publishedUrl: undefined,
       };
-    } catch (err: any) {
-      logger.error({ err: err.message }, "Telegram upload failed");
-      return { success: false, error: err.message };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error({ err: message }, "Telegram upload failed");
+      return { success: false, error: message };
     }
   }
 
   // Telegram does not support scheduling via standard Bot API
   async scheduleVideo(params: PublishParams, _publishAt: Date): Promise<PublishResult> {
+    void _publishAt;
     logger.warn("Telegram does not support scheduled posts via Bot API; uploading immediately");
     return this.uploadVideo(params);
   }

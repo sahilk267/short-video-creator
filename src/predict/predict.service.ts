@@ -109,7 +109,7 @@ export class PredictiveService {
     // Cap score to 0-100
     score = Math.max(0, Math.min(100, score));
 
-    logAss: logger.debug(
+    logger.debug(
       {
         topic,
         category,

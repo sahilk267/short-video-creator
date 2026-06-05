@@ -54,7 +54,7 @@ export class MemoryService {
         this.patterns = [];
       }
     } catch (error) {
-      logger.warn({ patternsPath: this.patternsPath }, "Failed to load patterns, starting fresh");
+      logger.warn({ error, patternsPath: this.patternsPath }, "Failed to load patterns, starting fresh");
       this.patterns = [];
     }
   }
@@ -83,10 +83,10 @@ export class MemoryService {
       keywords?: string[];
       engagement?: { views: number; likes: number; shares: number };
     } = {},
-  ): Promise<StoredPattern> {
+  ): Promise<StoredPattern | null> {
     if (score < 65) {
       logger.debug({ score }, "Pattern score too low, not storing");
-      return null as any;
+      return null;
     }
 
     const pattern: StoredPattern = {

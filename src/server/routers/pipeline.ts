@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Router } from "express";
 import express from "express";
 import type { Request, Response } from "express";
-import { PipelineOrchestrator } from "../../services/PipelineOrchestrator.js";
-import { PipelineStore } from "../../db/PipelineStore.js";
-import { logger } from "../../logger.js";
-import type { Config } from "../../config.js";
+import { PipelineOrchestrator } from "../../services/PipelineOrchestrator";
+import { PipelineStore } from "../../db/PipelineStore";
+import { logger } from "../../logger";
+import type { Config } from "../../config";
 
 export class PipelineRouter {
   public router: Router;
@@ -165,6 +167,7 @@ export class PipelineRouter {
       const data = await this.store.listComparisons(limit);
       res.json({ status: "ok", data, total: data.length });
     } catch (err) {
+      logger.error({ err }, "GET /pipeline/comparisons failed");
       res.status(500).json({ error: "Failed to list comparisons" });
     }
   }
@@ -178,6 +181,7 @@ export class PipelineRouter {
       }
       res.json({ status: "ok", run });
     } catch (err) {
+      logger.error({ err }, "GET /pipeline/comparisons/:id failed");
       res.status(500).json({ error: "Failed to fetch comparison" });
     }
   }
@@ -188,6 +192,7 @@ export class PipelineRouter {
       const jobs = await this.store.listJobs(limit);
       res.json({ status: "ok", data: jobs, total: jobs.length });
     } catch (err) {
+      logger.error({ err }, "GET /pipeline/jobs failed");
       res.status(500).json({ error: "Failed to list pipeline jobs" });
     }
   }
@@ -202,6 +207,7 @@ export class PipelineRouter {
       const variations = await this.store.getVariationsForJob(req.params.id);
       res.json({ status: "ok", job, variations });
     } catch (err) {
+      logger.error({ err }, "GET /pipeline/jobs/:id failed");
       res.status(500).json({ error: "Failed to fetch pipeline job" });
     }
   }
@@ -211,6 +217,7 @@ export class PipelineRouter {
       const stats = await this.store.getStats();
       res.json({ status: "ok", stats });
     } catch (err) {
+      logger.error({ err }, "GET /pipeline/stats failed");
       res.status(500).json({ error: "Failed to fetch pipeline stats" });
     }
   }

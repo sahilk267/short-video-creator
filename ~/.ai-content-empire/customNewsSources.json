@@ -1,0 +1,42 @@
+[
+  {
+    "id": "seed_1778430718593_3xnglg2",
+    "name": "TechCrunch",
+    "url": "https://techcrunch.com/feed/",
+    "category": "Technology",
+    "active": true,
+    "createdAt": "2026-05-10T16:31:58.593Z"
+  },
+  {
+    "id": "seed_1778430718593_8btytpm",
+    "name": "Product Hunt",
+    "url": "https://www.producthunt.com/feed",
+    "category": "Technology",
+    "active": true,
+    "createdAt": "2026-05-10T16:31:58.593Z"
+  },
+  {
+    "id": "seed_1778430718593_ked7l0s",
+    "name": "Hacker News",
+    "url": "https://news.ycombinator.com/rss",
+    "category": "Technology",
+    "active": true,
+    "createdAt": "2026-05-10T16:31:58.593Z"
+  },
+  {
+    "id": "seed_1778430718593_vkd849j",
+    "name": "Forbes Business",
+    "url": "https://www.forbes.com/business/feed/",
+    "category": "Business",
+    "active": true,
+    "createdAt": "2026-05-10T16:31:58.593Z"
+  },
+  {
+    "id": "seed_1778430718593_mgx67k3",
+    "name": "ESPN Sports",
+    "url": "https://www.espn.com/espn/rss/news",
+    "category": "Sports",
+    "active": false,
+    "createdAt": "2026-05-10T16:31:58.593Z"
+  }
+]

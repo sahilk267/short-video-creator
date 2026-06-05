@@ -34,6 +34,7 @@ export class WatermarkRouter {
         engine.updateDefault(req.body);
         res.json({ status: "ok", config: engine.getDefaultConfig() });
       } catch (err) {
+        logger.error({ err }, "PUT /watermark/default failed");
         res.status(500).json({ error: "Failed to update default watermark" });
       }
     });

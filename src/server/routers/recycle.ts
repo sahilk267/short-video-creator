@@ -4,7 +4,7 @@ import { ContentRecycleEngine } from "../../services/ContentRecycleEngine";
 import { ContentFreshnessEngine } from "../../services/ContentFreshnessEngine";
 import { AntiDuplicationEngine } from "../../services/AntiDuplicationEngine";
 import { Config } from "../../config";
-import { logger } from "../../logger";
+
 
 export class RecycleRouter {
   public router: express.Router;

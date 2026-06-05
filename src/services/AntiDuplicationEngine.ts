@@ -1,8 +1,6 @@
 import crypto from "crypto";
 import fs from "fs-extra";
 import path from "path";
-import { logger } from "../logger";
-
 export interface ContentFingerprint {
   hash: string;
   title: string;

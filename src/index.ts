@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import path from "path";
 import fs from "fs-extra";
 
-import { Config } from "./config.js";
-import { logger } from "./logger.js";
-import { Server } from "./server/server.js";
-import { runEnvironmentValidation } from "./config/validate.js";
-import { MusicManager } from "./short-creator/music.js";
+import { Config } from "./config";
+import { logger } from "./logger";
+import { Server } from "./server/server";
+import { runEnvironmentValidation } from "./config/validate";
+import { MusicManager } from "./short-creator/music";
 
 async function main() {
   runEnvironmentValidation();

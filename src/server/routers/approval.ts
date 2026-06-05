@@ -1,11 +1,10 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import type { Request, Response } from "express";
 import { ApprovalEngine } from "../../services/ApprovalEngine";
 import { ModerationEngine } from "../../services/ModerationEngine";
 import { ValidationEngine } from "../../services/ValidationEngine";
 import type { Config } from "../../config";
 
-const express = require("express") as typeof import("express");
 
 export class ApprovalRouter {
   public router: Router;
@@ -15,7 +14,7 @@ export class ApprovalRouter {
 
   constructor(config: Config) {
     this.router = Router();
-    this.router.use(express.json());
+    this.router.use(json());
     this.approval = new ApprovalEngine(config.dataDirPath);
     this.moderation = new ModerationEngine();
     this.validation = new ValidationEngine();

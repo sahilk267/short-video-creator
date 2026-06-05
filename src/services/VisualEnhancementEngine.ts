@@ -1,5 +1,3 @@
-import { logger } from "../logger";
-
 export interface EnhancementSettings {
   autoSharpen: boolean;
   contrastOptimize: boolean;

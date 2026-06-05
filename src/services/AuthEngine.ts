@@ -1,3 +1,5 @@
+/* eslint-disable @remotion/deterministic-randomness */
+
 import fs from "fs-extra";
 import path from "path";
 import crypto from "crypto";
@@ -127,7 +129,9 @@ export class AuthEngine {
       };
 
       const token = signJwt(payload, JWT_SECRET);
-      const { apiKey: _ak, apiKeyHash: _h, ...safeTenant } = tenant;
+      const safeTenant = { ...tenant } as Omit<Tenant, "apiKey" | "apiKeyHash"> & Record<string, unknown>;
+      delete safeTenant.apiKey;
+      delete safeTenant.apiKeyHash;
       logger.debug({ tenantId: tenant.id }, "AuthEngine: authenticated");
       return { success: true, tenant: safeTenant, token };
     } catch (err) {
@@ -171,13 +175,20 @@ export class AuthEngine {
   }
 
   getTenants(): Omit<Tenant, "apiKey" | "apiKeyHash">[] {
-    return this.tenants.map(({ apiKey: _ak, apiKeyHash: _h, ...t }) => t);
+    return this.tenants.map((tenant) => {
+      const safeTenant = { ...tenant } as Omit<Tenant, "apiKey" | "apiKeyHash"> & Record<string, unknown>;
+      delete safeTenant.apiKey;
+      delete safeTenant.apiKeyHash;
+      return safeTenant;
+    });
   }
 
   getTenant(id: string): Omit<Tenant, "apiKey" | "apiKeyHash"> | undefined {
     const t = this.tenants.find((t) => t.id === id);
     if (!t) return undefined;
-    const { apiKey: _ak, apiKeyHash: _h, ...safe } = t;
+    const safe = { ...t } as Omit<Tenant, "apiKey" | "apiKeyHash"> & Record<string, unknown>;
+    delete safe.apiKey;
+    delete safe.apiKeyHash;
     return safe;
   }
 }

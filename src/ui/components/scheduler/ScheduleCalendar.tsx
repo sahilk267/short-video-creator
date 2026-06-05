@@ -464,10 +464,9 @@ export const ScheduleCalendar: React.FC = () => {
                     variant="subtitle2"
                     fontWeight={isToday ? 800 : 400}
                     sx={{
-                      color: isToday ? "primary.main" : "text.primary",
+                      color: isToday ? "white" : "text.primary",
                       lineHeight: 1.2,
                       bgcolor: isToday ? "primary.main" : "transparent",
-                      color: isToday ? "white" : "text.primary",
                       width: 26,
                       height: 26,
                       borderRadius: "50%",

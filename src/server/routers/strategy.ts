@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import express from "express";
 import type { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import { PlatformPsychologyEngine } from "../../services/PlatformPsychologyEngine";

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import type { Request, Response } from "express";
 import { CompetitorAnalysisEngine } from "../../services/CompetitorAnalysisEngine";
 import type { Config } from "../../config";
@@ -9,8 +9,8 @@ export class CompetitorRouter {
 
   constructor(config: Config) {
     this.router = Router();
+    this.router.use(json());
     this.engine = new CompetitorAnalysisEngine(config.dataDirPath);
-    this.router.use(require("express").json());
     this.register();
   }
 

@@ -178,19 +178,25 @@ export interface GenerationContext {
   style?: StoredPatternStyle;
 }
 
-// Import from existing types
 import type { Scene } from "./types/shorts";
+import type { MemoryService } from "./memory/memory.service";
+import type { FeedbackService } from "./feedback/feedback.service";
+import type { PredictiveService } from "./predict/predict.service";
+import type { AssetService } from "./assets/asset.service";
+import type { MetadataService } from "./metadata/metadata.service";
+import type { BeatSyncService } from "./video/beat-sync.service";
+import type { AgentLoopService } from "./agents/agent-loop.service";
 
 // Service Registry (used in DI)
 export interface EnhancedServicesRegistry {
   flags: Record<FeatureFlag, boolean>;
-  memory?: any; // MemoryService type
-  feedback?: any; // FeedbackService type
-  predictive?: any; // PredictiveService type
-  assets?: any; // AssetService type
-  metadata?: any; // MetadataService type
-  beatSync?: any; // BeatSyncService type
-  agentLoop?: any; // AgentLoopService type
+  memory?: MemoryService;
+  feedback?: FeedbackService;
+  predictive?: PredictiveService;
+  assets?: AssetService;
+  metadata?: MetadataService;
+  beatSync?: BeatSyncService;
+  agentLoop?: AgentLoopService;
 }
 
 // Hook Options (already exists in AiLlmGenerator, included for reference)
@@ -201,15 +207,13 @@ export interface HookOption {
   rationale: string;
 }
 
-// Export all as namespace for convenience
-export namespace EnhancedFeatures {
-  export type Feature = FeatureFlag;
-  export type Platform = PlatformType;
-  export type Recommendation = ViabilityRecommendation;
-  export type Style = StoredPatternStyle;
+export type EnhancedFeature = FeatureFlag;
+export type EnhancedPlatform = PlatformType;
+export type EnhancedRecommendation = ViabilityRecommendation;
+export type EnhancedStyle = StoredPatternStyle;
 
-  export const PLATFORMS: PlatformType[] = [
-    "youtube",
+export const PLATFORMS: PlatformType[] = [
+  "youtube",
     "instagram",
     "tiktok",
     "telegram",
@@ -240,16 +244,15 @@ export namespace EnhancedFeatures {
     "enableAgentLoop",
   ];
 
-  export const REQUIRES_MEMORY: FeatureFlag[] = [
-    "enableAgentLoop",
-    "enableMemory",
-  ];
+export const REQUIRES_MEMORY: FeatureFlag[] = [
+  "enableAgentLoop",
+  "enableMemory",
+];
 
-  export const REQUIRES_FEEDBACK: FeatureFlag[] = [
-    "enableFeedbackLoop",
-    "enableAgentLoop",
-  ];
-}
+export const REQUIRES_FEEDBACK: FeatureFlag[] = [
+  "enableFeedbackLoop",
+  "enableAgentLoop",
+];
 
 /**
  * Usage examples:

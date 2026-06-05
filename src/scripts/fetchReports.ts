@@ -37,7 +37,6 @@ export async function fetchReports(sourceId?: string): Promise<number> {
 }
 
 if (require.main === module) {
-  const config = new Config();
   const cronExpression = process.env.CRON_INTERVAL || "*/30 * * * *";
 
   logger.info({ cronExpression }, "Starting report fetcher cron");

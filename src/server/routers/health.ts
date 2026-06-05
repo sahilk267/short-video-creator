@@ -79,9 +79,10 @@ export class HealthRouter {
         render: renderCounts,
         publish: publishCounts,
       });
-    } catch (err: any) {
-      logger.error({ err: err.message }, "Failed to fetch queue stats");
-      res.status(500).json({ error: err.message });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error({ err: message }, "Failed to fetch queue stats");
+      res.status(500).json({ error: message });
     }
   }
 
@@ -102,9 +103,10 @@ export class HealthRouter {
         renderStates: summarize(renderJobs),
         publishStates: summarize(publishJobs),
       });
-    } catch (err: any) {
-      logger.error({ err: err.message }, "Failed to fetch queue state visibility");
-      res.status(500).json({ error: err.message });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error({ err: message }, "Failed to fetch queue state visibility");
+      res.status(500).json({ error: message });
     }
   }
 
@@ -152,9 +154,10 @@ export class HealthRouter {
         slowRequests,
         alerts,
       });
-    } catch (err: any) {
-      logger.error({ err: err.message }, "Failed to build health dashboard snapshot");
-      res.status(500).json({ error: err.message });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error({ err: message }, "Failed to build health dashboard snapshot");
+      res.status(500).json({ error: message });
     }
   }
 

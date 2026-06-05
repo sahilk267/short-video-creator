@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Config } from "../../config";
-import { HumanizedContentEngine } from "../../services/HumanizedContentEngine.js";
+import { HumanizedContentEngine } from "../../services/HumanizedContentEngine";
 import { logger } from "../../logger";
 
 export class HumanizedRouter {
@@ -32,6 +32,7 @@ export class HumanizedRouter {
         const directives = this.engine.generateAvatarDirectives(req.params.emotion, duration);
         res.json({ directives });
       } catch (err) {
+        logger.error({ err }, "GET /humanized/avatar-directives failed");
         res.status(500).json({ error: "Failed to generate directives" });
       }
     });
@@ -41,6 +42,7 @@ export class HumanizedRouter {
         const config = this.engine.getConfig();
         res.json({ config });
       } catch (err) {
+        logger.error({ err }, "GET /humanized/config failed");
         res.status(500).json({ error: "Failed to fetch config" });
       }
     });
@@ -50,6 +52,7 @@ export class HumanizedRouter {
         this.engine.saveConfig(req.body);
         res.json({ success: true });
       } catch (err) {
+        logger.error({ err }, "PUT /humanized/config failed");
         res.status(500).json({ error: "Failed to save config" });
       }
     });

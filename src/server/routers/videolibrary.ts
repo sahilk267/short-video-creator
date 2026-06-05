@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * VideoLibraryRouter – Full CRUD + search + stats for video library
  *

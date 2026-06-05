@@ -90,7 +90,6 @@ export const TopVideosTable: React.FC<TopVideosTableProps> = ({ videos, loading 
 
   const maxViews = Math.max(...filtered.map((v) => v.views || 0), 1);
   const maxEngagement = Math.max(...filtered.map((v) => (v.likes || 0) + (v.shares || 0)), 1);
-  const maxCTR = Math.max(...filtered.map((v) => v.ctr || 0), 1);
 
   if (loading) return <Skeleton variant="rounded" height={400} />;
 

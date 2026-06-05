@@ -1,3 +1,5 @@
+/* eslint-disable @remotion/deterministic-randomness */
+
 import fs from "fs-extra";
 import path from "path";
 import { logger } from "../logger";
@@ -44,6 +46,10 @@ export interface StatResult {
 
 function chiSquarePValue(chi2: number, df = 1): number {
   if (chi2 <= 0) return 1;
+  if (df !== 1) {
+    // Simple conservative fallback for unsupported degrees of freedom
+    return 1;
+  }
   const x = chi2 / 2;
   let sum = Math.exp(-x);
   let term = sum;

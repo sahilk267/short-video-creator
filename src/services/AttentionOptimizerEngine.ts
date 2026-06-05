@@ -1,4 +1,4 @@
-import { logger } from "../logger";
+/* eslint-disable @remotion/deterministic-randomness */
 
 export interface AttentionSpan {
   secondsToFirstCurve: number;
@@ -84,6 +84,7 @@ export class AttentionOptimizerEngine {
     };
 
     const hookList = hooks[platform] || hooks.tiktok;
-    return hookList[Math.floor(Math.random() * hookList.length)];
+    const selected = hookList[Math.floor(Math.random() * hookList.length)];
+    return `${selected} ${topic}`;
   }
 }

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { test, expect, vi } from "vitest";
 import { TtsAdapter } from "./TtsAdapter";
 import { Kokoro } from "./Kokoro";
 import { LanguageEnum, SceneInput } from "../../types/shorts";
-import { AiLlmGenerator } from "../../script-generator/AiLlmGenerator";
 
 vi.mock("../../script-generator/AiLlmGenerator", () => {
   return {

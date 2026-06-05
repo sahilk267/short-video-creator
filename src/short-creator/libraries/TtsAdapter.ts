@@ -28,7 +28,7 @@ export class TtsAdapter {
 
     try {
       return await this.translator.translateText(scene.text, sourceLanguage, targetLanguage);
-    } catch (error) {
+    } catch {
       if (sourceLanguage !== targetLanguage && targetLanguage !== LanguageEnum.en) {
         throw new Error(`Narration translation failed for ${sourceLanguage} -> ${targetLanguage}`);
       }
@@ -36,10 +36,7 @@ export class TtsAdapter {
     }
   }
 
-  private async prepareTextForSpeech(
-    text: string,
-    targetLanguage: LanguageEnum,
-  ): Promise<string> {
+  private async prepareTextForSpeech(text: string): Promise<string> {
     if (!text.trim()) {
       return text;
     }
@@ -54,7 +51,7 @@ export class TtsAdapter {
     const targetLanguage = scene.language || LanguageEnum.en;
     const voiceKey = preferredVoice || defaultVoiceForLanguage(targetLanguage);
     const translatedText = await this.translateIfNeeded(scene);
-    const speechReadyText = await this.prepareTextForSpeech(translatedText, targetLanguage);
-    return this.kokoro.generate(speechReadyText, voiceKey as any);
+    const speechReadyText = await this.prepareTextForSpeech(translatedText);
+    return this.kokoro.generate(speechReadyText, voiceKey);
   }
 }

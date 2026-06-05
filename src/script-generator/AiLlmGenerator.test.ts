@@ -50,7 +50,18 @@ describe("AiLlmGenerator keyword-to-visual alignment", () => {
   test("ranks topic prompt stories by keyword relevance, freshness, and source weight", () => {
     const generator = new AiLlmGenerator("http://mocked", "model");
 
-    const ranked = (generator as any).rankStoriesForPrompt(
+    const ranked = (generator as unknown as {
+      rankStoriesForPrompt: (
+        stories: Array<{
+          title: string;
+          content: string;
+          pubDate: string;
+          sourceWeight: number;
+          sourceName: string;
+        }>,
+        options: { category: string; keywords: string[] },
+      ) => Array<{ title: string }>;
+    }).rankStoriesForPrompt(
       [
         {
           title: "Lifestyle roundup from the weekend",

@@ -1,9 +1,8 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import type { Request, Response } from "express";
 import { ABTestingEngine } from "../../services/ABTestingEngine";
 import type { Config } from "../../config";
 
-const express = require("express") as typeof import("express");
 
 export class ABTestingRouter {
   public router: Router;
@@ -11,7 +10,7 @@ export class ABTestingRouter {
 
   constructor(config: Config) {
     this.router = Router();
-    this.router.use(express.json());
+    this.router.use(json());
     this.engine = new ABTestingEngine(config.dataDirPath);
     this.register();
   }

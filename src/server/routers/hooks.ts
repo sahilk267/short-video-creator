@@ -31,7 +31,7 @@ export class HooksRouter {
       const hooks = this.library.getBest({
         category: category ? String(category) : undefined,
         platform: platform ? String(platform) : undefined,
-        emotion: emotion as any,
+        emotion: emotion ? String(emotion) : undefined,
         limit: limit ? parseInt(String(limit)) : 5,
       });
       res.json({ status: "ok", data: hooks });
@@ -49,6 +49,7 @@ export class HooksRouter {
         const hook = this.library.addHook(req.body);
         res.status(201).json({ status: "ok", data: hook });
       } catch (err) {
+        logger.error({ err }, "POST /hooks failed");
         res.status(400).json({ error: "Invalid hook data" });
       }
     });

@@ -1,7 +1,5 @@
 import fs from "fs-extra";
 import path from "path";
-import { logger } from "../logger";
-
 export interface TimeSlotPerformance {
   platform: string;
   category: string;

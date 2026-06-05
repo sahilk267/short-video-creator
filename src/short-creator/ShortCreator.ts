@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { OrientationEnum } from "./../types/shorts";
 /* eslint-disable @remotion/deterministic-randomness */
 import fs from "fs-extra";

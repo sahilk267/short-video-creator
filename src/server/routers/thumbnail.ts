@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ThumbnailEngine } from "../../services/ThumbnailEngine.js";
+import { ThumbnailEngine } from "../../services/ThumbnailEngine";
 import { logger } from "../../logger";
 
 export class ThumbnailRouter {
@@ -42,6 +42,7 @@ export class ThumbnailRouter {
         const gap = this.engine.generateCuriosityGap(req.params.topic);
         res.json({ gap });
       } catch (err) {
+        logger.error({ err }, "GET /thumbnail/curiosity-gap failed");
         res.status(500).json({ error: "Failed to generate gap" });
       }
     });
@@ -53,6 +54,7 @@ export class ThumbnailRouter {
         const isValid = this.engine.validateContrast(bgColor, textColor);
         res.json({ valid: isValid });
       } catch (err) {
+        logger.error({ err }, "POST /thumbnail/validate-contrast failed");
         res.status(500).json({ error: "Validation failed" });
       }
     });

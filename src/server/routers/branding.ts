@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Config } from "../../config";
-import { BrandingEngine } from "../../services/BrandingEngine.js";
+import { BrandingEngine } from "../../services/BrandingEngine";
 import { logger } from "../../logger";
 
 export class BrandingRouter {
@@ -31,6 +31,7 @@ export class BrandingRouter {
         const css = this.engine.generateThemeCss(_req.params.tenantId);
         res.type("text/css").send(css);
       } catch (err) {
+        logger.error({ err }, "GET /branding/:tenantId/css failed");
         res.status(500).json({ error: "Failed to generate CSS" });
       }
     });
@@ -64,6 +65,7 @@ export class BrandingRouter {
         const branding = this.engine.resetBranding(_req.params.tenantId);
         res.json({ branding });
       } catch (err) {
+        logger.error({ err }, "POST /branding/:tenantId/reset failed");
         res.status(500).json({ error: "Failed to reset branding" });
       }
     });
@@ -74,6 +76,7 @@ export class BrandingRouter {
         const all = this.engine.getAllBranding();
         res.json({ branding: all });
       } catch (err) {
+        logger.error({ err }, "GET /branding failed");
         res.status(500).json({ error: "Failed to fetch all branding" });
       }
     });

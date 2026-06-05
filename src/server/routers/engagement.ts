@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { EngagementPredictionEngine } from "../../services/EngagementPredictionEngine.js";
+import { EngagementPredictionEngine } from "../../services/EngagementPredictionEngine";
 import { logger } from "../../logger";
 
 export class EngagementRouter {
@@ -37,6 +37,7 @@ export class EngagementRouter {
         const factor = this.engine.calculateViralityFactor(shares, engagement);
         res.json({ viralityFactor: factor });
       } catch (err) {
+        logger.error({ err }, "POST /engagement/virality-factor failed");
         res.status(500).json({ error: "Failed to calculate virality factor" });
       }
     });

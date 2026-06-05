@@ -1,3 +1,5 @@
+/* eslint-disable @remotion/deterministic-randomness */
+
 import { logger } from "../logger";
 
 export interface MockWebsiteData {
@@ -67,7 +69,6 @@ export class MarketingEngine {
   generateBanners(websiteData: MockWebsiteData): BannerVariant[] {
     try {
       const category = (websiteData.category || "general").toLowerCase();
-      const audience = NICHE_AUDIENCES[category] || NICHE_AUDIENCES.general;
       const headline = websiteData.tagline || websiteData.title || "Grow Your Audience";
       const subtext = `Trusted by creators in ${category}`;
       const ctaText = "Get Started Free";

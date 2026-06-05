@@ -1,4 +1,5 @@
 import axios from "axios";
+import { random } from "remotion";
 import { logger } from "../../logger";
 
 export interface PixabayVideo {
@@ -38,7 +39,7 @@ export class PixabayAPI {
       const hits: PixabayVideo[] = res.data.hits || [];
       const valid = hits.filter((h) => h.duration >= minDuration);
       if (valid.length === 0) return null;
-      const selected = valid[Math.floor(Math.random() * Math.min(5, valid.length))];
+      const selected = valid[Math.floor(random(null) * Math.min(5, valid.length))];
       const videoUrl = selected.videos.large?.url || selected.videos.medium?.url || selected.videos.small?.url;
       if (!videoUrl) return null;
       logger.debug({ query, videoId: selected.id, url: videoUrl }, "Pixabay video found");
@@ -59,7 +60,7 @@ export class PixabayAPI {
       });
       const hits = res.data.hits || [];
       if (hits.length === 0) return null;
-      const selected = hits[Math.floor(Math.random() * Math.min(5, hits.length))];
+      const selected = hits[Math.floor(random(null) * Math.min(5, hits.length))];
       return selected.largeImageURL || selected.webformatURL || null;
     } catch (err) {
       logger.warn({ err: (err as Error).message, query }, "Pixabay image fetch failed");

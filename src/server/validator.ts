@@ -1,6 +1,6 @@
 import { createShortInput, CreateShortInput, videoIdSchema, statusRequestSchema, StatusRequest } from "../types/shorts";
 import { logger } from "../logger";
-import { ZodError } from "zod";
+import { ZodError, type ZodIssue } from "zod";
 
 export interface ValidationErrorResult {
   message: string;
@@ -65,7 +65,7 @@ function formatZodError(error: ZodError): ValidationErrorResult {
   const fieldErrors: Record<string, string[]> = {};
 
   // Extract all the errors into a human-readable format
-  error.issues.forEach((err: any) => {
+  error.issues.forEach((err: ZodIssue) => {
     const path = err.path.join(".");
     if (!fieldErrors[path]) {
       fieldErrors[path] = [];

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type { Config } from "../config";
 import axios from "axios";
 import { logger } from "../logger";

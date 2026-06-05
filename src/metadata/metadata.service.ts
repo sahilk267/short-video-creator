@@ -3,7 +3,6 @@
  * Creates titles, descriptions, and hashtags optimized per platform
  */
 
-import { logger } from "../logger";
 
 export type PlatformType = "youtube" | "instagram" | "tiktok" | "telegram" | "facebook";
 

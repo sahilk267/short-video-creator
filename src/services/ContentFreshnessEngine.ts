@@ -1,7 +1,5 @@
 import fs from "fs-extra";
 import path from "path";
-import { logger } from "../logger";
-
 export interface FreshnessRecord {
   keyword: string;
   category: string;

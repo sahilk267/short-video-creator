@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ExpertEditingEngine } from "../../services/ExpertEditingEngine.js";
+import { ExpertEditingEngine } from "../../services/ExpertEditingEngine";
 import { logger } from "../../logger";
 
 export class EditingRouter {
@@ -51,6 +51,7 @@ export class EditingRouter {
 
         res.json({ effect: result });
       } catch (err) {
+        logger.error({ err }, "GET /editing/effects failed");
         res.status(500).json({ error: "Failed to generate effect" });
       }
     });

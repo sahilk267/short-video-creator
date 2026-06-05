@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 process.env.LOG_LEVEL = "debug";
 
 import nock from "nock";

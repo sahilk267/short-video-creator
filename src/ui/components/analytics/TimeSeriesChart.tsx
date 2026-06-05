@@ -32,9 +32,9 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
   loading = false,
   title = "Views & Engagement Over Time",
 }) => {
-  const { viewsPath, engagementPath, yMax, xLabels, yLabels } = useMemo(() => {
+  const { viewsPath, engagementPath, xLabels, yLabels } = useMemo(() => {
     if (!data || data.length < 2) {
-      return { viewsPath: "", engagementPath: "", yMax: 0, xLabels: [], yLabels: [] };
+      return { viewsPath: "", engagementPath: "", xLabels: [], yLabels: [] };
     }
 
     const innerW = CHART_WIDTH - PADDING.left - PADDING.right;
@@ -58,8 +58,8 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     // X labels: show up to 8 evenly spaced
     const step = Math.max(1, Math.floor(data.length / 8));
     const xLabels = data
-      .filter((_, i) => i === 0 || i === data.length - 1 || i % step === 0)
-      .map((d, _, arr) => ({
+      .filter((d, i) => i === 0 || i === data.length - 1 || i % step === 0)
+      .map((d, i) => ({
         label: formatDateLabel(d.date),
         x: xScale(data.indexOf(d)),
         i: data.indexOf(d),
@@ -71,7 +71,7 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
       y: yScale(yMax * frac),
     }));
 
-    return { viewsPath, engagementPath, yMax, xLabels, yLabels };
+    return { viewsPath, engagementPath, xLabels, yLabels };
   }, [data]);
 
   if (loading) return <Skeleton variant="rounded" height={280} />;

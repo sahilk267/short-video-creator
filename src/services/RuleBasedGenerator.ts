@@ -1,3 +1,5 @@
+import { random } from "remotion";
+
 const HOOKS: Record<string, string[]> = {
   educational: [
     "Did you know {topic} can change everything?",
@@ -64,7 +66,7 @@ const CAPTIONS: Record<string, string[]> = {
 };
 
 function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[Math.floor(random(null) * arr.length)];
 }
 
 function fillTemplate(template: string, topic: string): string {

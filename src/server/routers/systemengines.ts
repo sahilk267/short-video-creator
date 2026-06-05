@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import type { Request, Response } from "express";
 import { ResourceEngine } from "../../services/ResourceEngine";
 import { ThrottlingEngine } from "../../services/ThrottlingEngine";
@@ -12,7 +12,6 @@ import { CreatorKnowledgeBase } from "../../services/CreatorKnowledgeBase";
 import { MarketingEngine } from "../../services/MarketingEngine";
 import type { Config } from "../../config";
 
-const express = require("express") as typeof import("express");
 
 export class SystemEnginesRouter {
   public router: Router;
@@ -30,7 +29,7 @@ export class SystemEnginesRouter {
 
   constructor(config: Config) {
     this.router = Router();
-    this.router.use(express.json());
+    this.router.use(json());
     this.dataDirPath = config.dataDirPath;
     this.resource = new ResourceEngine(config.dataDirPath);
     this.throttle = new ThrottlingEngine(config.dataDirPath);

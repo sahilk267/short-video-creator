@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { QualityScoringEngine } from "../../services/QualityScoringEngine.js";
+import { QualityScoringEngine } from "../../services/QualityScoringEngine";
 import { logger } from "../../logger";
 
 export class QualityRouter {

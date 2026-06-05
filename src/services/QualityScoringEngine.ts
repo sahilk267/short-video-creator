@@ -1,4 +1,4 @@
-import { logger } from "../logger";
+/* eslint-disable @remotion/deterministic-randomness */
 
 export interface QualityMetrics {
   audioQuality: number;

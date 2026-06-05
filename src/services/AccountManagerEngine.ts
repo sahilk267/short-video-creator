@@ -124,7 +124,7 @@ export class AccountManagerEngine {
         };
       }
     } catch (err) {
-      logger.warn("Failed to load account metrics");
+      logger.warn({ err }, "Failed to load account metrics");
     }
     return null;
   }

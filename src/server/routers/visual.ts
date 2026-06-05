@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { VisualEnhancementEngine } from "../../services/VisualEnhancementEngine.js";
+import { VisualEnhancementEngine } from "../../services/VisualEnhancementEngine";
 import { logger } from "../../logger";
 
 export class VisualRouter {
@@ -51,6 +51,7 @@ export class VisualRouter {
         const filters = this.engine.generateFfmpegFilters(baseEnhancement);
         res.json({ filters });
       } catch (err) {
+        logger.error({ err }, "GET /visual/ffmpeg-filters failed");
         res.status(500).json({ error: "Failed to generate filters" });
       }
     });

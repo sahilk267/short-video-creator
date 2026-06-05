@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AttentionOptimizerEngine } from "../../services/AttentionOptimizerEngine.js";
+import { AttentionOptimizerEngine } from "../../services/AttentionOptimizerEngine";
 import { logger } from "../../logger";
 
 export class AttentionRouter {
@@ -30,6 +30,7 @@ export class AttentionRouter {
         const optimization = this.engine.optimizeForAttention(duration, platform);
         res.json({ optimization });
       } catch (err) {
+        logger.error({ err }, "POST /attention/optimize failed");
         res.status(500).json({ error: "Failed to optimize attention" });
       }
     });
@@ -39,6 +40,7 @@ export class AttentionRouter {
         const hook = this.engine.generateHookScript(req.params.platform, req.params.topic);
         res.json({ hook });
       } catch (err) {
+        logger.error({ err }, "GET /attention/hook failed");
         res.status(500).json({ error: "Failed to generate hook" });
       }
     });

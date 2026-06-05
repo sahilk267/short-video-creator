@@ -1,5 +1,3 @@
-import { logger } from "../logger";
-
 export type CtaPlatform = "instagram" | "tiktok" | "youtube" | "telegram" | "linkedin" | "facebook" | "x";
 export type CtaPlacement = "caption_end" | "video_end" | "pinned_comment" | "description";
 

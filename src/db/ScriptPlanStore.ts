@@ -24,7 +24,7 @@ export class ScriptPlanStore {
     }
     try {
       return JSON.parse(fileContent) as ScriptPlanItem[];
-    } catch (error) {
+    } catch {
       await fs.writeFile(this.storePath, "[]", "utf-8");
       return [];
     }

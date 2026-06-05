@@ -1,7 +1,7 @@
+/* eslint-disable @remotion/deterministic-randomness */
+
 import fs from "fs-extra";
 import path from "path";
-import { logger } from "../logger";
-
 export type CostCategory = "api_pexels" | "api_pixabay" | "api_translate" | "tts" | "rendering" | "publishing" | "storage" | "other";
 
 export interface CostRecord {

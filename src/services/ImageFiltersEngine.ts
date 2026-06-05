@@ -230,17 +230,18 @@ const FILTER_PRESETS: FilterPreset[] = [
 
 export class ImageFiltersEngine {
   private outputDir: string;
-  private canvasLib: any = null;
+  private canvasLib: typeof import("canvas") | null = null;
 
   constructor(dataDirPath: string) {
     this.outputDir = path.join(dataDirPath, "filtered-images");
     fs.ensureDirSync(this.outputDir);
-    this.tryLoadCanvas();
+    void this.tryLoadCanvas();
   }
 
   private async tryLoadCanvas() {
     try {
-      this.canvasLib = require("canvas");
+      const canvasModule = await import("canvas");
+      this.canvasLib = canvasModule;
     } catch {
       logger.info("canvas not available — using SVG/CSS filter output");
     }
@@ -383,7 +384,6 @@ export class ImageFiltersEngine {
 
     // Vignette
     if (options.vignette && options.vignette > 0) {
-      const v = options.vignette / 100 * intensity;
       filters.push(
         `<feComposite operator="over" in="${in_attr}" in2="SourceGraphic" result="vignetted"/>`,
       );
@@ -397,7 +397,6 @@ export class ImageFiltersEngine {
     const inputContent = await fs.readFile(inputSvgPath, "utf-8");
     const filterId = `filter_${options.filter}_${Date.now()}`;
     const svgFilter = this.buildSvgFilter(options, filterId);
-    const cssFilter = this.buildCssFilter(options);
 
     // Inject filter into SVG defs and apply to content
     const filteredSvg = inputContent
@@ -478,7 +477,6 @@ export class ImageFiltersEngine {
     const preset = this.getPreset(options.filter);
     const filterId = `prev_${options.filter}`;
     const svgFilter = this.buildSvgFilter(options, filterId);
-    const cssFilter = this.buildCssFilter(options);
 
     // Determine colors for the preview gradient background
     const bgColor = this.getFilterBgColor(options.filter);
@@ -527,12 +525,17 @@ export class ImageFiltersEngine {
     });
   }
 
-  private applyGrain(ctx: any, w: number, h: number, intensity: number): void {
+  private deterministicRandom(seed: number): number {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+
+  private applyGrain(ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number): void {
     const imageData = ctx.getImageData(0, 0, w, h);
     const data = imageData.data;
     const grainAmount = (intensity / 100) * 50;
     for (let i = 0; i < data.length; i += 4) {
-      const noise = (Math.random() - 0.5) * grainAmount;
+      const noise = (this.deterministicRandom(i + grainAmount) - 0.5) * grainAmount;
       data[i] = Math.max(0, Math.min(255, data[i] + noise));
       data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
       data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
@@ -540,7 +543,7 @@ export class ImageFiltersEngine {
     ctx.putImageData(imageData, 0, 0);
   }
 
-  private applyVignette(ctx: any, w: number, h: number, intensity: number): void {
+  private applyVignette(ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number): void {
     const gradient = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, Math.max(w, h) * 0.75);
     gradient.addColorStop(0, "rgba(0,0,0,0)");
     gradient.addColorStop(1, `rgba(0,0,0,${(intensity / 100) * 0.8})`);

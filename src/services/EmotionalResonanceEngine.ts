@@ -1,5 +1,3 @@
-import { logger } from "../logger";
-
 export type EmotionalTone = "joy" | "fear" | "anger" | "sadness" | "surprise" | "trust" | "disgust" | "anticipation";
 
 export interface EmotionalScore {
@@ -32,18 +30,29 @@ export class EmotionalResonanceEngine {
     anticipation: { musicGenre: "building tension", colors: ["#FF7675", "#FDCB6E", "#00B894"], pacing: "building" },
   };
 
+  private deterministicRandom(seed: number): number {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+
   scoreEmotionalContent(scriptText: string, audioLength: number, visualElements: number): EmotionalScore {
     const tones: EmotionalTone[] = ["joy", "fear", "anger", "sadness", "surprise", "trust", "disgust", "anticipation"];
-    const primaryEmotion = tones[Math.floor(Math.random() * tones.length)];
+    const seed = scriptText.length + audioLength + visualElements;
+    const primaryEmotion = tones[Math.floor(this.deterministicRandom(seed) * tones.length)];
 
-    const scriptAlignment = 0.7 + Math.random() * 0.3;
-    const audioAlignment = 0.65 + Math.random() * 0.35;
-    const visualAlignment = 0.6 + Math.random() * 0.4;
-    const overallScore = (scriptAlignment + audioAlignment + visualAlignment) / 3;
+    const scriptScore = Math.min(1, scriptText.trim().length / 120);
+    const audioScore = Math.min(1, Math.max(0, audioLength / 120));
+    const visualScore = Math.min(1, Math.max(0, visualElements / 10));
+
+    const scriptAlignment = 0.5 + scriptScore * 0.35 + this.deterministicRandom(seed + 11) * 0.15;
+    const audioAlignment = 0.5 + audioScore * 0.4 + this.deterministicRandom(seed + 17) * 0.1;
+    const visualAlignment = 0.45 + visualScore * 0.35 + this.deterministicRandom(seed + 23) * 0.2;
+    const intensity = 0.5 + this.deterministicRandom(seed + 29) * 0.5;
+    const overallScore = Math.min(1, (scriptAlignment + audioAlignment + visualAlignment + intensity) / 4);
 
     return {
       tone: primaryEmotion,
-      intensity: 0.5 + Math.random() * 0.5,
+      intensity,
       scriptAlignment,
       audioAlignment,
       visualAlignment,

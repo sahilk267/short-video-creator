@@ -1,14 +1,14 @@
-import { logger } from "../logger.js";
-import { HumanizedContentEngine } from "./HumanizedContentEngine.js";
-import { EmotionalResonanceEngine } from "./EmotionalResonanceEngine.js";
-import { QualityScoringEngine } from "./QualityScoringEngine.js";
-import { AttentionOptimizerEngine } from "./AttentionOptimizerEngine.js";
-import { EngagementPredictionEngine } from "./EngagementPredictionEngine.js";
-import { ThumbnailEngine } from "./ThumbnailEngine.js";
-import { WatermarkEngine } from "./WatermarkEngine.js";
-import { HookLibraryEngine } from "./HookLibraryEngine.js";
-import { PipelineStore, type PipelineJob, type GeneratedVariation, type AIScores } from "../db/PipelineStore.js";
-import { ScheduleStore } from "../db/ScheduleStore.js";
+import { logger } from "../logger";
+import { HumanizedContentEngine } from "./HumanizedContentEngine";
+import { EmotionalResonanceEngine } from "./EmotionalResonanceEngine";
+import { QualityScoringEngine } from "./QualityScoringEngine";
+import { AttentionOptimizerEngine } from "./AttentionOptimizerEngine";
+import { EngagementPredictionEngine } from "./EngagementPredictionEngine";
+import { ThumbnailEngine } from "./ThumbnailEngine";
+import { WatermarkEngine } from "./WatermarkEngine";
+import { HookLibraryEngine } from "./HookLibraryEngine";
+import { PipelineStore, type PipelineJob, type GeneratedVariation, type AIScores } from "../db/PipelineStore";
+import { ScheduleStore } from "../db/ScheduleStore";
 
 export interface PipelineInput {
   topic: string;

@@ -32,7 +32,7 @@ export class ReportStore {
     }
     try {
       return JSON.parse(fileContent) as ReportRecord[];
-    } catch (error) {
+    } catch {
       await fs.writeFile(this.storePath, "[]", "utf-8");
       return [];
     }

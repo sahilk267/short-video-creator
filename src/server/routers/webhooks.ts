@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Config } from "../../config";
-import { WebhookNotificationEngine } from "../../services/WebhookNotificationEngine.js";
+import { WebhookNotificationEngine } from "../../services/WebhookNotificationEngine";
 import { logger } from "../../logger";
 
 export class WebhooksRouter {
@@ -29,6 +29,7 @@ export class WebhooksRouter {
       try {
         res.json(this.engine.getStats());
       } catch (err) {
+        logger.error({ err }, "GET /webhooks/stats failed");
         res.status(500).json({ error: "Failed to fetch stats" });
       }
     });
@@ -39,6 +40,7 @@ export class WebhooksRouter {
         const limit = Number(req.query.limit) || 100;
         res.json({ logs: this.engine.getLogs(limit) });
       } catch (err) {
+        logger.error({ err }, "GET /webhooks/logs failed");
         res.status(500).json({ error: "Failed to fetch logs" });
       }
     });
@@ -77,6 +79,7 @@ export class WebhooksRouter {
         if (!updated) return res.status(404).json({ error: "Webhook not found" });
         res.json({ webhook: updated });
       } catch (err) {
+        logger.error({ err }, "PUT /webhooks/:id failed");
         res.status(500).json({ error: "Failed to update webhook" });
       }
     });
@@ -88,6 +91,7 @@ export class WebhooksRouter {
         if (!ok) return res.status(404).json({ error: "Webhook not found" });
         res.json({ success: true });
       } catch (err) {
+        logger.error({ err }, "DELETE /webhooks/:id failed");
         res.status(500).json({ error: "Failed to delete webhook" });
       }
     });
@@ -99,6 +103,7 @@ export class WebhooksRouter {
         if (!updated) return res.status(404).json({ error: "Webhook not found" });
         res.json({ webhook: updated });
       } catch (err) {
+        logger.error({ err }, "PATCH /webhooks/:id/toggle failed");
         res.status(500).json({ error: "Failed to toggle webhook" });
       }
     });
@@ -124,6 +129,7 @@ export class WebhooksRouter {
         const results = await this.engine.notify(event, title, message, data, severity);
         res.json({ results, count: results.length });
       } catch (err) {
+        logger.error({ err }, "POST /webhooks/notify failed");
         res.status(500).json({ error: "Failed to dispatch notification" });
       }
     });

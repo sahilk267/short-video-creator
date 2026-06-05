@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { EmotionalResonanceEngine } from "../../services/EmotionalResonanceEngine.js";
+import { EmotionalResonanceEngine } from "../../services/EmotionalResonanceEngine";
 import { logger } from "../../logger";
 
 export class EmotionalRouter {
@@ -26,9 +26,11 @@ export class EmotionalRouter {
 
     this.router.get("/directives/:emotion", (req, res) => {
       try {
-        const directives = this.engine.generateEmotionalDirectives(req.params.emotion as any);
+        const emotion = String(req.params.emotion);
+        const directives = this.engine.generateEmotionalDirectives(emotion);
         res.json({ directives });
       } catch (err) {
+        logger.error({ err }, "GET /emotional/directives failed");
         res.status(500).json({ error: "Failed to generate directives" });
       }
     });
@@ -40,6 +42,7 @@ export class EmotionalRouter {
         const isValid = this.engine.validateEmotionalAlignment(score);
         res.json({ valid: isValid });
       } catch (err) {
+        logger.error({ err }, "POST /emotional/validate failed");
         res.status(500).json({ error: "Validation failed" });
       }
     });

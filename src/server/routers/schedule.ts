@@ -17,13 +17,13 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import express from "express";
 import type { Config } from "../../config";
-import { ScheduleStore } from "../../db/ScheduleStore";
+import { ScheduleStore, type ScheduleRecord } from "../../db/ScheduleStore";
 import { logger } from "../../logger";
 import { ImageEngine } from "../../services/ImageEngine";
 import { ContentFreshnessEngine } from "../../services/ContentFreshnessEngine";
 import { BestTimeLearningEngine } from "../../services/BestTimeLearningEngine";
 import type { ShortCreator } from "../../short-creator/ShortCreator";
-import { LanguageEnum, VideoTypeEnum } from "../../types/shorts";
+import { LanguageEnum, VideoTypeEnum, VoiceEnum, MusicVolumeEnum, TextModeEnum, OrientationEnum } from "../../types/shorts";
 
 export class ScheduleRouter {
   public router: Router;
@@ -80,12 +80,17 @@ export class ScheduleRouter {
     }, 60_000);
   }
 
+  private deterministicRandom(seed: number): number {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+
   private async executeSchedule(scheduleId: string): Promise<boolean> {
     const sched = await this.store.get(scheduleId);
     if (!sched || sched.status !== "active") return false;
 
     try {
-      const meta = sched.metadata as any;
+      const meta = sched.metadata as { contentType?: string; alsoGenerate?: Record<string, boolean> };
       const contentType: string = meta?.contentType || "video";
       const alsoGenerate: Record<string, boolean> = meta?.alsoGenerate || {};
       const category = sched.categories?.[0] || "General";
@@ -105,7 +110,7 @@ export class ScheduleRouter {
 
       // ── Human Mimicry: random ±45 min timing variation ───────────
       if (sched.engines?.enableHumanMimicry) {
-        const variationMs = Math.floor((Math.random() * 2 - 1) * 45 * 60 * 1000);
+        const variationMs = Math.floor((this.deterministicRandom(Date.now()) * 2 - 1) * 45 * 60 * 1000);
         if (variationMs > 3 * 60 * 1000) {
           logger.info({ scheduleId, variationMinutes: Math.round(variationMs / 60000) }, "Human mimicry: delaying schedule execution");
           setTimeout(() => void this.executeSchedule(scheduleId), Math.abs(variationMs));
@@ -155,18 +160,18 @@ export class ScheduleRouter {
             {
               videoType: VideoTypeEnum.short,
               durationLimit: 60,
-              voice: "af_heart" as any,
+              voice: VoiceEnum.af_heart,
               scriptLanguage: language,
               audioLanguage: language,
               overlayLanguage: language,
               captionLanguage: language,
               subtitleLanguage: language,
-              music: "chill" as any,
-              captionPosition: "bottom" as any,
+              music: "chill",
+              captionPosition: "bottom",
               captionBackgroundColor: "blue",
-              textMode: "hybrid" as any,
-              orientation: "portrait" as any,
-              musicVolume: "high" as any,
+              textMode: TextModeEnum.hybrid,
+              orientation: OrientationEnum.portrait,
+              musicVolume: MusicVolumeEnum.high,
               subtitleLineCount: 1,
               subtitleFontScale: 1,
               paddingBack: 1500,
@@ -237,7 +242,21 @@ export class ScheduleRouter {
         contentType = "video",
         alsoGenerate = {},
         smartSchedule = false,
-      } = req.body as any;
+      } = req.body as {
+        name?: string;
+        videoId?: string;
+        platforms?: string[];
+        categories?: string[];
+        languages?: string[];
+        engines?: Record<string, unknown>;
+        quality?: Record<string, unknown>;
+        cronExpression?: string;
+        publishAt?: string;
+        metadata?: Record<string, unknown>;
+        contentType?: string;
+        alsoGenerate?: Record<string, boolean>;
+        smartSchedule?: boolean;
+      };
 
       if (!name || typeof name !== "string") {
         res.status(400).json({ error: "name is required" });
@@ -289,7 +308,7 @@ export class ScheduleRouter {
           ...metadata,
           contentType,
           alsoGenerate,
-        } as any,
+        },
       });
 
       res.status(201).json({ status: "ok", schedule: record });
@@ -330,12 +349,12 @@ export class ScheduleRouter {
   private async updateStatus(req: Request, res: Response): Promise<void> {
     try {
       const { status } = req.body as { status: string };
-      const allowed = ["active", "paused", "completed", "failed"];
-      if (!status || !allowed.includes(status)) {
+      const allowed = ["active", "paused", "completed", "failed"] as const;
+      if (!status || !allowed.includes(status as ScheduleRecord["status"])) {
         res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
         return;
       }
-      const updated = await this.store.updateStatus(req.params.id, status as any);
+      const updated = await this.store.updateStatus(req.params.id, status as ScheduleRecord["status"]);
       if (!updated) {
         res.status(404).json({ error: "Schedule not found" });
         return;
@@ -410,7 +429,7 @@ export class ScheduleRouter {
         const platform = s.platforms?.[0] || "youtube";
         const category = s.categories?.[0] || "General";
         const bestTime = this.bestTimeEngine.getBestTimes(platform, category);
-        const meta = s.metadata as any;
+        const meta = s.metadata as { contentType?: string };
         return {
           ...s,
           bestTimeRecommendation: {
@@ -435,7 +454,7 @@ export class ScheduleRouter {
       const platform = String(req.query["platform"] || "youtube");
       const category = String(req.query["category"] || "General");
       const allPlatforms = ["youtube", "tiktok", "instagram", "linkedin", "facebook", "telegram", "twitter"];
-      const results: Record<string, any> = {};
+      const results: Record<string, unknown> = {};
       const targetPlatforms = platform === "all" ? allPlatforms : [platform];
       for (const p of targetPlatforms) {
         const rec = this.bestTimeEngine.getBestTimes(p, category);

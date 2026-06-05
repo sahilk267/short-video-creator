@@ -1,4 +1,5 @@
-import axios from "axios";
+/* eslint-disable @remotion/deterministic-randomness */
+
 import Parser from "rss-parser";
 import { logger } from "../logger";
 

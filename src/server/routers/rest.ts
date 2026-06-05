@@ -17,7 +17,6 @@ import { CustomNewsSourceStore } from "../../db/CustomNewsSourceStore";
 import { ReportMerger } from "../../aggregator/ReportMerger";
 import { RssFetcher } from "../../news-fetcher/RssFetcher";
 import { AiLlmGenerator, type AutoScriptStyle, type HookOption } from "../../script-generator/AiLlmGenerator";
-import { LanguageEnum, type CreateShortInput, type SceneInput } from "../../types/shorts";
 
 // todo abstract class
 export class APIRouter {
@@ -466,11 +465,12 @@ export class APIRouter {
           const aiLlm = new AiLlmGenerator(this.config.aiLlmUrl, this.config.aiLlmModel);
           const translated = await aiLlm.translateText(String(text), String(sourceLanguage), String(targetLanguage));
           res.status(200).json({ text: translated });
-        } catch (error: any) {
-          logger.error({ err: error, body: req.body }, "Error in preview translation");
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          logger.error({ err: message, body: req.body }, "Error in preview translation");
           res.status(500).json({
             error: "Failed to translate preview text",
-            message: error.message || "Unknown error",
+            message,
           });
         }
       },
@@ -512,11 +512,12 @@ export class APIRouter {
           const topics = await aiLlm.suggestTopics(stories, { category, keywords });
 
           res.status(200).json({ topics });
-        } catch (error: any) {
-          logger.error({ err: error, body: req.body }, "Error in auto-script topic generation");
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          logger.error({ err: message, body: req.body }, "Error in auto-script topic generation");
           res.status(500).json({
             error: "Failed to generate topics",
-            message: error.message || "Unknown error",
+            message,
           });
         }
       },
@@ -563,11 +564,12 @@ export class APIRouter {
           const hooks: HookOption[] = await aiLlm.suggestHooks(stories, { category, topic, style, keywords });
 
           res.status(200).json({ hooks });
-        } catch (error: any) {
-          logger.error({ err: error, body: req.body }, "Error in auto-script hook generation");
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          logger.error({ err: message, body: req.body }, "Error in auto-script hook generation");
           res.status(500).json({
             error: "Failed to generate hooks",
-            message: error.message || "Unknown error",
+            message,
           });
         }
       },
@@ -624,13 +626,16 @@ export class APIRouter {
           });
 
           res.status(200).json({ scenes });
-        } catch (error: any) {
-          logger.error({ err: error, body: req.body }, "Error in auto-script generation");
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          const details = error instanceof Error ? error.stack ?? "No stack trace available" : "No stack trace available";
+          const rawOllamaOutput = (error as { rawResponse?: string }).rawResponse || "No output captured";
+          logger.error({ err: message, body: req.body }, "Error in auto-script generation");
           res.status(500).json({
             error: "Failed to generate script",
-            message: error.message || "Unknown error",
-            details: error.stack || "No stack trace available",
-            rawOllamaOutput: error.rawResponse || "No output captured"
+            message,
+            details,
+            rawOllamaOutput,
           });
         }
       },

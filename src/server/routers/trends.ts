@@ -33,6 +33,7 @@ export class TrendsRouter {
         const topics = await trendEngine.getTopByCategory(req.params.category, 10);
         res.json({ status: "ok", data: topics });
       } catch (err) {
+        logger.error({ err }, "GET /trends/category failed");
         res.status(500).json({ error: "Failed to fetch category trends" });
       }
     });
@@ -53,6 +54,7 @@ export class TrendsRouter {
         const result = await trendEngine.fetchTrends();
         res.json({ status: "ok", data: result, message: "Trends refreshed" });
       } catch (err) {
+        logger.error({ err }, "POST /trends/refresh failed");
         res.status(500).json({ error: "Refresh failed" });
       }
     });

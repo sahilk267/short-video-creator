@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar, Box, Container, CssBaseline, Toolbar, Typography, Button,
   ThemeProvider, createTheme, IconButton, Drawer, List, ListItem,
-  ListItemButton, ListItemIcon, ListItemText, Divider, Tooltip, Chip
+  ListItemButton, ListItemIcon, ListItemText, Divider, Chip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import VideoIcon from '@mui/icons-material/VideoLibrary';

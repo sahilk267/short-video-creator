@@ -1,7 +1,5 @@
 import fs from "fs-extra";
 import path from "path";
-import { logger } from "../logger";
-
 export type HookType = "curiosity" | "shock" | "value" | "pattern_interrupt" | "story" | "question" | "controversy" | "urgency";
 export type HookEmotion = "inspiration" | "fear" | "curiosity" | "humor" | "anger" | "surprise" | "joy";
 

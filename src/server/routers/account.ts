@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Config } from "../../config";
-import { AccountManagerEngine } from "../../services/AccountManagerEngine.js";
+import { AccountManagerEngine } from "../../services/AccountManagerEngine";
 import { logger } from "../../logger";
 
 export class AccountRouter {
@@ -39,6 +39,7 @@ export class AccountRouter {
         const guidance = this.engine.getAccountGuidance(metrics);
         res.json({ guidance });
       } catch (err) {
+        logger.error({ err }, "POST /account/guidance failed");
         res.status(500).json({ error: "Failed to get guidance" });
       }
     });
@@ -60,6 +61,7 @@ export class AccountRouter {
         }
         res.json({ metrics });
       } catch (err) {
+        logger.error({ err }, "GET /account/load failed");
         res.status(500).json({ error: "Failed to load metrics" });
       }
     });
@@ -69,6 +71,7 @@ export class AccountRouter {
         this.engine.saveMetrics(req.body);
         res.json({ success: true });
       } catch (err) {
+        logger.error({ err }, "POST /account/save failed");
         res.status(500).json({ error: "Failed to save metrics" });
       }
     });

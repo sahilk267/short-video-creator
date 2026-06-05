@@ -34,6 +34,9 @@ export interface ScheduleRecord {
     createdBy?: string;
     tags?: string[];
     notes?: string;
+    contentType?: string;
+    alsoGenerate?: Record<string, boolean>;
+    [key: string]: unknown;
   };
   createdAt: string;
   updatedAt: string;

@@ -38,6 +38,7 @@ export class TranslateRouter {
         const results = await engine.translateBatch(texts, targetLang, sourceLang || "en");
         res.json({ status: "ok", data: results });
       } catch (err) {
+        logger.error({ err }, "POST /translate/batch failed");
         res.status(500).json({ error: "Batch translation failed" });
       }
     });

@@ -1,0 +1,342 @@
+[
+  {
+    "text": "Stop scrolling — this will change how you think about {topic}",
+    "type": "pattern_interrupt",
+    "emotion": "curiosity",
+    "category": [
+      "General"
+    ],
+    "platform": [
+      "tiktok",
+      "instagram",
+      "youtube"
+    ],
+    "performanceScore": 88,
+    "id": "hook_builtin_0",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Nobody talks about this {topic} secret...",
+    "type": "curiosity",
+    "emotion": "curiosity",
+    "category": [
+      "General"
+    ],
+    "platform": [
+      "tiktok",
+      "instagram"
+    ],
+    "performanceScore": 85,
+    "id": "hook_builtin_1",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Breaking: {topic} just happened and here's what you need to know",
+    "type": "urgency",
+    "emotion": "fear",
+    "category": [
+      "News",
+      "Politics"
+    ],
+    "platform": [
+      "youtube",
+      "instagram",
+      "telegram"
+    ],
+    "performanceScore": 82,
+    "id": "hook_builtin_2",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "I was wrong about {topic} — here's the truth",
+    "type": "controversy",
+    "emotion": "surprise",
+    "category": [
+      "Education",
+      "Business"
+    ],
+    "platform": [
+      "youtube",
+      "linkedin"
+    ],
+    "performanceScore": 79,
+    "id": "hook_builtin_3",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "3 {topic} mistakes you're making right now",
+    "type": "value",
+    "emotion": "fear",
+    "category": [
+      "Education",
+      "Business",
+      "Health"
+    ],
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "performanceScore": 91,
+    "id": "hook_builtin_4",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "POV: You finally understand {topic}",
+    "type": "story",
+    "emotion": "joy",
+    "category": [
+      "Entertainment",
+      "Education"
+    ],
+    "platform": [
+      "tiktok",
+      "instagram"
+    ],
+    "performanceScore": 86,
+    "id": "hook_builtin_5",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "What they don't want you to know about {topic}",
+    "type": "shock",
+    "emotion": "anger",
+    "category": [
+      "News",
+      "Politics"
+    ],
+    "platform": [
+      "youtube",
+      "telegram"
+    ],
+    "performanceScore": 83,
+    "id": "hook_builtin_6",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "This {topic} hack will save you hours every week",
+    "type": "value",
+    "emotion": "joy",
+    "category": [
+      "Tech",
+      "Business"
+    ],
+    "platform": [
+      "youtube",
+      "linkedin",
+      "instagram"
+    ],
+    "performanceScore": 89,
+    "id": "hook_builtin_7",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Aap log ye {topic} ke baare mein galat sochte ho",
+    "type": "controversy",
+    "emotion": "surprise",
+    "category": [
+      "General"
+    ],
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "performanceScore": 84,
+    "id": "hook_builtin_8",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Part 2 chahiye? {topic} ka pura sach sunlo",
+    "type": "curiosity",
+    "emotion": "curiosity",
+    "category": [
+      "General"
+    ],
+    "platform": [
+      "instagram",
+      "tiktok"
+    ],
+    "performanceScore": 87,
+    "id": "hook_builtin_9",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "The uncomfortable truth about {topic} no one says out loud",
+    "type": "shock",
+    "emotion": "anger",
+    "category": [
+      "Business",
+      "Politics"
+    ],
+    "platform": [
+      "linkedin",
+      "youtube"
+    ],
+    "performanceScore": 80,
+    "id": "hook_builtin_10",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "I tested {topic} for 30 days — the results shocked me",
+    "type": "story",
+    "emotion": "surprise",
+    "category": [
+      "Health",
+      "Tech",
+      "Business"
+    ],
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "performanceScore": 92,
+    "id": "hook_builtin_11",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Attention: {topic} is about to change forever",
+    "type": "urgency",
+    "emotion": "fear",
+    "category": [
+      "Tech",
+      "Business",
+      "News"
+    ],
+    "platform": [
+      "all"
+    ],
+    "performanceScore": 78,
+    "id": "hook_builtin_12",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Wait for it... {topic} explained in 60 seconds",
+    "type": "pattern_interrupt",
+    "emotion": "curiosity",
+    "category": [
+      "Education"
+    ],
+    "platform": [
+      "tiktok",
+      "instagram",
+      "youtube"
+    ],
+    "performanceScore": 85,
+    "id": "hook_builtin_13",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Rich people use {topic} every day. Here's how:",
+    "type": "value",
+    "emotion": "inspiration",
+    "category": [
+      "Business",
+      "Finance"
+    ],
+    "platform": [
+      "youtube",
+      "instagram",
+      "linkedin"
+    ],
+    "performanceScore": 90,
+    "id": "hook_builtin_14",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "This is why {topic} is destroying your [outcome]",
+    "type": "shock",
+    "emotion": "fear",
+    "category": [
+      "Health",
+      "Business"
+    ],
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "performanceScore": 83,
+    "id": "hook_builtin_15",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Motivational truth about {topic} that will hit different today",
+    "type": "story",
+    "emotion": "inspiration",
+    "category": [
+      "Motivation"
+    ],
+    "platform": [
+      "instagram",
+      "youtube"
+    ],
+    "performanceScore": 82,
+    "id": "hook_builtin_16",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Scientists just discovered something shocking about {topic}",
+    "type": "shock",
+    "emotion": "surprise",
+    "category": [
+      "Science",
+      "Health"
+    ],
+    "platform": [
+      "youtube",
+      "telegram"
+    ],
+    "performanceScore": 84,
+    "id": "hook_builtin_17",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Why 99% of people fail at {topic} (and how to be the 1%)",
+    "type": "value",
+    "emotion": "inspiration",
+    "category": [
+      "Business",
+      "Motivation"
+    ],
+    "platform": [
+      "youtube",
+      "linkedin"
+    ],
+    "performanceScore": 91,
+    "id": "hook_builtin_18",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  },
+  {
+    "text": "Ye video mat dekho agar {topic} ke baare mein sach nahi sunna",
+    "type": "controversy",
+    "emotion": "curiosity",
+    "category": [
+      "General"
+    ],
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "performanceScore": 86,
+    "id": "hook_builtin_19",
+    "usageCount": 0,
+    "createdAt": "2026-05-10T16:33:24.826Z"
+  }
+]
