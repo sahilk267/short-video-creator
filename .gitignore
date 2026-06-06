@@ -2,3 +2,10 @@ node_modules
 dist
 .DS_Store
 .env
+
+# Local runtime / temp artifacts
+~
+~/.ai-content-empire/
+lint_full.txt
+lint_output.txt
+server.log
