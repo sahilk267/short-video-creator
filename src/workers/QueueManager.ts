@@ -42,7 +42,9 @@ export function getRedisConnection(config: Config): IORedis {
 export async function testRedisConnection(config: Config): Promise<boolean> {
   try {
     const conn = getRedisConnection(config);
-    await conn.connect();
+    if (conn.status !== "ready" && conn.status !== "connecting") {
+      await conn.connect();
+    }
     await conn.ping();
     logger.info({ host: config.redisHost, port: config.redisPort }, "Redis connected");
     return true;

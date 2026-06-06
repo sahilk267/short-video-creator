@@ -23,7 +23,7 @@ import { ImageEngine } from "../../services/ImageEngine";
 import { ContentFreshnessEngine } from "../../services/ContentFreshnessEngine";
 import { BestTimeLearningEngine } from "../../services/BestTimeLearningEngine";
 import type { ShortCreator } from "../../short-creator/ShortCreator";
-import { LanguageEnum, VideoTypeEnum, VoiceEnum, MusicVolumeEnum, TextModeEnum, OrientationEnum } from "../../types/shorts";
+import { LanguageEnum, VideoTypeEnum, VoiceEnum, MusicVolumeEnum, TextModeEnum, OrientationEnum, MusicMoodEnum, CaptionPositionEnum } from "../../types/shorts";
 
 export class ScheduleRouter {
   public router: Router;
@@ -166,8 +166,8 @@ export class ScheduleRouter {
               overlayLanguage: language,
               captionLanguage: language,
               subtitleLanguage: language,
-              music: "chill",
-              captionPosition: "bottom",
+              music: MusicMoodEnum.chill,
+              captionPosition: CaptionPositionEnum.bottom,
               captionBackgroundColor: "blue",
               textMode: TextModeEnum.hybrid,
               orientation: OrientationEnum.portrait,
@@ -248,8 +248,20 @@ export class ScheduleRouter {
         platforms?: string[];
         categories?: string[];
         languages?: string[];
-        engines?: Record<string, unknown>;
-        quality?: Record<string, unknown>;
+        engines?: {
+          enableTranslation?: boolean;
+          enableCommentCTA?: boolean;
+          enablePlatformPsych?: boolean;
+          enableSeries?: boolean;
+          enableHumanMimicry?: boolean;
+          enableHashtagOptimization?: boolean;
+          enableEngagementOptimization?: boolean;
+        };
+        quality?: {
+          targetLUFS?: number;
+          sharpnessLevel?: number;
+          visualQualityTier?: "draft" | "standard" | "premium";
+        };
         cronExpression?: string;
         publishAt?: string;
         metadata?: Record<string, unknown>;

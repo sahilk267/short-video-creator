@@ -230,7 +230,7 @@ const FILTER_PRESETS: FilterPreset[] = [
 
 export class ImageFiltersEngine {
   private outputDir: string;
-  private canvasLib: typeof import("canvas") | null = null;
+  private canvasLib: any = null;
 
   constructor(dataDirPath: string) {
     this.outputDir = path.join(dataDirPath, "filtered-images");
@@ -240,6 +240,7 @@ export class ImageFiltersEngine {
 
   private async tryLoadCanvas() {
     try {
+      // @ts-ignore: canvas is an optional runtime dependency and may not be installed in all environments
       const canvasModule = await import("canvas");
       this.canvasLib = canvasModule;
     } catch {
@@ -435,7 +436,7 @@ export class ImageFiltersEngine {
       const w = outputWidth || img.width;
       const h = outputHeight || img.height;
       const canvas = createCanvas(w, h);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d") as any;
 
       // Build CSS-like filter string for canvas
       const cssFilter = this.buildCssFilter(options);
@@ -530,7 +531,7 @@ export class ImageFiltersEngine {
     return x - Math.floor(x);
   }
 
-  private applyGrain(ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number): void {
+  private applyGrain(ctx: any, w: number, h: number, intensity: number): void {
     const imageData = ctx.getImageData(0, 0, w, h);
     const data = imageData.data;
     const grainAmount = (intensity / 100) * 50;
@@ -543,7 +544,7 @@ export class ImageFiltersEngine {
     ctx.putImageData(imageData, 0, 0);
   }
 
-  private applyVignette(ctx: CanvasRenderingContext2D, w: number, h: number, intensity: number): void {
+  private applyVignette(ctx: any, w: number, h: number, intensity: number): void {
     const gradient = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, Math.max(w, h) * 0.75);
     gradient.addColorStop(0, "rgba(0,0,0,0)");
     gradient.addColorStop(1, `rgba(0,0,0,${(intensity / 100) * 0.8})`);

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { EmotionalResonanceEngine } from "../../services/EmotionalResonanceEngine";
+import { EmotionalResonanceEngine, type EmotionalTone } from "../../services/EmotionalResonanceEngine";
 import { logger } from "../../logger";
 
 export class EmotionalRouter {
@@ -26,8 +26,12 @@ export class EmotionalRouter {
 
     this.router.get("/directives/:emotion", (req, res) => {
       try {
-        const emotion = String(req.params.emotion);
-        const directives = this.engine.generateEmotionalDirectives(emotion);
+        const emotionParam = String(req.params.emotion);
+        if (!this.isEmotionalTone(emotionParam)) {
+          res.status(400).json({ error: "Invalid emotion" });
+          return;
+        }
+        const directives = this.engine.generateEmotionalDirectives(emotionParam);
         res.json({ directives });
       } catch (err) {
         logger.error({ err }, "GET /emotional/directives failed");
@@ -46,5 +50,18 @@ export class EmotionalRouter {
         res.status(500).json({ error: "Validation failed" });
       }
     });
+  }
+
+  private isEmotionalTone(value: unknown): value is EmotionalTone {
+    return [
+      "joy",
+      "fear",
+      "anger",
+      "sadness",
+      "surprise",
+      "trust",
+      "disgust",
+      "anticipation",
+    ].includes(String(value)) as boolean;
   }
 }
