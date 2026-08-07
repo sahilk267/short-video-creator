@@ -16,3 +16,12 @@ data/temp/
 data/generated-images/
 data/filtered-images/
 data/exports/
+
+# Video/intermediate media (never commit to git — waste storage)
+# NOTE: static/music/*.mp3 is a deliberate, tracked royalty-free music library.
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.avi
+*.wav
