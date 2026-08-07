@@ -18,6 +18,8 @@ export interface ScriptGenerationOptions {
   hook?: string;
   keywords?: string[];
   scriptLanguage?: string;
+  videoType?: "short" | "long";
+  durationLimit?: number;
 }
 
 type PromptStory = {
@@ -28,16 +30,121 @@ type PromptStory = {
   sourceName?: string;
 };
 
+export interface LlmProviderOptions {
+  provider?: "openrouter" | "ollama";
+  openrouterApiKey?: string;
+  openrouterUrl?: string;
+  openrouterModel?: string;
+}
+
+const DEFAULT_OPENROUTER_URL = "https://openrouter.ai/api/v1";
+const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-chat-v3-0324:free";
+
+let defaultLlmOptions: LlmProviderOptions = {};
+
+export function configureLlmDefaults(options: LlmProviderOptions): void {
+  defaultLlmOptions = options;
+}
+
 export class AiLlmGenerator {
   private apiUrl: string;
   private model: string;
+  private options: LlmProviderOptions;
 
   constructor(
     apiUrl: string = "http://localhost:12434",
     model: string = "llama3",
+    options: LlmProviderOptions = {},
   ) {
     this.apiUrl = apiUrl;
     this.model = model;
+    this.options = options;
+  }
+
+  private effectiveOptions(): LlmProviderOptions {
+    return { ...defaultLlmOptions, ...this.options };
+  }
+
+  private useOpenRouter(): boolean {
+    const options = this.effectiveOptions();
+    if (!options.openrouterApiKey) return false;
+    return options.provider !== "ollama";
+  }
+
+  private async complete(prompt: string, format?: "json" | "text"): Promise<string> {
+    if (this.useOpenRouter()) {
+      try {
+        return await this.completeOpenRouter(prompt, format);
+      } catch (error: any) {
+        console.warn(
+          "[AiLlmGenerator] OpenRouter request failed, falling back to Ollama:",
+          error?.response?.data?.error?.message || error?.message,
+        );
+      }
+    }
+    return this.completeOllama(prompt, format);
+  }
+
+  private async completeOpenRouter(prompt: string, format?: "json" | "text"): Promise<string> {
+    const options = this.effectiveOptions();
+    const baseUrl = (options.openrouterUrl || DEFAULT_OPENROUTER_URL).replace(/\/+$/, "");
+    const model = options.openrouterModel || DEFAULT_OPENROUTER_MODEL;
+    const body: Record<string, unknown> = {
+      model,
+      messages: [
+        {
+          role: "system",
+          content: format === "json"
+            ? "You are a precise assistant. Respond ONLY with valid JSON matching the exact structure requested, with no surrounding text or code fences."
+            : "You are a precise assistant. Respond only with the requested output and no extra commentary.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+      stream: false,
+    };
+    const response = await axios.post(`${baseUrl}/chat/completions`, body, {
+      headers: {
+        Authorization: `Bearer ${options.openrouterApiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/sahilk267/short-video-creator",
+        "X-Title": "Short Video Creator",
+      },
+      timeout: 120000,
+    });
+    const content = response?.data?.choices?.[0]?.message?.content;
+    if (typeof content !== "string" || !content.trim()) {
+      const error: any = new Error("OpenRouter returned no completion content");
+      error.rawResponse = JSON.stringify(response?.data);
+      throw error;
+    }
+    return content.trim();
+  }
+
+  private async completeOllama(prompt: string, format?: "json" | "text"): Promise<string> {
+    const response = await axios.post(`${this.apiUrl}/api/generate`, {
+      model: this.model,
+      prompt,
+      stream: false,
+      format,
+    });
+    if (!response?.data?.response) {
+      throw new Error("Ollama returned no response");
+    }
+    return String(response.data.response);
+  }
+
+  private targetSceneCount(options: ScriptGenerationOptions): number {
+    if (options.videoType !== "long") {
+      return 5;
+    }
+    const limit = options.durationLimit && options.durationLimit > 0
+      ? options.durationLimit
+      : 300;
+    // Roughly 8-10 seconds of narration per scene for a 25-30 word scene.
+    const scenes = Math.round(limit / 9);
+    return Math.max(8, Math.min(30, scenes));
   }
 
   private normalizeKeywordList(keywords?: string[]): string[] {
@@ -273,23 +380,7 @@ export class AiLlmGenerator {
     }
 
     const prompt = `You are a professional translator. Convert the following text from ${sourceLanguage} to ${targetLanguage}. Output only translated text with no extra commentary.\n\nText:\n${text}`;
-    const response = await axios.post(`${this.apiUrl}/api/generate`, {
-      model: this.model,
-      prompt,
-      stream: false,
-      format: "text",
-    });
-
-    if (!response?.data?.response) {
-      throw new Error("Translation API returned no response");
-    }
-
-    let result = response.data.response;
-    if (typeof result !== "string") {
-      result = String(result);
-    }
-
-    return result.trim();
+    return this.complete(prompt, "text");
   }
 
   async transliterateText(text: string, sourceLanguage: string): Promise<string> {
@@ -303,23 +394,7 @@ Output only the transliterated text with no commentary.
 
 Text:
 ${text}`;
-    const response = await axios.post(`${this.apiUrl}/api/generate`, {
-      model: this.model,
-      prompt,
-      stream: false,
-      format: "text",
-    });
-
-    if (!response?.data?.response) {
-      throw new Error("Transliteration API returned no response");
-    }
-
-    let result = response.data.response;
-    if (typeof result !== "string") {
-      result = String(result);
-    }
-
-    return result.trim();
+    return this.complete(prompt, "text");
   }
 
   async suggestTopics(
@@ -349,14 +424,9 @@ STRICT INSTRUCTIONS:
 `;
 
     try {
-      const response = await axios.post(`${this.apiUrl}/api/generate`, {
-        model: this.model,
-        prompt,
-        stream: false,
-        format: "json",
-      });
+      const response = await this.complete(prompt, "json");
 
-      const parsed = this.extractJson(response.data?.response);
+      const parsed = this.extractJson(response);
       if (Array.isArray(parsed)) {
         return parsed
           .map((item) => String(item).trim())
@@ -396,14 +466,9 @@ STRICT INSTRUCTIONS:
 `;
 
     try {
-      const response = await axios.post(`${this.apiUrl}/api/generate`, {
-        model: this.model,
-        prompt,
-        stream: false,
-        format: "json",
-      });
+      const response = await this.complete(prompt, "json");
 
-      const parsed = this.extractJson(response.data?.response);
+      const parsed = this.extractJson(response);
       if (Array.isArray(parsed)) {
         return this.rankHookOptions(parsed
           .map((item) => String(item).trim())
@@ -430,9 +495,18 @@ STRICT INSTRUCTIONS:
     const languageLine = options.scriptLanguage ? `Output language: ${this.languageDisplay(options.scriptLanguage)}` : "";
     const keywordLine = options.keywords?.length ? `Priority keywords: ${options.keywords.join(", ")}` : "";
 
+    const isLong = options.videoType === "long";
+    const sceneCount = this.targetSceneCount(options);
+    const formatLine = isLong
+      ? "a long-form video (YouTube-style) that is complete and self-contained on its own"
+      : "a short video (TikTok/Shorts style)";
+    const structureLine = isLong
+      ? "Structure the script as ONE continuous narrative that flows from scene to scene: an engaging hook, context and rising detail, in-depth analysis, and a satisfying payoff. Do not repeat the same headline or angle across scenes — advance the story every scene."
+      : "Each scene should feel like a punchy standalone beat, but together they build a single story.";
+
     const prompt = `
 You are a professional world news script writer.
-Given the following news stories, create a 5-scene video script for a short video (TikTok/Shorts style).
+Given the following news stories, create a ${sceneCount}-scene video script for ${formatLine}.
 Each scene must relate to these stories and be engaging.
 
 Stories:
@@ -447,7 +521,7 @@ ${languageLine}
 ${keywordLine}
 
 STRICT INSTRUCTIONS:
-1. Output ONLY a valid JSON array.
+1. Output ONLY a valid JSON array with EXACTLY ${sceneCount} scene objects.
 2. NO text before or after the JSON.
 3. Start the output with "[" and end it with "]".
 4. Each object must have these EXACT fields:
@@ -462,6 +536,7 @@ STRICT INSTRUCTIONS:
 7. If style is "Viral", make the language sharper and more curiosity-driven.
 8. If style is "Explainer", make the language clearer and more structured.
 9. If style is "News", keep it authoritative and urgent.
+10. ${structureLine}
 
 JSON Format Example:
 [
@@ -476,29 +551,9 @@ JSON Format Example:
 ]
 `;
 
-    console.log(`Sending prompt to AI LLM at ${this.apiUrl}/api/generate using model ${this.model}`);
+    console.log(`Sending prompt to AI LLM (${this.useOpenRouter() ? "OpenRouter" : "Ollama"}) using model ${this.useOpenRouter() ? (this.effectiveOptions().openrouterModel || DEFAULT_OPENROUTER_MODEL) : this.model}`);
     try {
-      const response = await axios.post(`${this.apiUrl}/api/generate`, {
-        model: this.model,
-        prompt,
-        stream: false,
-        format: "json",
-      });
-
-      console.log(`AI LLM response status: ${response.status}`);
-      const result = response.data;
-      if (!result || typeof result !== "object") {
-        const error: any = new Error("Invalid response from AI LLM (no data)");
-        error.rawResponse = JSON.stringify(result);
-        throw error;
-      }
-
-      const jsonStr = result.response;
-      if (!jsonStr) {
-        const error: any = new Error("AI LLM returned empty response field");
-        error.rawResponse = JSON.stringify(result);
-        throw error;
-      }
+      const jsonStr = await this.complete(prompt, "json");
 
       console.log(`AI LLM generated response length: ${jsonStr.length} chars`);
       let scenes = this.extractJson(jsonStr);
@@ -595,7 +650,7 @@ JSON Format Example:
         };
       });
 
-      return normalizedScenes.slice(0, 7) as SceneInput[];
+      return normalizedScenes.slice(0, Math.min(sceneCount, 30)) as SceneInput[];
     } catch (error: any) {
       console.error("AI LLM generation failed:", error);
       let errorMsg = error.message;

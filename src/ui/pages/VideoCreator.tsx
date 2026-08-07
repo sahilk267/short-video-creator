@@ -28,16 +28,12 @@ import type { HookOption } from "../../script-generator/AiLlmGenerator";
 import LoadingSpinner from "../components/shared/LoadingSpinner";
 import apiClient from "../services/apiClient";
 import { defaultVoiceForLanguage, labelForLanguage } from "../../config/languageSupport";
+import { CONTENT_CATEGORIES } from "../../config/categories";
 
 const AutoScriptPanel = lazy(() => import("../components/video-creator/AutoScriptPanel"));
 const SceneEditorList = lazy(() => import("../components/video-creator/SceneEditorList"));
 const VideoConfigPanel = lazy(() => import("../components/video-creator/VideoConfigPanel"));
 const http = apiClient.getAxiosInstance();
-
-const CONTENT_CATEGORIES = [
-  "General", "Motivation", "Business", "Education", "Entertainment",
-  "Tech", "News", "Health", "Finance", "Lifestyle", "Religion",
-];
 
 const PLATFORM_PSYCHOLOGY_OPTIONS = [
   { value: "", label: "None (default)" },
@@ -73,14 +69,13 @@ const VideoCreator: React.FC = () => {
     videoType: VideoTypeEnum.short,
     durationLimit: 60,
   });
-  const [contentCategory, setContentCategory] = useState("General");
+  const [category, setCategory] = useState("World");
   const [platformPsychology, setPlatformPsychology] = useState("");
   const [loading, setLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<NewsSourceOption[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("World");
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedStyle, setSelectedStyle] = useState<AutoScriptStyle>("News");
@@ -195,8 +190,8 @@ const VideoCreator: React.FC = () => {
     if (selectedSources.length === 0) return;
     setError(null);
     try {
-      const topics = await fetchTrendingTopics(selectedSources, selectedCategory);
-      await fetchHookOptions(selectedSources, selectedCategory, selectedTopic || topics[0] || "", selectedStyle);
+      const topics = await fetchTrendingTopics(selectedSources, category);
+      await fetchHookOptions(selectedSources, category, selectedTopic || topics[0] || "", selectedStyle);
     } catch (err) {
       console.error("Failed to fetch topics:", err);
       setError("Failed to load trending topics for this source.");
@@ -212,19 +207,19 @@ const VideoCreator: React.FC = () => {
       return;
     }
     void refreshAutomationOptions();
-  }, [selectedSources, selectedCategory]);
+  }, [selectedSources, category]);
 
   useEffect(() => {
     if (selectedSources.length === 0) return;
     void (async () => {
       try {
-        await fetchHookOptions(selectedSources, selectedCategory, selectedTopic, selectedStyle);
+        await fetchHookOptions(selectedSources, category, selectedTopic, selectedStyle);
       } catch (err) {
         console.error("Failed to fetch hooks:", err);
         setError("Failed to load hook options.");
       }
     })();
-  }, [selectedSources, selectedCategory, selectedTopic, selectedStyle]);
+  }, [selectedSources, category, selectedTopic, selectedStyle]);
 
   const handleAddScene = () => {
     setScenes((current) => [...current, { text: "", searchTerms: "", keywords: "", subcategory: "", headline: "", visualPrompt: "" }]);
@@ -265,12 +260,14 @@ const VideoCreator: React.FC = () => {
     try {
       const res = await http.post("/api/auto-script", {
         sourceIds: selectedSources,
-        category: selectedCategory,
+        category,
         topic: selectedTopic || undefined,
         style: selectedStyle,
         hook: selectedHook || undefined,
         scriptLanguage: config.scriptLanguage,
         keywords: keywordList,
+        videoType: config.videoType,
+        durationLimit: config.durationLimit,
       });
       if (res.data.scenes) {
         setScenes(res.data.scenes.map((scene: any) => ({
@@ -340,7 +337,7 @@ const VideoCreator: React.FC = () => {
       const response = await http.post("/api/short-video", {
         scenes: apiScenes,
         config,
-        contentCategory,
+        contentCategory: category,
         platformPsychology: platformPsychology || undefined,
       });
 
@@ -391,9 +388,17 @@ const VideoCreator: React.FC = () => {
                     key={cat}
                     label={cat}
                     size="small"
-                    onClick={() => setContentCategory(cat)}
-                    color={contentCategory === cat ? "primary" : "default"}
-                    variant={contentCategory === cat ? "filled" : "outlined"}
+                    onClick={() => {
+                      if (category === cat) return;
+                      setCategory(cat);
+                      setSelectedSources([]);
+                      setTrendingTopics([]);
+                      setSelectedTopic("");
+                      setHookOptions([]);
+                      setSelectedHook("");
+                    }}
+                    color={category === cat ? "primary" : "default"}
+                    variant={category === cat ? "filled" : "outlined"}
                     sx={{ cursor: "pointer" }}
                   />
                 ))}
@@ -472,7 +477,7 @@ const VideoCreator: React.FC = () => {
               topicsLoading={topicsLoading}
               hooksLoading={hooksLoading}
               sourceSaving={sourceSaving}
-              selectedCategory={selectedCategory}
+              selectedCategory={category}
               selectedSources={selectedSources}
               selectedTopic={selectedTopic}
               selectedStyle={selectedStyle}
@@ -481,14 +486,6 @@ const VideoCreator: React.FC = () => {
               sources={sources}
               trendingTopics={trendingTopics}
               hookOptions={hookOptions}
-              onCategoryChange={(category: string) => {
-                setSelectedCategory(category);
-                setSelectedSources([]);
-                setTrendingTopics([]);
-                setSelectedTopic("");
-                setHookOptions([]);
-                setSelectedHook("");
-              }}
               onSourceChange={setSelectedSources}
               onTopicChange={setSelectedTopic}
               onStyleChange={setSelectedStyle}
@@ -521,7 +518,7 @@ const VideoCreator: React.FC = () => {
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap flexWrap="wrap">
           <Typography variant="body2">Scenes: <strong>{scenes.length}</strong></Typography>
-          <Typography variant="body2">Content: <strong>{contentCategory}</strong></Typography>
+          <Typography variant="body2">Content: <strong>{category}</strong></Typography>
           <Typography variant="body2">Type: <strong>{config.videoType}</strong></Typography>
           <Typography variant="body2">Orientation: <strong>{config.orientation}</strong></Typography>
           <Typography variant="body2">Script: <strong>{labelForLanguage(config.scriptLanguage)}</strong></Typography>
@@ -583,7 +580,7 @@ const VideoCreator: React.FC = () => {
             <Suspense fallback={<LoadingSpinner message="Loading scene editor..." />}>
               <SceneEditorList
                 scenes={scenes}
-                category={selectedCategory}
+                category={category}
                 scriptLanguage={config.scriptLanguage}
                 voice={config.voice}
                 audioLanguage={config.audioLanguage}

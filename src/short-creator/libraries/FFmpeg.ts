@@ -91,6 +91,25 @@ export class FFMpeg {
     });
   }
 
+  async concatVideos(inputPaths: string[], outputPath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const concatInput = `concat:${inputPaths.join("|")}`;
+      ffmpeg()
+        .input(concatInput)
+        .videoCodec("copy")
+        .audioCodec("copy")
+        .on("end", () => {
+          logger.info({ outputPath, parts: inputPaths.length }, "Video parts concatenated");
+          resolve(outputPath);
+        })
+        .on("error", (error: unknown) => {
+          logger.error(error, "Error concatenating video parts");
+          reject(error);
+        })
+        .save(outputPath);
+    });
+  }
+
   async getAudioDuration(filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
       ffmpeg.ffprobe(filePath, (error, metadata) => {

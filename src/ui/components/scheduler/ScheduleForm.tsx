@@ -28,6 +28,7 @@ import {
   Select,
   SelectChangeEvent,
 } from "@mui/material";
+import { CONTENT_CATEGORIES } from "../../../config/categories";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import SendIcon from "@mui/icons-material/Send";
@@ -81,11 +82,7 @@ const LANGUAGES = [
   { value: "sk", label: "🇸🇰 Slovak" },
 ];
 
-const CATEGORIES = [
-  "World", "Technology", "Science", "Business", "Sports",
-  "Entertainment", "Health", "Politics", "Finance", "Culture",
-  "Education", "Lifestyle", "Travel", "Food", "Fashion",
-];
+const CATEGORIES = CONTENT_CATEGORIES;
 
 const QUALITY_TIERS = [
   { value: "draft", label: "Draft (Fast)" },

@@ -11,6 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import EpisodeIcon from "@mui/icons-material/OndemandVideo";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { CONTENT_CATEGORIES } from "../../config/categories";
 
 interface Episode {
   episodeNumber: number;
@@ -41,10 +42,7 @@ const STYLES = [
   { value: "weekly", label: "Weekly Series" },
   { value: "mini", label: "Mini Series (3-5 parts)" },
 ];
-const CATEGORIES = [
-  "Technology", "Entertainment", "Education", "Business",
-  "Health", "Sports", "Finance", "Lifestyle",
-];
+const CATEGORIES = CONTENT_CATEGORIES;
 
 const STATUS_COLORS: Record<string, string> = {
   planned: "#f59e0b",

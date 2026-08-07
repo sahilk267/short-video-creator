@@ -43,12 +43,22 @@ interface SceneEditorListProps {
 const subcategorySuggestions: Record<string, string[]> = {
   General: ["Breaking", "Explainer", "Trending"],
   World: ["Geopolitics", "Diplomacy", "Conflict", "Global Economy"],
+  News: ["Breaking", "Politics", "Elections", "Economy"],
   Technology: ["AI", "Startups", "Cybersecurity", "Gadgets"],
   Business: ["Markets", "Policy", "Corporate", "Earnings"],
   Cricket: ["Match Analysis", "Transfers", "Tournament", "Player Form"],
   NBA: ["Playoffs", "Trades", "Player Form", "Team Strategy"],
   Sports: ["Highlights", "Transfers", "Injuries", "Tournament"],
   Science: ["Space", "Health Research", "Climate", "Innovation"],
+  Entertainment: ["Movies", "Music", "Celebrity", "Trending"],
+  Education: ["Tutorials", "Explainer", "Courses", "Exam Prep"],
+  Health: ["Fitness", "Nutrition", "Medical", "Wellness"],
+  Finance: ["Investing", "Crypto", "Personal Finance", "Markets"],
+  Lifestyle: ["Fashion", "Home", "Wellness", "Travel"],
+  Motivation: ["Success Stories", "Discipline", "Goal Setting", "Mindset"],
+  Travel: ["Destinations", "Budget Travel", "Food Trails", "Adventure"],
+  Food: ["Recipes", "Street Food", "Restaurant Reviews", "Cooking Tips"],
+  Religion: ["Faith", "Spiritual", "History", "Community"],
 };
 
 const SceneEditorList: React.FC<SceneEditorListProps> = ({

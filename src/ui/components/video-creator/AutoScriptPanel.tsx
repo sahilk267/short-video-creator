@@ -52,7 +52,6 @@ interface AutoScriptPanelProps {
   sources: NewsSourceOption[];
   trendingTopics: string[];
   hookOptions: HookOption[];
-  onCategoryChange: (category: string) => void;
   onSourceChange: (sourceIds: string[]) => void;
   onTopicChange: (topic: string) => void;
   onStyleChange: (style: AutoScriptStyle) => void;
@@ -64,17 +63,6 @@ interface AutoScriptPanelProps {
 }
 
 const ALL_SOURCES_VALUE = "__all_sources__";
-
-const categoryOptions = [
-  { id: "General", label: "General" },
-  { id: "World", label: "World" },
-  { id: "Technology", label: "Tech" },
-  { id: "Business", label: "Business" },
-  { id: "Cricket", label: "Cricket" },
-  { id: "NBA", label: "NBA" },
-  { id: "Sports", label: "Sports" },
-  { id: "Science", label: "Science" },
-];
 
 const styleOptions: AutoScriptStyle[] = ["News", "Viral", "Explainer"];
 
@@ -92,7 +80,6 @@ const AutoScriptPanel: React.FC<AutoScriptPanelProps> = ({
   sources,
   trendingTopics,
   hookOptions,
-  onCategoryChange,
   onSourceChange,
   onTopicChange,
   onStyleChange,
@@ -147,27 +134,11 @@ const AutoScriptPanel: React.FC<AutoScriptPanelProps> = ({
   return (
     <Paper sx={{ p: 4, mb: 4, bgcolor: "rgba(25, 118, 210, 0.04)", border: "1px dashed #1976d2" }}>
       <Typography variant="h6" sx={{ display: "flex", alignItems: "center", mb: 2, color: "#1976d2" }}>
-        <AutoFixHighIcon sx={{ mr: 1 }} /> Magic Auto-Scripting (with Ollama)
+        <AutoFixHighIcon sx={{ mr: 1 }} /> Magic Auto-Scripting
       </Typography>
       <Typography variant="body2" sx={{ mb: 3, opacity: 0.8 }}>
-        Pick category, multiple sources, keyword bias, trending angle, style, and hook. This will improve source coverage and keep the script focused on your target subject.
+        Category comes from <strong>Content Setup</strong> above. Pick sources for <strong>{selectedCategory}</strong>, add keyword bias, trending angle, style, and hook. This will improve source coverage and keep the script focused on your target subject.
       </Typography>
-
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>Category</Typography>
-        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-          {categoryOptions.map((cat) => (
-            <Chip
-              key={cat.id}
-              label={cat.label}
-              clickable
-              color={selectedCategory === cat.id ? "primary" : "default"}
-              variant={selectedCategory === cat.id ? "filled" : "outlined"}
-              onClick={() => onCategoryChange(cat.id)}
-            />
-          ))}
-        </Stack>
-      </Box>
 
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs={12} md={8}>

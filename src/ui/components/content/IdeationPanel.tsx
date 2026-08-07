@@ -17,8 +17,9 @@ import {
 } from "@mui/material";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import { useIdeationMutation, type IdeaItem } from "../../hooks/useContentSuggestions";
+import { CONTENT_CATEGORIES } from "../../../config/categories";
 
-const CATEGORIES = ["news", "entertainment", "education", "sports", "tech", "lifestyle", "travel", "food"];
+const CATEGORIES = CONTENT_CATEGORIES;
 const PLATFORMS = ["youtube", "instagram", "tiktok", "facebook", "telegram"];
 
 interface IdeationPanelProps {
@@ -26,7 +27,7 @@ interface IdeationPanelProps {
 }
 
 const IdeationPanel: React.FC<IdeationPanelProps> = ({ onSelectIdea }) => {
-  const [category, setCategory] = useState("news");
+  const [category, setCategory] = useState("News");
   const [platform, setPlatform] = useState("youtube");
   const [count, setCount] = useState(5);
   const [style, setStyle] = useState("");

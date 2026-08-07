@@ -406,8 +406,10 @@ export class ShortCreator {
       videoType,
     );
     if (chunkedScenes.length > 1) {
+      const partIds: string[] = [];
       for (let i = 0; i < chunkedScenes.length; i++) {
         const chunkId = `${videoId}_part${i + 1}`;
+        partIds.push(chunkId);
         await this.createShort(
           chunkId,
           chunkedScenes[i],
@@ -416,6 +418,10 @@ export class ShortCreator {
           subtitleLanguage,
         );
       }
+      // Render the parent video as the concatenation of all parts so the
+      // requested videoId always resolves to a playable file.
+      const partPaths = partIds.map((partId) => this.getVideoPath(partId));
+      await this.ffmpeg.concatVideos(partPaths, this.getVideoPath(videoId));
       return videoId;
     }
 

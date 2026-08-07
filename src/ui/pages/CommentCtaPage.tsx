@@ -8,6 +8,7 @@ import CommentIcon from "@mui/icons-material/Comment";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import { CONTENT_CATEGORIES } from "../../config/categories";
 
 interface CTA {
   id: string;
@@ -27,11 +28,6 @@ const PLATFORMS = [
   { value: "linkedin", label: "LinkedIn" },
   { value: "twitter", label: "X/Twitter" },
   { value: "facebook", label: "Facebook" },
-];
-
-const CATEGORIES = [
-  "Technology", "Entertainment", "Education", "Business",
-  "Health", "Sports", "Finance", "Lifestyle", "World",
 ];
 
 const LANGUAGES = [
@@ -138,7 +134,7 @@ function CommentCtaPage() {
             <FormControl fullWidth size="small">
               <InputLabel>Category</InputLabel>
               <Select value={category} label="Category" onChange={(e) => setCategory(e.target.value)}>
-                {CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                {CONTENT_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
               </Select>
             </FormControl>
           </Grid>

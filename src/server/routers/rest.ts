@@ -16,7 +16,7 @@ import { VideoMetadataStore } from "../../db/VideoMetadataStore";
 import { CustomNewsSourceStore } from "../../db/CustomNewsSourceStore";
 import { ReportMerger } from "../../aggregator/ReportMerger";
 import { RssFetcher } from "../../news-fetcher/RssFetcher";
-import { AiLlmGenerator, type AutoScriptStyle, type HookOption } from "../../script-generator/AiLlmGenerator";
+import { AiLlmGenerator, configureLlmDefaults, type AutoScriptStyle, type HookOption } from "../../script-generator/AiLlmGenerator";
 
 // Resolve a user-supplied file name safely inside a base directory,
 // rejecting any path traversal attempt (e.g. ../../.env or %2e%2e).
@@ -47,6 +47,13 @@ export class APIRouter {
     this.scriptPlanStore = new ScriptPlanStore(config.dataDirPath);
     this.videoMetadataStore = new VideoMetadataStore(config.dataDirPath);
     this.customNewsSourceStore = new CustomNewsSourceStore(config.dataDirPath);
+
+    configureLlmDefaults({
+      provider: config.aiLlmProvider,
+      openrouterApiKey: config.openrouterApiKey,
+      openrouterUrl: config.openrouterUrl,
+      openrouterModel: config.openrouterModel,
+    });
 
     this.router.use(express.json());
 
@@ -616,6 +623,8 @@ export class APIRouter {
             hook,
             scriptLanguage,
             keywords = [],
+            videoType,
+            durationLimit,
           }: {
             sourceId?: string;
             sourceIds?: string[];
@@ -625,6 +634,8 @@ export class APIRouter {
             hook?: string;
             scriptLanguage?: string;
             keywords?: string[];
+            videoType?: "short" | "long";
+            durationLimit?: number;
           } = req.body;
           const selectedSourceIds = Array.from(new Set(
             (Array.isArray(sourceIds) ? sourceIds : [])
@@ -654,6 +665,8 @@ export class APIRouter {
             hook,
             scriptLanguage,
             keywords,
+            videoType,
+            durationLimit,
           });
 
           res.status(200).json({ scenes });

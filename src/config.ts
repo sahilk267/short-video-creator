@@ -128,6 +128,10 @@ export class Config {
   public useAiImages: boolean = false;
   public aiLlmUrl: string = "http://localhost:12434";
   public aiLlmModel: string = "llama3";
+  public aiLlmProvider: "openrouter" | "ollama" = "ollama";
+  public openrouterApiKey: string = "";
+  public openrouterUrl: string = "https://openrouter.ai/api/v1";
+  public openrouterModel: string = "deepseek/deepseek-chat-v3-0324:free";
 
   // Phase 4: Redis / BullMQ
   public redisHost: string = "localhost";
@@ -214,6 +218,12 @@ export class Config {
       ? "http://host.docker.internal:12434"
       : "http://localhost:12434");
     this.aiLlmModel = process.env.AI_LLM_MODEL || "llama3";
+    this.openrouterApiKey = process.env.OPENROUTER_API_KEY || "";
+    this.openrouterUrl = process.env.OPENROUTER_URL || "https://openrouter.ai/api/v1";
+    this.openrouterModel = process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3-0324:free";
+    this.aiLlmProvider = process.env.AI_LLM_PROVIDER === "ollama"
+      ? "ollama"
+      : (this.openrouterApiKey ? "openrouter" : "ollama");
 
   // Phase 4: Redis
   this.redisHost = process.env.REDIS_HOST || "localhost";

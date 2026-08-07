@@ -53,24 +53,6 @@ const VideoConfigPanel: React.FC<VideoConfigPanelProps> = ({
         <Grid container spacing={3} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
-              <InputLabel>Video Type</InputLabel>
-              <Select
-                value={config.videoType}
-                onChange={(e) => onConfigChange("videoType", e.target.value as RenderConfig["videoType"])}
-                label="Video Type"
-                required
-              >
-                {Object.values(VideoTypeEnum).map((videoType) => (
-                  <MenuItem key={videoType} value={videoType}>
-                    {videoType === VideoTypeEnum.short ? "Short-form" : "Long-form"}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
               <InputLabel>Orientation</InputLabel>
               <Select
                 value={config.orientation}
