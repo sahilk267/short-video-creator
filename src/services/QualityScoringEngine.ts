@@ -1,5 +1,3 @@
-/* eslint-disable @remotion/deterministic-randomness */
-
 export interface QualityMetrics {
   audioQuality: number;
   visualQuality: number;
@@ -22,7 +20,7 @@ export class QualityScoringEngine {
     const audioQuality = this.scoreAudio(hasAudio, audioLUFS);
     const visualQuality = this.scoreVisual(visualResolution, frameRate);
     const scriptQuality = this.scoreScript(scriptLength);
-    const engagementPotential = 0.65 + Math.random() * 0.35;
+    const engagementPotential = this.scoreEngagement(scriptLength, visualQuality);
     const technicalQuality = (audioQuality + visualQuality) / 2;
 
     const overallScore = (audioQuality + visualQuality + scriptQuality + engagementPotential + technicalQuality) / 5;
@@ -62,6 +60,15 @@ export class QualityScoringEngine {
     if (length < 200) return 70;
     if (length < 1000) return 85;
     return 90;
+  }
+
+  // Deterministic proxy for engagement potential (no randomness).
+  private scoreEngagement(scriptLength: number, visualQuality: number): number {
+    let score = 40;
+    if (scriptLength >= 50 && scriptLength < 1000) score += 30;
+    if (scriptLength >= 1000) score += 20;
+    if (visualQuality >= 80) score += 20;
+    return Math.min(100, score);
   }
 
   private identifyIssues(audioScore: number, visualScore: number, scriptScore: number): string[] {

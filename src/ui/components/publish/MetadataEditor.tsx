@@ -14,7 +14,7 @@ import {
   Alert,
   Paper,
 } from "@mui/material";
-import { PlatformMetadata } from "../pages/PublishDashboard";
+import type { PlatformMetadata } from "../../pages/PublishDashboard";
 
 interface TabPanelProps {
   children?: React.ReactNode;

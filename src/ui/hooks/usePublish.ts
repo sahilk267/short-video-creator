@@ -21,6 +21,76 @@ export interface PublishResponse {
   totalPlatforms: number;
 }
 
+interface ChannelConfigRecord {
+  id: string;
+  category: string;
+  platform: string;
+  channelId: string;
+  createdAt: string;
+}
+
+interface SingleJobPayload {
+  renderOutputPath: string;
+  platform: string;
+  channelId: string;
+  title: string;
+  description: string;
+  tags: string[];
+  category: string;
+  language: string;
+  scheduleAt?: string;
+}
+
+function buildJobPayload(
+  platform: string,
+  meta: PlatformMetadata,
+  channelId: string,
+  schedule: ScheduleConfig,
+): SingleJobPayload {
+  const m = (meta as Record<string, Record<string, unknown>>)[platform] ?? {};
+
+  let title = "";
+  let description = "";
+  let tags: string[] = [];
+  let category = "General";
+
+  switch (platform) {
+    case "youtube":
+      title = String(m.title ?? "");
+      description = String(m.description ?? "");
+      tags = Array.isArray(m.tags) ? (m.tags as string[]) : [];
+      category = String(m.categoryId ?? "General");
+      break;
+    case "facebook":
+      title = String(m.title ?? "");
+      description = String(m.description ?? "");
+      tags = Array.isArray(m.hashtags) ? (m.hashtags as string[]) : [];
+      break;
+    case "instagram":
+    case "telegram": {
+      const caption = String(m.caption ?? "");
+      title = caption.split("\n")[0] || platform;
+      description = caption;
+      tags = Array.isArray(m.hashtags) ? (m.hashtags as string[]) : [];
+      break;
+    }
+  }
+
+  return {
+    renderOutputPath: "",
+    platform,
+    channelId,
+    title,
+    description,
+    tags,
+    category,
+    language: "en",
+    scheduleAt: schedule.publishImmediately
+      ? undefined
+      : `${schedule.scheduledDate}T${schedule.scheduledTime}`,
+  };
+}
+
 interface UsePublishState {
   loading: boolean;
   error: string | null;
@@ -54,7 +124,9 @@ export const usePublish = (): [
         // Validate metadata
         const missingMetadata = request.platforms.some((platform) => {
           const platformKey = platform as keyof PlatformMetadata;
-          const metadata = request.metadata[platformKey];
+          const metadata = request.metadata[platformKey] as
+            | Record<string, unknown>
+            | undefined;
 
           if (!metadata) {
             return true;
@@ -93,30 +165,65 @@ export const usePublish = (): [
           }
         }
 
-        // Call API
-        const response = await api.publish.enqueue({
-          videoIds: request.videoIds,
-          platforms: request.platforms,
-          metadata: request.metadata,
-          publishImmediately: request.schedule.publishImmediately,
-          scheduledDateTime: request.schedule.publishImmediately
-            ? undefined
-            : `${request.schedule.scheduledDate}T${request.schedule.scheduledTime}`,
-          timezone: request.schedule.timezone,
-        });
+        // Resolve channel mappings (category → platform → channelId) once.
+        let channelConfigs: ChannelConfigRecord[] = [];
+        try {
+          channelConfigs = (await api.channels.list()) as ChannelConfigRecord[];
+        } catch {
+          channelConfigs = [];
+        }
+
+        const channelFor = (platform: string): string => {
+          const match = channelConfigs.find((c) => c.platform === platform);
+          return match?.channelId || "default";
+        };
+
+        // The backend accepts one publish job per (video, platform) pair.
+        const jobIds: string[] = [];
+        const skipped: string[] = [];
+
+        for (const videoId of request.videoIds) {
+          for (const platform of request.platforms) {
+            const payload = buildJobPayload(platform, request.metadata, channelFor(platform), request.schedule);
+
+            const pathResult = await api.videos
+              .getRenderPath(videoId)
+              .catch(() => null);
+            if (!pathResult?.path) {
+              skipped.push(videoId);
+              continue;
+            }
+            payload.renderOutputPath = pathResult.path;
+
+            const response = (await api.publish.enqueue(payload)) as {
+              publishJobId: string;
+              status: string;
+            } | null;
+            if (response?.publishJobId) {
+              jobIds.push(response.publishJobId);
+            }
+          }
+        }
+
+        if (jobIds.length === 0) {
+          if (skipped.length > 0) {
+            throw new Error("Selected videos have no rendered file — publish requires a rendered video");
+          }
+          throw new Error("No publish jobs were created");
+        }
 
         // Handle response
         const resultData: PublishResponse = {
-          jobIds: response.jobIds || [],
-          status: response.status || "queued",
-          totalVideos: request.videoIds.length,
+          jobIds,
+          status: "queued",
+          totalVideos: jobIds.length,
           totalPlatforms: request.platforms.length,
         };
 
         setData(resultData);
 
         // Show success notification
-        successNotification(`Successfully queued ${request.videoIds.length} video(s) for ${request.platforms.length} platform(s)`, 6000);
+        successNotification(`Successfully queued ${jobIds.length} publish job(s)`, 6000);
 
         return resultData;
       } catch (err) {

@@ -12,6 +12,7 @@
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "typecheck:ui": "tsc -p src/ui/tsconfig.json --noEmit",
     "verify:baseline": "npm run typecheck && npm exec vitest run",
     "verify:production": "npm run typecheck && npm exec vitest run && npm run build",
     "backup:data": "ts-node scripts/backupData.ts",

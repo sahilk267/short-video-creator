@@ -17,6 +17,7 @@ import { logger } from "../../logger";
 import { RenderJobStore } from "../../db/RenderJobStore";
 import { PublishJobStore } from "../../db/PublishJobStore";
 import { AiLearningStore, type LearningEvent } from "../../db/AiLearningStore";
+import { readiness } from "../readiness";
 
 export class HealthRouter {
   public router: Router;
@@ -50,12 +51,24 @@ export class HealthRouter {
     const freeMb = Math.floor(os.freemem() / 1024 / 1024);
     const totalMb = Math.floor(os.totalmem() / 1024 / 1024);
 
-    const healthy = !this.config.redisEnabled || redisOk === true;
+    const redisHealthy = !this.config.redisEnabled || redisOk === true;
+    const videoEngineHealthy = !readiness.videoEngineError;
+
+    const healthy = redisHealthy && videoEngineHealthy;
 
     res.status(healthy ? 200 : 503).json({
-      status: healthy ? "ok" : "degraded",
+      status: readiness.videoEngineError
+        ? "degraded"
+        : readiness.videoEngineReady
+          ? "ok"
+          : "initializing",
       uptime: uptimeSeconds,
       redis: this.config.redisEnabled ? (redisOk ? "ok" : "error") : "disabled",
+      videoEngine: readiness.videoEngineError
+        ? "error"
+        : readiness.videoEngineReady
+          ? "ready"
+          : "initializing",
       memory: { freeMb, totalMb, usedPercent: Math.round((1 - freeMb / totalMb) * 100) },
       version: process.env.npm_package_version ?? "unknown",
     });

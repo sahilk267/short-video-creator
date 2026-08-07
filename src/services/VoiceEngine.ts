@@ -1,4 +1,5 @@
 import { logger } from "../logger";
+import { isDevMode } from "../config";
 
 export type VoiceGender = "male" | "female" | "neutral";
 export type VoiceSpeed = "slow" | "normal" | "fast";
@@ -87,13 +88,20 @@ export class VoiceEngine {
       }
       return this.mockSynthesize(voiceId, outputPath, wordCount, durationEstimateSec);
     } catch (err) {
-      logger.warn({ err, voiceId }, "VoiceEngine: primary TTS failed, using mock");
+      logger.warn({ err, voiceId }, "VoiceEngine: primary TTS failed");
       return this.mockSynthesize(voiceId, outputPath, wordCount, durationEstimateSec);
     }
   }
 
   private mockSynthesize(voiceId: string, outputPath: string, wordCount: number, durationEstimateSec: number): TTSResult {
-    logger.debug({ voiceId }, "VoiceEngine: mock synthesis");
+    if (!isDevMode()) {
+      return {
+        outputPath, provider: "mock", voiceId, durationEstimateSec, wordCount,
+        success: false,
+        error: "No real TTS provider available — mock synthesis is disabled outside DEV mode",
+      };
+    }
+    logger.debug({ voiceId }, "VoiceEngine: mock synthesis (DEV only)");
     return { outputPath, provider: "mock", voiceId, durationEstimateSec, wordCount, success: true };
   }
 
@@ -109,14 +117,22 @@ export class VoiceEngine {
 
 class KokoroAdapter {
   async synthesize(text: string, voiceId: string, outputPath: string, _speed: number, durationEstimateSec: number): Promise<TTSResult> {
-    logger.debug({ voiceId, outputPath }, "KokoroAdapter: synthesizing (delegating to TtsAdapter)");
-    return { outputPath, provider: "kokoro", voiceId, durationEstimateSec, wordCount: text.split(/\s+/).length, success: true };
+    logger.warn({ voiceId, outputPath }, "KokoroAdapter: no real TTS backend wired — returning failure instead of fake success");
+    return {
+      outputPath, provider: "kokoro", voiceId, durationEstimateSec, wordCount: text.split(/\s+/).length,
+      success: false,
+      error: "Kokoro TTS backend is not wired to the VoiceEngine (use ShortCreator/TtsAdapter pipeline)",
+    };
   }
 }
 
 class CoquiAdapter {
   async synthesize(text: string, voiceId: string, outputPath: string, _speed: number, durationEstimateSec: number): Promise<TTSResult> {
-    logger.debug({ voiceId, outputPath }, "CoquiAdapter: synthesizing");
-    return { outputPath, provider: "coqui", voiceId, durationEstimateSec, wordCount: text.split(/\s+/).length, success: true };
+    logger.warn({ voiceId, outputPath }, "CoquiAdapter: no real TTS backend wired — returning failure instead of fake success");
+    return {
+      outputPath, provider: "coqui", voiceId, durationEstimateSec, wordCount: text.split(/\s+/).length,
+      success: false,
+      error: "Coqui TTS backend is not wired to the VoiceEngine",
+    };
   }
 }

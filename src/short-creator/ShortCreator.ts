@@ -441,9 +441,32 @@ export class ShortCreator {
     for (const scene of inputScenes) {
       const sceneNum = index + 1;
       console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Generating audio...`);
-      const audio = await this.ttsAdapter.synthesize(scene, config.voice);
+      const sourceScriptLanguage = scene.sourceLanguage || config.scriptLanguage || scene.language;
+      const audio = await this.ttsAdapter.synthesize(scene, config.voice, sourceScriptLanguage);
       let { audioLength } = audio;
       const { audio: audioStream } = audio;
+
+      const effectiveCaptionLanguage =
+        config.captionLanguage ||
+        (subtitleLanguage as LanguageEnum | undefined) ||
+        scene.language;
+      const effectiveOverlayLanguage =
+        config.overlayLanguage ||
+        sourceScriptLanguage;
+      logger.debug(
+        {
+          sceneNum,
+          sourceScriptLanguage,
+          sceneLanguage: scene.language,
+          configScriptLanguage: config.scriptLanguage,
+          captionLanguage: config.captionLanguage,
+          effectiveCaptionLanguage,
+          overlayLanguage: config.overlayLanguage,
+          effectiveOverlayLanguage,
+          useAiImages: config.useAiImages || this.config.useAiImages,
+        },
+        "Resolved scene language and rendering settings",
+      );
 
       const tempId = cuid();
       const tempWavFileName = `${tempId}.wav`;
@@ -470,15 +493,6 @@ export class ShortCreator {
           "Caption generation failed, continuing without captions",
         );
       }
-
-      const sourceScriptLanguage = scene.sourceLanguage || config.scriptLanguage || scene.language;
-      const effectiveCaptionLanguage =
-        config.captionLanguage ||
-        (subtitleLanguage as LanguageEnum | undefined) ||
-        scene.language;
-      const effectiveOverlayLanguage =
-        config.overlayLanguage ||
-        sourceScriptLanguage;
 
       await this.ffmpeg.saveToMp3(audioStream, tempMp3Path);
 

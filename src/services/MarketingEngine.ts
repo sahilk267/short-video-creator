@@ -1,6 +1,7 @@
 /* eslint-disable @remotion/deterministic-randomness */
 
 import { logger } from "../logger";
+import { isDevMode } from "../config";
 
 export interface MockWebsiteData {
   url: string;
@@ -127,6 +128,11 @@ export class MarketingEngine {
   }
 
   scrapeWebsiteMock(url: string): MockWebsiteData {
+    if (!isDevMode()) {
+      throw new Error(
+        "Website scraping is not implemented — mock scraper is disabled outside DEV mode",
+      );
+    }
     const domain = url.replace(/https?:\/\//, "").split("/")[0];
     const name = domain.split(".")[0];
     const capitalName = name.charAt(0).toUpperCase() + name.slice(1);

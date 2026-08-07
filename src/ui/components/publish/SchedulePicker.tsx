@@ -17,7 +17,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { ScheduleConfig } from "../pages/PublishDashboard";
+import type { ScheduleConfig } from "../../pages/PublishDashboard";
 
 interface SchedulePickerProps {
   schedule: ScheduleConfig;

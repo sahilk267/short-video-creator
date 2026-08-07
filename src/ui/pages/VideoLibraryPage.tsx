@@ -60,7 +60,7 @@ const STATUS_COLORS: Record<string, "default" | "primary" | "secondary" | "succe
   draft: "default", published: "success", scheduled: "primary", archived: "error",
 };
 
-const emptyForm = { title: "", description: "", category: "General", subcategory: "", platform: "youtube", duration: 0, tags: "", status: "draft" as const };
+const emptyForm = { title: "", description: "", category: "General", subcategory: "", platform: "youtube", duration: 0, tags: "", status: "draft" };
 
 export const VideoLibraryPage: React.FC = () => {
   const [tab, setTab] = useState(0);

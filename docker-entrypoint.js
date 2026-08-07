@@ -3,8 +3,8 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const seedPairs = [
-  ["/app/cache/puppeteer", process.env.PUPPETEER_CACHE_DIR || "/app/data/cache/puppeteer"],
-  ["/app/cache/huggingface", process.env.HF_HOME || "/app/data/cache/huggingface"],
+  ["/app/cache-seed/puppeteer", process.env.PUPPETEER_CACHE_DIR || "/app/data/cache/puppeteer"],
+  ["/app/cache-seed/huggingface", process.env.HF_HOME || "/app/data/cache/huggingface"],
 ];
 
 function ensureEspeakDataPath() {

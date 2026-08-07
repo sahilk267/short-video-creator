@@ -3,6 +3,7 @@ import express from "express";
 import type {
   Request as ExpressRequest,
   Response as ExpressResponse,
+  NextFunction,
 } from "express";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
@@ -47,9 +48,15 @@ import { ABTestingRouter } from "./routers/abtesting";
 import { ApprovalRouter } from "./routers/approval";
 import { SystemEnginesRouter } from "./routers/systemengines";
 import { ContentBucketsRouter } from "./routers/contentbuckets";
+import { ChannelConfigRouter } from "./routers/channelconfigs";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
+import { MusicManager } from "../short-creator/music";
+import { RssFetcher } from "../news-fetcher/RssFetcher";
+import { VoiceEnum } from "../types/shorts";
+import { validateTokenIfPresent, logAdminKeyStatus } from "./auth";
+import { readiness } from "./readiness";
 
 export class Server {
   private app: express.Application;
@@ -59,14 +66,30 @@ export class Server {
   constructor(config: Config, shortCreatorPromise: Promise<ShortCreator>) {
     this.config = config;
     this.app = express();
-    this.app.set("trust proxy", 1);
+    // Trust proxies only when explicitly enabled (behind a reverse proxy).
+    // When disabled, req.ip comes from the socket and rate limiting cannot be
+    // bypassed by spoofing X-Forwarded-For.
+    this.app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : false);
+    this.app.use(express.json({ limit: "10mb" }));
+
+    this.applySecurityHeaders();
+    this.applyCors();
+
+    // Optional token validation (non-blocking) + global API rate limit.
+    this.app.use(validateTokenIfPresent);
+    this.app.use("/api", apiRateLimiter);
+    this.app.use("/mcp", apiRateLimiter);
 
     // Mark ready once the promise resolves
     shortCreatorPromise.then(() => {
       this.shortCreatorReady = true;
-    }).catch(() => {
-      // error already logged in index.ts
+      readiness.videoEngineReady = true;
+    }).catch((err) => {
+      readiness.videoEngineError = true;
+      logger.error(err, "ShortCreator initialization failed");
     });
+
+    logAdminKeyStatus();
 
     // Global guard: any /api or /mcp path not yet handled returns 503 until ready
     // This middleware runs first for /api and /mcp.
@@ -115,6 +138,7 @@ export class Server {
     const approvalRouter = new ApprovalRouter(config);
     const systemEnginesRouter = new SystemEnginesRouter(config);
     const contentBucketsRouter = new ContentBucketsRouter(config);
+    const channelConfigRouter = new ChannelConfigRouter(config);
 
     // Always-available routes (no ShortCreator dependency)
     this.app.use("/api/health", healthRouter.router);
@@ -153,6 +177,7 @@ export class Server {
     this.app.use("/api/approval", approvalRouter.router);
     this.app.use("/api/system", systemEnginesRouter.router);
     this.app.use("/api/system/content-buckets", contentBucketsRouter.router);
+    this.app.use("/api/channel-configs", channelConfigRouter.router);
 
     // API Documentation (Swagger UI) — always available
     this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -162,6 +187,20 @@ export class Server {
     this.app.get("/api/docs.json", (_req: ExpressRequest, res: ExpressResponse) => {
       res.setHeader("Content-Type", "application/json");
       res.send(swaggerSpec);
+    });
+
+    // Expose non-video-dependent UI options immediately, even while the heavy video engine initializes.
+    const musicManager = new MusicManager(config);
+    const rssFetcher = new RssFetcher(config.dataDirPath);
+    this.app.get("/api/voices", (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(200).json(Object.values(VoiceEnum));
+    });
+    this.app.get("/api/music-tags", (_req: ExpressRequest, res: ExpressResponse) => {
+      const tags = Array.from(new Set(musicManager.musicList().map((music) => music.mood)));
+      res.status(200).json(tags);
+    });
+    this.app.get("/api/news-sources", (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(200).json(rssFetcher.listSourcesSync());
     });
 
     // ShortCreator-dependent routes: registered dynamically once ready.
@@ -175,7 +214,6 @@ export class Server {
     let mcpHandler: express.Router = express.Router().use(initializingResponse);
     let queueHandler: express.Router = express.Router().use(initializingResponse);
 
-    deferredApiRouter.use(apiRateLimiter);
     deferredApiRouter.use((req, res, next) => apiHandler(req, res, next));
     deferredMcpRouter.use((req, res, next) => mcpHandler(req, res, next));
     deferredQueueRouter.use((req, res, next) => queueHandler(req, res, next));
@@ -183,6 +221,14 @@ export class Server {
     this.app.use("/api", deferredApiRouter);
     this.app.use("/mcp", deferredMcpRouter);
     this.app.use("/api/queue", deferredQueueRouter);
+
+    // JSON 404s for unknown API routes (before the SPA catch-all)
+    this.app.use("/api", (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(404).json({ error: "Not found" });
+    });
+    this.app.use("/mcp", (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(404).json({ error: "Not found" });
+    });
 
     // When ShortCreator is ready, swap in the real handlers
     shortCreatorPromise.then((shortCreator) => {
@@ -209,6 +255,54 @@ export class Server {
     // Serve the React app for all other routes (must be last)
     this.app.get("*", (req: ExpressRequest, res: ExpressResponse) => {
       res.sendFile(path.join(__dirname, "../../dist/ui/index.html"));
+    });
+
+    // Central JSON error handler (must be registered after all routes)
+    this.app.use((err: unknown, _req: ExpressRequest, res: ExpressResponse, _next: NextFunction) => {
+      void _next;
+      const status = (err as { status?: number }).status ?? 500;
+      const message = status >= 500 ? "Internal server error" : (err as Error).message;
+      if (status >= 500) logger.error(err, "Unhandled request error");
+      if (!res.headersSent) {
+        res.status(status).json({ error: message });
+      } else {
+        res.destroy();
+      }
+    });
+  }
+
+  private applySecurityHeaders(): void {
+    this.app.use((_req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("X-Frame-Options", "DENY");
+      res.setHeader("Referrer-Policy", "no-referrer");
+      res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+      res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+      next();
+    });
+  }
+
+  private applyCors(): void {
+    const allowedOrigins = (process.env.CORS_ORIGINS || "*")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean);
+    this.app.use((req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+      const origin = req.headers.origin;
+      if (origin) {
+        const allowed = allowedOrigins.includes("*") || allowedOrigins.includes(origin);
+        if (allowed) {
+          res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes("*") ? "*" : origin);
+          res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+          res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Admin-Key");
+          res.setHeader("Vary", "Origin");
+        }
+      }
+      if (req.method === "OPTIONS") {
+        res.status(204).end();
+        return;
+      }
+      next();
     });
   }
 

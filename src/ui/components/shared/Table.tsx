@@ -100,27 +100,30 @@ export const Table = React.forwardRef<HTMLDivElement, TableProps<unknown>>(
                     </TableCell>
                   </TableRow>
                 ) : (
-                  displayedData.map((row) => (
-                    <TableRow
-                      key={String(row[rowKey as keyof unknown])}
-                      onClick={() => onRowClick?.(row)}
-                      sx={{
-                        cursor: onRowClick ? "pointer" : "inherit",
-                        "&:hover": onRowClick ? { backgroundColor: "#f9f9f9" } : {},
-                      }}
-                    >
-                      {columns.map((column) => (
-                        <TableCell
-                          key={String(column.key)}
-                          align={column.align || "left"}
-                        >
-                          {column.render
-                            ? column.render(row[column.key as keyof unknown], row)
-                            : String(row[column.key as keyof unknown] || "")}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
+                  displayedData.map((row) => {
+                    const record = row as Record<string, unknown>;
+                    return (
+                      <TableRow
+                        key={String(record[rowKey as string])}
+                        onClick={() => onRowClick?.(row)}
+                        sx={{
+                          cursor: onRowClick ? "pointer" : "inherit",
+                          "&:hover": onRowClick ? { backgroundColor: "#f9f9f9" } : {},
+                        }}
+                      >
+                        {columns.map((column) => (
+                          <TableCell
+                            key={String(column.key)}
+                            align={column.align || "left"}
+                          >
+                            {column.render
+                              ? column.render(record[column.key as string], row)
+                              : String(record[column.key as string] || "")}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </MUITable>

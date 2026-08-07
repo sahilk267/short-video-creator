@@ -526,5 +526,21 @@
     "error": null,
     "createdAt": "2026-03-28T09:00:41.598Z",
     "updatedAt": "2026-03-28T09:00:41.598Z"
+  },
+  {
+    "id": "cmsisskii00006crsgd8e2b3r",
+    "scriptPlanId": "",
+    "videoType": "short",
+    "language": "en",
+    "subtitleLanguage": "en",
+    "orientation": "portrait",
+    "category": "World",
+    "namingKey": "same",
+    "status": "queued",
+    "attemptCount": 0,
+    "outputPath": null,
+    "error": null,
+    "createdAt": "2026-08-07T10:24:28.890Z",
+    "updatedAt": "2026-08-07T10:24:28.890Z"
   }
 ]

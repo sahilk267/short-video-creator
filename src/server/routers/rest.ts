@@ -18,6 +18,17 @@ import { ReportMerger } from "../../aggregator/ReportMerger";
 import { RssFetcher } from "../../news-fetcher/RssFetcher";
 import { AiLlmGenerator, type AutoScriptStyle, type HookOption } from "../../script-generator/AiLlmGenerator";
 
+// Resolve a user-supplied file name safely inside a base directory,
+// rejecting any path traversal attempt (e.g. ../../.env or %2e%2e).
+function safePathInDir(dirPath: string, fileName: string): string | null {
+  const base = path.resolve(dirPath);
+  const candidate = path.resolve(base, path.basename(fileName));
+  if (candidate !== path.join(base, path.basename(fileName))) return null;
+  if (path.dirname(candidate) !== base) return null;
+  if (!candidate.startsWith(base + path.sep)) return null;
+  return candidate;
+}
+
 // todo abstract class
 export class APIRouter {
   public router: express.Router;
@@ -137,6 +148,23 @@ export class APIRouter {
     );
 
     this.router.get(
+      "/short-video/:videoId/render-path",
+      (req: ExpressRequest, res: ExpressResponse) => {
+        const videoId = req.params.videoId;
+        if (!videoId) {
+          res.status(400).json({ error: "videoId is required" });
+          return;
+        }
+        const videoPath = this.shortCreator.getVideoPath(videoId);
+        if (!videoPath || !fs.existsSync(videoPath)) {
+          res.status(404).json({ error: "Rendered video not found" });
+          return;
+        }
+        res.status(200).json({ path: videoPath });
+      },
+    );
+
+    this.router.get(
       "/short-videos",
       (req: ExpressRequest, res: ExpressResponse) => {
         const videos = this.shortCreator.listAllVideos();
@@ -173,8 +201,8 @@ export class APIRouter {
           });
           return;
         }
-        const tmpFilePath = path.join(this.config.tempDirPath, tmpFile);
-        if (!fs.existsSync(tmpFilePath)) {
+        const tmpFilePath = safePathInDir(this.config.tempDirPath, tmpFile);
+        if (!tmpFilePath || !fs.existsSync(tmpFilePath)) {
           res.status(404).json({
             error: "tmpFile not found",
           });
@@ -219,8 +247,8 @@ export class APIRouter {
           });
           return;
         }
-        const musicFilePath = path.join(this.config.musicDirPath, fileName);
-        if (!fs.existsSync(musicFilePath)) {
+        const musicFilePath = safePathInDir(this.config.musicDirPath, fileName);
+        if (!musicFilePath || !fs.existsSync(musicFilePath)) {
           res.status(404).json({
             error: "music file not found",
           });
@@ -586,6 +614,7 @@ export class APIRouter {
             topic,
             style = "News",
             hook,
+            scriptLanguage,
             keywords = [],
           }: {
             sourceId?: string;
@@ -594,6 +623,7 @@ export class APIRouter {
             topic?: string;
             style?: AutoScriptStyle;
             hook?: string;
+            scriptLanguage?: string;
             keywords?: string[];
           } = req.body;
           const selectedSourceIds = Array.from(new Set(
@@ -606,7 +636,7 @@ export class APIRouter {
             return;
           }
 
-          logger.info({ selectedSourceIds }, "Auto-generating script from news");
+          logger.info({ selectedSourceIds, scriptLanguage }, "Auto-generating script from news");
 
           const rssFetcher = new RssFetcher();
           const stories = await rssFetcher.fetchStoriesFromSources(selectedSourceIds);
@@ -622,6 +652,7 @@ export class APIRouter {
             topic,
             style,
             hook,
+            scriptLanguage,
             keywords,
           });
 

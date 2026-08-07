@@ -29,16 +29,21 @@ services:
       - DOCKER=true
       - DEV=false
       - SKIP_RUNTIME_INSTALL=true
+      - DATA_DIR_PATH=/app/data
+      - WHISPER_INSTALL_PATH=/app/libs/whisper
       - NODE_OPTIONS=--max-old-space-size=4096
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_ENABLED=true
-      - PUPPETEER_CACHE_DIR=/app/data/cache/puppeteer
-      - HF_HOME=/app/data/cache/huggingface
+      - AI_LLM_URL=http://host.docker.internal:12434
+      - AI_LLM_MODEL=docker.io/ai/llama3.1:latest
+      - PUPPETEER_CACHE_DIR=/app/cache/puppeteer
+      - HF_HOME=/app/cache/huggingface
     ports:
       - "${PORT:-3123}:${PORT:-3123}"
     volumes:
       - ./data:/app/data
+      - ./cache:/app/cache
     extra_hosts:
       - "host.docker.internal:host-gateway"
     shm_size: "2gb"

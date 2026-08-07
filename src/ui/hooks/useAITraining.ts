@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { apiClient } from "../services/apiClient";
+import { api } from "../services/apiClient";
 import { useNotification } from "../store/uiStore";
 import type { SuggestionContext, SuggestionResult } from "./useAIMetrics";
 
@@ -65,7 +65,7 @@ export function useAITraining(onComplete?: () => Promise<void> | void) {
     setTraining(true);
     setTrainingError(null);
     const result = await executeAITraining(
-      () => apiClient.ai.train() as Promise<TrainingResponse>,
+      () => api.ai.train() as Promise<TrainingResponse>,
       { success, error },
       onComplete,
     );
@@ -85,7 +85,7 @@ export function useAITraining(onComplete?: () => Promise<void> | void) {
     setSuggesting(true);
     setSuggestionError(null);
     const result = await executeAISuggestion(
-      (payload) => apiClient.ai.getSuggestion(payload) as Promise<SuggestionResult>,
+      (payload) => api.ai.getSuggestion(payload) as Promise<SuggestionResult>,
       context,
       { success, error },
     );

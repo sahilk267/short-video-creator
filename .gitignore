@@ -9,3 +9,10 @@ dist
 lint_full.txt
 lint_output.txt
 server.log
+
+# Runtime media (never commit large video/audio artifacts)
+data/videos/
+data/temp/
+data/generated-images/
+data/filtered-images/
+data/exports/

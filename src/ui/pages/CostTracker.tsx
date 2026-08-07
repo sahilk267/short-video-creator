@@ -141,7 +141,7 @@ export const CostTracker: React.FC = () => {
                       <Table size="small" stickyHeader>
                         <TableHead>
                           <TableRow>
-                            <TableCell fontWeight="bold">Date</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Date</TableCell>
                             <TableCell align="right">Cost (USD)</TableCell>
                           </TableRow>
                         </TableHead>

@@ -34,7 +34,7 @@ interface PlatformStatus {
 
 const PLATFORMS = ["youtube", "instagram", "tiktok", "twitter", "facebook", "linkedin"];
 
-const RECOVERY_RECOMMENDATIONS: Record<string, Record<string, string[]>> = {
+const RECOVERY_RECOMMENDATIONS: Record<string, string[]> = {
   low: [
     "Continue current posting strategy",
     "Monitor engagement rates weekly",

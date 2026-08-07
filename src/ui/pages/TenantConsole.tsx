@@ -18,6 +18,7 @@ import {
   usePlanChangeMutation,
   useRegenerateApiKeyMutation,
   useRemoveMemberMutation,
+  useRevokeApiKeyMutation,
   useUpdateWorkspaceMutation,
 } from "../hooks/useTenantMutation";
 

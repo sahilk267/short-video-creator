@@ -36,8 +36,30 @@ export interface AuthResult {
   error?: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
+const jwtSecretCandidate = process.env.JWT_SECRET || "";
+const insecureDefaults = new Set([
+  "change-this-to-a-random-secret-at-least-32-chars",
+  "change-me-in-production",
+  "change_me",
+  "secret",
+  "password",
+]);
+if (
+  !jwtSecretCandidate ||
+  jwtSecretCandidate.length < 32 ||
+  insecureDefaults.has(jwtSecretCandidate.toLowerCase())
+) {
+  throw new Error(
+    "JWT_SECRET environment variable is required and must be a unique secret at least 32 characters long. " +
+      "Generate one with: openssl rand -hex 32",
+  );
+}
+const JWT_SECRET = jwtSecretCandidate;
 const TOKEN_TTL_SEC = 3600;
+
+export function verifyJwtToken(token: string): AuthToken | null {
+  return verifyJwt(token, JWT_SECRET);
+}
 
 function generateApiKey(): string {
   return "ace_" + crypto.randomBytes(24).toString("hex");

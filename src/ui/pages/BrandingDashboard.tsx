@@ -168,7 +168,7 @@ const BrandingDashboard: React.FC = () => {
                     value={form.colors?.[key as keyof typeof form.colors] || '#000000'}
                     onChange={(e) => setForm(f => ({
                       ...f,
-                      colors: { ...f.colors, [key]: e.target.value }
+                      colors: { ...(f.colors ?? ({} as BrandingConfig["colors"])), [key]: e.target.value }
                     }))}
                     style={{ width: 50, height: 40, borderRadius: 4, cursor: 'pointer' }}
                   />
@@ -176,7 +176,7 @@ const BrandingDashboard: React.FC = () => {
                     value={form.colors?.[key as keyof typeof form.colors] || ''}
                     onChange={(e) => setForm(f => ({
                       ...f,
-                      colors: { ...f.colors, [key]: e.target.value }
+                      colors: { ...(f.colors ?? ({} as BrandingConfig["colors"])), [key]: e.target.value }
                     }))}
                     size="small"
                     placeholder="#000000"
@@ -240,7 +240,7 @@ const BrandingDashboard: React.FC = () => {
               <Typography variant="subtitle2" gutterBottom>Light Logo (URL or Base64)</Typography>
               <TextField
                 value={form.logo?.light || ''}
-                onChange={(e) => setForm(f => ({ ...f, logo: { ...f.logo, light: e.target.value } }))}
+                onChange={(e) => setForm(f => ({ ...f, logo: { ...(f.logo ?? ({} as BrandingConfig["logo"])), light: e.target.value } }))}
                 fullWidth
                 size="small"
                 multiline
@@ -252,7 +252,7 @@ const BrandingDashboard: React.FC = () => {
               <Typography variant="subtitle2" gutterBottom>Dark Logo (URL or Base64)</Typography>
               <TextField
                 value={form.logo?.dark || ''}
-                onChange={(e) => setForm(f => ({ ...f, logo: { ...f.logo, dark: e.target.value } }))}
+                onChange={(e) => setForm(f => ({ ...f, logo: { ...(f.logo ?? ({} as BrandingConfig["logo"])), dark: e.target.value } }))}
                 fullWidth
                 size="small"
                 multiline
@@ -273,7 +273,7 @@ const BrandingDashboard: React.FC = () => {
               <TextField
                 label="Font Family"
                 value={form.typography?.fontFamily || ''}
-                onChange={(e) => setForm(f => ({ ...f, typography: { ...f.typography, fontFamily: e.target.value } }))}
+                onChange={(e) => setForm(f => ({ ...f, typography: { ...(f.typography ?? ({} as BrandingConfig["typography"])), fontFamily: e.target.value } }))}
                 fullWidth
                 size="small"
                 placeholder="'Inter', 'Roboto', sans-serif"
@@ -284,7 +284,7 @@ const BrandingDashboard: React.FC = () => {
                 label="Heading Weight"
                 type="number"
                 value={form.typography?.headingWeight || 700}
-                onChange={(e) => setForm(f => ({ ...f, typography: { ...f.typography, headingWeight: parseInt(e.target.value) } }))}
+                onChange={(e) => setForm(f => ({ ...f, typography: { ...(f.typography ?? ({} as BrandingConfig["typography"])), headingWeight: parseInt(e.target.value) } }))}
                 fullWidth
                 size="small"
                 inputProps={{ min: 100, max: 900, step: 100 }}
@@ -295,7 +295,7 @@ const BrandingDashboard: React.FC = () => {
                 label="Body Weight"
                 type="number"
                 value={form.typography?.bodyWeight || 400}
-                onChange={(e) => setForm(f => ({ ...f, typography: { ...f.typography, bodyWeight: parseInt(e.target.value) } }))}
+                onChange={(e) => setForm(f => ({ ...f, typography: { ...(f.typography ?? ({} as BrandingConfig["typography"])), bodyWeight: parseInt(e.target.value) } }))}
                 fullWidth
                 size="small"
                 inputProps={{ min: 100, max: 900, step: 100 }}

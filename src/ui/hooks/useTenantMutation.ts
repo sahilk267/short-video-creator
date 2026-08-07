@@ -70,7 +70,7 @@ export function useRegenerateApiKeyMutation(tenantId?: string, onDone?: () => vo
     (payload) =>
       api.tenants.keys.update(tenantId || "", {
         action: "regenerate",
-        keyId: payload.keyId,
+        keyId: (payload as { keyId: string }).keyId,
       }) as Promise<{ id: string; value?: string }>,
     { onSuccess: () => onDone?.() },
   );
@@ -78,7 +78,7 @@ export function useRegenerateApiKeyMutation(tenantId?: string, onDone?: () => vo
 
 export function useRevokeApiKeyMutation(tenantId?: string, onDone?: () => void) {
   return useMutation<void, { keyId: string }>(
-    (payload) => api.tenants.keys.delete(tenantId || "", payload.keyId) as Promise<void>,
+    (payload) => api.tenants.keys.delete(tenantId || "", (payload as { keyId: string }).keyId) as Promise<void>,
     { onSuccess: () => onDone?.() },
   );
 }
@@ -88,7 +88,7 @@ export function usePlanChangeMutation(tenantId?: string, onDone?: () => void) {
     (payload) =>
       api.tenants.logs.write(tenantId || "", "billing", {
         action: "plan-change",
-        plan: payload.plan,
+        plan: (payload as { plan: "free" | "starter" | "pro" | "enterprise" }).plan,
       }) as Promise<void>,
     { onSuccess: () => onDone?.() },
   );
@@ -106,11 +106,13 @@ export function useCancelSubscriptionMutation(tenantId?: string, onDone?: () => 
 
 export function useIntegrationToggleMutation(tenantId?: string, onDone?: () => void) {
   return useMutation<void, { integrationId: string; connected: boolean }>(
-    (payload) =>
-      api.tenants.logs.write(tenantId || "", "integrations", {
-        action: payload.connected ? "connect" : "disconnect",
-        integrationId: payload.integrationId,
-      }) as Promise<void>,
+    (payload) => {
+      const p = payload as { integrationId: string; connected: boolean };
+      return api.tenants.logs.write(tenantId || "", "integrations", {
+        action: p.connected ? "connect" : "disconnect",
+        integrationId: p.integrationId,
+      }) as Promise<void>;
+    },
     { onSuccess: () => onDone?.() },
   );
 }

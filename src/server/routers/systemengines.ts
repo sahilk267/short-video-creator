@@ -11,6 +11,7 @@ import { CredentialRotationEngine } from "../../services/CredentialRotationEngin
 import { CreatorKnowledgeBase } from "../../services/CreatorKnowledgeBase";
 import { MarketingEngine } from "../../services/MarketingEngine";
 import type { Config } from "../../config";
+import { requireAdminKey } from "../auth";
 
 
 export class SystemEnginesRouter {
@@ -116,27 +117,27 @@ export class SystemEnginesRouter {
       res.json({ status: "ok" });
     });
 
-    // ─── Export Engine ───
-    this.router.post("/export", async (req: Request, res: Response) => {
+    // ─── Export Engine (admin-only) ───
+    this.router.post("/export", requireAdminKey, async (req: Request, res: Response) => {
       const { type = "full_backup", format = "json" } = req.body;
       try {
         const manifest = await this.exporter.exportContent(this.dataDirPath, type, format);
         res.json({ status: "ok", data: manifest });
       } catch (err) { res.status(500).json({ error: String(err) }); }
     });
-    this.router.post("/export/backup", async (_req: Request, res: Response) => {
+    this.router.post("/export/backup", requireAdminKey, async (_req: Request, res: Response) => {
       try {
         const manifest = await this.exporter.backupAll(this.dataDirPath);
         res.json({ status: "ok", data: manifest });
       } catch (err) { res.status(500).json({ error: String(err) }); }
     });
-    this.router.post("/export/restore", async (req: Request, res: Response) => {
-      const { exportPath, targetPath } = req.body;
+    this.router.post("/export/restore", requireAdminKey, async (req: Request, res: Response) => {
+      const { exportPath } = req.body;
       if (!exportPath) { res.status(400).json({ error: "exportPath required" }); return; }
-      const result = await this.exporter.restore(exportPath, targetPath || this.dataDirPath);
+      const result = await this.exporter.restore(exportPath, this.dataDirPath);
       res.json({ status: "ok", data: result });
     });
-    this.router.get("/export/list", (_req: Request, res: Response) => {
+    this.router.get("/export/list", requireAdminKey, (_req: Request, res: Response) => {
       res.json({ status: "ok", data: this.exporter.getExports() });
     });
 
@@ -183,10 +184,10 @@ export class SystemEnginesRouter {
       if (!payload) { res.status(401).json({ error: "Invalid or expired token" }); return; }
       res.json({ status: "ok", data: payload });
     });
-    this.router.get("/auth/tenants", (_req: Request, res: Response) => {
+    this.router.get("/auth/tenants", requireAdminKey, (_req: Request, res: Response) => {
       res.json({ status: "ok", data: this.auth.getTenants() });
     });
-    this.router.post("/auth/rotate/:tenantId", (req: Request, res: Response) => {
+    this.router.post("/auth/rotate/:tenantId", requireAdminKey, (req: Request, res: Response) => {
       try {
         const result = this.auth.rotateCredentials(req.params.tenantId);
         res.json({ status: "ok", data: result });

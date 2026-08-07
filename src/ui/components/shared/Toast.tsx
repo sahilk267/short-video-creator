@@ -9,7 +9,7 @@ import {
   AlertProps,
   SnackbarCloseReason,
 } from "@mui/material";
-import { useUIStore } from "../store/uiStore";
+import { useUIStore } from "../../store/uiStore";
 
 export interface ToastProps {
   anchorOrigin?: {

@@ -55,6 +55,7 @@ export class TenantStore {
     workspaceName: string;
     tier: TenantTier;
     apiKeys?: Record<string, string>;
+    encryptedApiKeys?: Record<string, string>;
   }): Promise<TenantRecord> {
     const current = await this.readAll();
     const now = new Date().toISOString();
@@ -62,7 +63,8 @@ export class TenantStore {
       id: cuid(),
       workspaceName: params.workspaceName,
       tier: params.tier,
-      apiKeys: params.apiKeys ?? {},
+      apiKeys: {},
+      encryptedApiKeys: params.encryptedApiKeys ?? {},
       engineConfig: {},
       createdAt: now,
       updatedAt: now,

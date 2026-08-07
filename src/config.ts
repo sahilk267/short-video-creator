@@ -5,6 +5,19 @@ import fs from "fs-extra";
 import pino from "pino";
 import { kokoroModelPrecision, whisperModels } from "./types/shorts";
 
+function expandHomeDir(value: string | undefined): string | undefined {
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+  if (value === "~") {
+    return os.homedir();
+  }
+  if (value.startsWith("~/") || value.startsWith("~\\")) {
+    return path.join(os.homedir(), value.slice(2));
+  }
+  return value;
+}
+
 const defaultLogLevel: pino.Level = "info";
 const defaultPort = 3123;
 const whisperVersion = "1.7.1";
@@ -33,6 +46,19 @@ export const logger = isRunningInDocker
         "facebookAccessToken",
         "slackWebhookUrl",
         "pagerDutyRoutingKey",
+        "linkedinAccessToken",
+        "twitterAccessToken",
+        "twitterApiKey",
+        "apiKey",
+        "apiKeys",
+        "api_key",
+        "customHeaders",
+        "req.body",
+        "req.headers",
+        "input",
+        "targetPath",
+        "newValue",
+        "value",
       ],
     })
   : pino({
@@ -90,8 +116,8 @@ export class Config {
   public logLevel: pino.Level;
   public whisperVerbose: boolean;
   public port: number;
-  public runningInDocker: boolean;
-  public devMode: boolean;
+  public runningInDocker: boolean = process.env.DOCKER === "true";
+  public devMode: boolean = process.env.DEV === "true";
   public whisperVersion: string = whisperVersion;
   public whisperModel: whisperModels = defaultWhisperModel;
   public kokoroModelPrecision: kokoroModelPrecision = "fp32";
@@ -101,7 +127,7 @@ export class Config {
   public videoCacheSizeInBytes: number | null = null;
   public useAiImages: boolean = false;
   public aiLlmUrl: string = "http://localhost:12434";
-  public aiLlmModel: string = "docker.io/ai/llama3.2:latest";
+  public aiLlmModel: string = "llama3";
 
   // Phase 4: Redis / BullMQ
   public redisHost: string = "localhost";
@@ -127,12 +153,18 @@ export class Config {
   public cronInterval: string = "*/30 * * * *";
 
   constructor() {
+    const dataDirPathEnv = expandHomeDir(process.env.DATA_DIR_PATH);
     this.dataDirPath =
-      process.env.DATA_DIR_PATH ||
-      path.join(os.homedir(), ".ai-agents-az-video-generator");
+      dataDirPathEnv ||
+      (this.runningInDocker ? "/app/data" : path.join(os.homedir(), ".ai-agents-az-video-generator"));
     this.libsDirPath = path.join(this.dataDirPath, "libs");
 
-    this.whisperInstallPath = process.env.WHISPER_INSTALL_PATH || path.join(this.dataDirPath, "libs", "whisper");
+    const whisperInstallPathEnv = expandHomeDir(process.env.WHISPER_INSTALL_PATH);
+    this.whisperInstallPath =
+      whisperInstallPathEnv ||
+      (this.runningInDocker
+        ? path.join("/app", "libs", "whisper")
+        : path.join(this.dataDirPath, "libs", "whisper"));
     this.videosDirPath = path.join(this.dataDirPath, "videos");
     this.tempDirPath = path.join(this.dataDirPath, "temp");
     this.logsDirPath = path.join(this.dataDirPath, "logs");
@@ -178,8 +210,10 @@ export class Config {
     }
 
     this.useAiImages = process.env.USE_AI_IMAGES === "true";
-    this.aiLlmUrl = process.env.AI_LLM_URL || "http://localhost:12434";
-    this.aiLlmModel = process.env.AI_LLM_MODEL || "docker.io/ai/llama3.2:latest";
+    this.aiLlmUrl = process.env.AI_LLM_URL || (this.runningInDocker
+      ? "http://host.docker.internal:12434"
+      : "http://localhost:12434");
+    this.aiLlmModel = process.env.AI_LLM_MODEL || "llama3";
 
   // Phase 4: Redis
   this.redisHost = process.env.REDIS_HOST || "localhost";
@@ -240,3 +274,7 @@ export class Config {
 }
 
 export const KOKORO_MODEL = "onnx-community/Kokoro-82M-v1.0-ONNX";
+
+export function isDevMode(): boolean {
+  return process.env.DEV === "true";
+}

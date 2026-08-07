@@ -150,7 +150,13 @@ export class ExportEngine {
       fs.ensureDirSync(targetDirPath);
       for (const [filename, content] of Object.entries(data.data)) {
         try {
-          fs.writeJsonSync(path.join(targetDirPath, filename), content, { spaces: 2 });
+          const safeName = path.basename(filename);
+          const target = path.join(targetDirPath, safeName);
+          if (path.dirname(target) !== path.resolve(targetDirPath)) {
+            errors.push(`Skipped unsafe filename: ${filename}`);
+            continue;
+          }
+          fs.writeJsonSync(target, content, { spaces: 2 });
           filesRestored++;
         } catch (err) {
           errors.push(`Failed to restore ${filename}: ${err}`);

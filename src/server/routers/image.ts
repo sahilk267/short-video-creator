@@ -8,6 +8,15 @@ import { Config } from "../../config";
 import { ImageFiltersEngine } from "../../services/ImageFiltersEngine";
 import type { FilterType, FilterOptions } from "../../services/ImageFiltersEngine";
 
+function safePathInDir(dirPath: string, fileName: string): string | null {
+  const base = path.resolve(dirPath);
+  const candidate = path.resolve(base, path.basename(fileName));
+  if (candidate !== path.join(base, path.basename(fileName))) return null;
+  if (path.dirname(candidate) !== base) return null;
+  if (!candidate.startsWith(base + path.sep)) return null;
+  return candidate;
+}
+
 export class ImageRouter {
   public router: express.Router;
   private config: Config;
@@ -82,7 +91,8 @@ export class ImageRouter {
     });
 
     this.router.get("/file/:fileName", async (req: ExpressRequest, res: ExpressResponse) => {
-      const filePath = path.join(this.config.dataDirPath, "generated-images", req.params.fileName);
+      const filePath = safePathInDir(path.join(this.config.dataDirPath, "generated-images"), req.params.fileName);
+      if (!filePath) return res.status(400).json({ error: "Invalid file name" });
       res.sendFile(filePath, (err) => {
         if (err) res.status(404).json({ error: "File not found" });
       });
@@ -165,7 +175,8 @@ export class ImageRouter {
      * Serve generated filter preview file
      */
     this.router.get("/filters/preview/file/:fileName", (req: ExpressRequest, res: ExpressResponse) => {
-      const filePath = path.join(this.config.dataDirPath, "filtered-images", req.params.fileName);
+      const filePath = safePathInDir(path.join(this.config.dataDirPath, "filtered-images"), req.params.fileName);
+      if (!filePath) return res.status(400).json({ error: "Invalid file name" });
       res.sendFile(filePath, (err) => {
         if (err) res.status(404).json({ error: "Filter preview file not found" });
       });
@@ -182,7 +193,8 @@ export class ImageRouter {
         if (!fileName) return res.status(400).json({ error: "fileName is required" });
         if (!filter) return res.status(400).json({ error: "filter is required" });
 
-        const inputPath = path.join(this.config.dataDirPath, "generated-images", fileName);
+        const inputPath = safePathInDir(path.join(this.config.dataDirPath, "generated-images"), fileName);
+        if (!inputPath) return res.status(400).json({ error: "Invalid file name" });
         const options: FilterOptions = { filter, ...rest };
 
         const ext = path.extname(fileName).toLowerCase();
@@ -218,11 +230,15 @@ export class ImageRouter {
         if (!filter) return res.status(400).json({ error: "filter is required" });
         if (fileNames.length > 20) return res.status(400).json({ error: "Max 20 files per batch" });
 
-        const inputPaths = fileNames.map((f: string) =>
-          path.join(this.config.dataDirPath, "generated-images", f),
-        );
+        const inputPaths = fileNames.map((f: string) => {
+          const safe = safePathInDir(path.join(this.config.dataDirPath, "generated-images"), f);
+          return safe;
+        });
+        if (inputPaths.some((p) => p === null)) {
+          return res.status(400).json({ error: "Invalid file name in fileNames" });
+        }
         const options: FilterOptions = { filter, ...rest };
-        const results = await this.filtersEngine.batchApplyFilter(inputPaths, options);
+        const results = await this.filtersEngine.batchApplyFilter(inputPaths as string[], options);
 
         res.json({
           status: "ok",
@@ -245,7 +261,8 @@ export class ImageRouter {
      * Serve filtered image files
      */
     this.router.get("/filtered/:fileName", (req: ExpressRequest, res: ExpressResponse) => {
-      const filePath = path.join(this.config.dataDirPath, "filtered-images", req.params.fileName);
+      const filePath = safePathInDir(path.join(this.config.dataDirPath, "filtered-images"), req.params.fileName);
+      if (!filePath) return res.status(400).json({ error: "Invalid file name" });
       res.sendFile(filePath, (err) => {
         if (err) res.status(404).json({ error: "Filtered image not found" });
       });

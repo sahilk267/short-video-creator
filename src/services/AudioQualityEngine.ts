@@ -1,6 +1,7 @@
 /* eslint-disable @remotion/deterministic-randomness */
 
 import { logger } from "../logger";
+import { isDevMode } from "../config";
 
 export interface AudioSettings {
   targetLUFS: number;
@@ -69,7 +70,12 @@ export class AudioQualityEngine {
   }
 
   detectAudioLevels(audioFile: string): { meanLUFS: number; peakLUFS: number; dynamicRange: number } {
-    logger.info({ audioFile }, "Analyzing audio levels");
+    if (!isDevMode()) {
+      throw new Error(
+        "Real audio level analysis is not implemented — random/mock levels are disabled outside DEV mode",
+      );
+    }
+    logger.info({ audioFile }, "Analyzing audio levels (DEV mock)");
     return {
       meanLUFS: -16 + Math.random() * 4,
       peakLUFS: -1 + Math.random() * 2,

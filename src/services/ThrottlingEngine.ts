@@ -148,8 +148,9 @@ export class ThrottlingEngine {
       this.save();
       return { allowed: true, remaining };
     } catch (err) {
-      logger.error({ err, tenantId }, "ThrottlingEngine.check error");
-      return { allowed: true, remaining: {} };
+      // Fail-closed: on unexpected errors deny access rather than granting it.
+      logger.error({ err, tenantId }, "ThrottlingEngine.check error — failing closed");
+      return { allowed: false, reason: "Throttle check unavailable", remaining: {} };
     }
   }
 

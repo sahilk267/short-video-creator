@@ -96,7 +96,7 @@ export interface UseScheduledJobsReturn {
   data: ScheduledJobsData | null;
   loading: boolean;
   error: string | null;
-  refresh: () => void;
+  refresh: () => Promise<void>;
 }
 
 export function useScheduledJobs(options: { autoLoad?: boolean } = {}): UseScheduledJobsReturn {

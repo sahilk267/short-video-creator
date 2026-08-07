@@ -69,6 +69,7 @@ const VideoCreator: React.FC = () => {
     subtitleFontScale: 1,
     orientation: OrientationEnum.portrait,
     musicVolume: MusicVolumeEnum.high,
+    useAiImages: false,
     videoType: VideoTypeEnum.short,
     durationLimit: 60,
   });
@@ -268,6 +269,7 @@ const VideoCreator: React.FC = () => {
         topic: selectedTopic || undefined,
         style: selectedStyle,
         hook: selectedHook || undefined,
+        scriptLanguage: config.scriptLanguage,
         keywords: keywordList,
       });
       if (res.data.scenes) {
@@ -479,7 +481,7 @@ const VideoCreator: React.FC = () => {
               sources={sources}
               trendingTopics={trendingTopics}
               hookOptions={hookOptions}
-              onCategoryChange={(category) => {
+              onCategoryChange={(category: string) => {
                 setSelectedCategory(category);
                 setSelectedSources([]);
                 setTrendingTopics([]);

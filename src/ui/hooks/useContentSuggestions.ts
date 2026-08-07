@@ -96,13 +96,13 @@ export function useEditingSuggestionsMutation() {
 
 export function useModerationMutation() {
   return useMutation<ModerationResult, { text: string }>(
-    (payload) => api.content.moderate(payload.text) as Promise<ModerationResult>,
+    (payload) => api.content.moderate((payload as { text: string }).text) as Promise<ModerationResult>,
   );
 }
 
 export function useAccessibilityMutation() {
   return useMutation<AccessibilityResult, { script: string }>(
-    (payload) => api.content.getAccessibility(payload.script) as Promise<AccessibilityResult>,
+    (payload) => api.content.getAccessibility((payload as { script: string }).script) as Promise<AccessibilityResult>,
   );
 }
 

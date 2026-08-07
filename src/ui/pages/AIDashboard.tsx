@@ -124,7 +124,7 @@ const AIDashboard: React.FC = () => {
           <ModelHealthCard data={data} loading={loading} />
         </Grid>
         <Grid item xs={12} lg={5}>
-          <TrainingJobsList data={data} loading={loading} training={training} onTrain={triggerTraining} />
+          <TrainingJobsList data={data} loading={loading} training={training} onTrain={() => void triggerTraining()} />
         </Grid>
       </Grid>
 

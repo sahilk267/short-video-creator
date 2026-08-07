@@ -479,8 +479,8 @@ function TrendHijackTab() {
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Chip label={`Format: ${result.formatSuggestion}`} color="primary" />
             <Chip label={`Confidence: ${result.confidence}%`} color={result.confidence as number > 70 ? 'success' : 'warning'} />
-            {result.isEvergreen && <Chip label="Evergreen" color="info" />}
-            {result.audioTrend && <Chip label={`🎵 ${result.audioTrend}`} variant="outlined" />}
+            {result.isEvergreen ? <Chip label="Evergreen" color="info" /> : null}
+            {result.audioTrend ? <Chip label={`🎵 ${result.audioTrend}`} variant="outlined" /> : null}
           </Box>
         </Box>
       )}
@@ -635,7 +635,7 @@ function ApprovalTab() {
                 <Button size="small" variant="contained" color="error" onClick={() => review(it.id as string, 'rejected')}>Reject</Button>
                 <Button size="small" variant="outlined" color="warning" onClick={() => review(it.id as string, 'needs_revision')}>Needs Revision</Button>
               </Box>
-              {it.comments && <Alert severity="info" sx={{ mt: 1 }}>{String(it.comments)}</Alert>}
+              {it.comments ? <Alert severity="info" sx={{ mt: 1 }}>{String(it.comments)}</Alert> : null}
             </AccordionDetails>
           </Accordion>
         );
@@ -736,7 +736,7 @@ function ValidationTab() {
             return (
               <Alert key={i} severity={iss.severity as 'error' | 'warning' | 'info'} sx={{ mb: 1 }}>
                 <strong>{String(iss.field)}</strong>: {String(iss.message)}
-                {iss.suggestion && <Typography variant="caption" display="block">💡 {String(iss.suggestion)}</Typography>}
+                {iss.suggestion ? <Typography variant="caption" display="block">💡 {String(iss.suggestion)}</Typography> : null}
               </Alert>
             );
           })}
@@ -796,24 +796,24 @@ function KnowledgeBaseTab() {
             </AccordionSummary>
             <AccordionDetails>
               <Typography variant="body2" sx={{ mb: 2 }}>{String(r.description)}</Typography>
-              {r.doList && (
+              {r.doList ? (
                 <Box sx={{ mb: 1 }}>
                   <Typography variant="subtitle2" color="success.main">✅ Do</Typography>
                   {(r.doList as string[]).map((d, j) => <Typography key={j} variant="body2">• {d}</Typography>)}
                 </Box>
-              )}
-              {r.dontList && (
+              ) : null}
+              {r.dontList ? (
                 <Box sx={{ mb: 1 }}>
                   <Typography variant="subtitle2" color="error.main">❌ Don't</Typography>
                   {(r.dontList as string[]).map((d, j) => <Typography key={j} variant="body2">• {d}</Typography>)}
                 </Box>
-              )}
-              {r.examples && (
+              ) : null}
+              {r.examples ? (
                 <Box>
                   <Typography variant="subtitle2" color="info.main">💡 Examples</Typography>
                   {(r.examples as string[]).map((e, j) => <Typography key={j} variant="body2" sx={{ fontStyle: 'italic' }}>"{e}"</Typography>)}
                 </Box>
-              )}
+              ) : null}
             </AccordionDetails>
           </Accordion>
         );
@@ -849,7 +849,7 @@ function ThrottlingTab() {
       {checkResult && (
         <Alert severity={checkResult.allowed ? 'success' : 'error'} sx={{ mb: 2 }}>
           {checkResult.allowed ? 'Request allowed' : `Blocked: ${checkResult.reason}`}
-          {checkResult.retryAfterMs && ` — Retry after ${Math.round((checkResult.retryAfterMs as number) / 1000)}s`}
+          {checkResult.retryAfterMs ? ` — Retry after ${Math.round((checkResult.retryAfterMs as number) / 1000)}s` : null}
         </Alert>
       )}
       {quotas.length > 0 && (

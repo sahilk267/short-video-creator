@@ -17,6 +17,7 @@ export interface ScriptGenerationOptions {
   style?: AutoScriptStyle;
   hook?: string;
   keywords?: string[];
+  scriptLanguage?: string;
 }
 
 type PromptStory = {
@@ -33,7 +34,7 @@ export class AiLlmGenerator {
 
   constructor(
     apiUrl: string = "http://localhost:12434",
-    model: string = "docker.io/ai/llama3.2:latest",
+    model: string = "llama3",
   ) {
     this.apiUrl = apiUrl;
     this.model = model;
@@ -45,6 +46,21 @@ export class AiLlmGenerator {
         .map((keyword) => String(keyword).trim())
         .filter(Boolean),
     )).slice(0, 8);
+  }
+
+  private languageDisplay(language: string | undefined): string {
+    switch (language) {
+      case "en":
+        return "English";
+      case "hi":
+        return "Hindi";
+      case "fr":
+        return "French";
+      case "es":
+        return "Spanish";
+      default:
+        return String(language || "English");
+    }
   }
 
   private getRelevantPriorityKeywords(
@@ -411,6 +427,7 @@ STRICT INSTRUCTIONS:
     const topicLine = options.topic ? `Topic focus: ${options.topic}` : "";
     const styleLine = options.style ? `Narrative style: ${options.style}` : "";
     const hookLine = options.hook ? `Opening hook to incorporate in scene 1: ${options.hook}` : "";
+    const languageLine = options.scriptLanguage ? `Output language: ${this.languageDisplay(options.scriptLanguage)}` : "";
     const keywordLine = options.keywords?.length ? `Priority keywords: ${options.keywords.join(", ")}` : "";
 
     const prompt = `
@@ -426,6 +443,7 @@ ${categoryLine}
 ${topicLine}
 ${styleLine}
 ${hookLine}
+${languageLine}
 ${keywordLine}
 
 STRICT INSTRUCTIONS:
@@ -610,21 +628,69 @@ JSON Format Example:
   }
 
   private extractJson(jsonStr: string): unknown {
+    const safe = (s: string) => String(s || "");
+
+    // Quick attempt: direct parse
     try {
       return JSON.parse(jsonStr);
-    } catch {
-      const arrayMatch = jsonStr.match(/\[[\s\S]*\]/);
-      if (arrayMatch) {
-        return JSON.parse(arrayMatch[0]);
+    } catch (err) {
+      // Continue to cleaning attempts
+    }
+
+    // Strip common wrappers like markdown code fences and explanatory text
+    let candidate = safe(jsonStr)
+      .replace(/```[\s\S]*?```/g, (m) => {
+        // inside code fences keep inner content
+        return m.replace(/```/g, "");
+      })
+      .replace(/\r\n/g, "\n")
+      .replace(/\u201c|\u201d|\u2018|\u2019/g, '"') // smart quotes -> normal
+      .trim();
+
+    // Find first JSON array/object and trim surrounding text
+    const arrayMatch = candidate.match(/\[[\s\S]*\]/);
+    const objectMatch = candidate.match(/\{[\s\S]*\}/);
+    if (arrayMatch) candidate = arrayMatch[0];
+    else if (objectMatch) candidate = objectMatch[0];
+
+    // Heuristics: remove trailing commas before closing brackets/braces
+    candidate = candidate.replace(/,\s*([}\]])/g, "$1");
+
+    // Replace single quotes around keys/strings with double quotes when safe
+    // Only do this if we don't already have double-quoted keys present
+    if (!/"[\s\S]*"\s*:\s*/.test(candidate) && /'[\s\S]*'\s*:\s*/.test(candidate)) {
+      candidate = candidate.replace(/'(.*?)'/g, '"$1"');
+    }
+
+    // Try parsing cleaned candidate
+    try {
+      return JSON.parse(candidate);
+    } catch (err: any) {
+      // As a last resort, attempt to salvage an array or object by extracting inner JSON-like text
+      const fallbackArray = jsonStr.match(/\[[\s\S]*\]/);
+      if (fallbackArray) {
+        try {
+          return JSON.parse(fallbackArray[0]);
+        } catch {
+          // fallthrough
+        }
       }
 
-      const objectMatch = jsonStr.match(/\{[\s\S]*\}/);
-      if (objectMatch) {
-        return JSON.parse(objectMatch[0]);
+      const fallbackObject = jsonStr.match(/\{[\s\S]*\}/);
+      if (fallbackObject) {
+        try {
+          return JSON.parse(fallbackObject[0]);
+        } catch {
+          // fallthrough
+        }
       }
     }
 
-    throw new Error("Could not parse JSON from AI LLM response");
+    // If we get here, fail with helpful diagnostic including a snippet
+    const snippet = safe(jsonStr).slice(0, 800);
+    const e: any = new Error("Could not parse JSON from AI LLM response");
+    e.snippet = snippet;
+    throw e;
   }
 
   private fallbackTopics(

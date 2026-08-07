@@ -100,7 +100,7 @@ export const PublishDashboard: React.FC = () => {
   const [publishedJobIds, setPublishedJobIds] = useState<string[]>([]);
 
   // Fetch videos list
-  const { data: videosList, isLoading: videosLoading } = useQuery(
+  const { data: videosList, isLoading: videosLoading } = useQuery<unknown[]>(
     () => api.videos.list(),
     { cacheTTL: 30000 }
   );

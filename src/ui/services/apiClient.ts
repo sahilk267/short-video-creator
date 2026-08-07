@@ -30,6 +30,27 @@ export class ApiError extends Error {
 }
 
 /**
+ * Normalize a backend response into its payload.
+ *
+ * Many endpoints return an envelope like `{ status: "ok", data: ... }`, but
+ * some return the payload directly (e.g. `{ videoId }` or a plain array).
+ * Instead of assuming `.data` always exists, unwrap only when the response is
+ * actually an envelope, and pass everything else through untouched.
+ */
+function unwrap<T>(payload: unknown): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    "status" in payload &&
+    "data" in payload
+  ) {
+    return (payload as { data: T }).data as T;
+  }
+  return payload as T;
+}
+
+/**
  * Cache entry for GET requests
  */
 interface CacheEntry<T> {
@@ -155,7 +176,7 @@ class ApiClientService {
     const requestPromise = (async () => {
       try {
         const { data } = await this.axiosInstance.get<ApiResponse<T>>(url, config);
-        const result = data.data as T;
+        const result = unwrap<T>(data);
         this.setCachedData(cacheKey, result, cacheTTL);
         this.requestCache.delete(cacheKey);
         return result;
@@ -180,7 +201,7 @@ class ApiClientService {
     const { data: responseData } = await this.axiosInstance.post<
       ApiResponse<T>
     >(url, data, config);
-    return responseData.data as T;
+    return unwrap<T>(responseData);
   }
 
   /**
@@ -194,7 +215,7 @@ class ApiClientService {
     const { data: responseData } = await this.axiosInstance.put<
       ApiResponse<T>
     >(url, data, config);
-    return responseData.data as T;
+    return unwrap<T>(responseData);
   }
 
   /**
@@ -208,7 +229,7 @@ class ApiClientService {
     const { data: responseData } = await this.axiosInstance.patch<
       ApiResponse<T>
     >(url, data, config);
-    return responseData.data as T;
+    return unwrap<T>(responseData);
   }
 
   /**
@@ -221,7 +242,7 @@ class ApiClientService {
     const { data: responseData } = await this.axiosInstance.delete<
       ApiResponse<T>
     >(url, config);
-    return responseData.data as T;
+    return unwrap<T>(responseData);
   }
 
   /**
@@ -248,7 +269,13 @@ export const api = {
       apiClient.get(`/api/short-video/${videoId}/metadata`),
     download: (videoId: string) =>
       apiClient.get(`/api/short-video/${videoId}`, { responseType: "blob" }),
-    list: () => apiClient.get("/api/short-videos"),
+    getRenderPath: (videoId: string) =>
+      apiClient.get<{ path: string }>(`/api/short-video/${videoId}/render-path`),
+    list: () =>
+      apiClient.get(`/api/short-videos`).then((raw) => {
+        const videos = (raw as { videos?: unknown[] })?.videos;
+        return Array.isArray(videos) ? videos : [];
+      }),
     delete: (videoId: string) =>
       apiClient.delete(`/api/short-video/${videoId}`),
   },
@@ -291,7 +318,7 @@ export const api = {
   // Publishing
   publish: {
     enqueue: (data: unknown) =>
-      apiClient.post("/api/publish/enqueue", data),
+      apiClient.post("/api/publish", data),
     getMetadataSuggestions: (data: unknown) =>
       apiClient.post("/api/publish/metadata-suggestions", data),
     list: () => apiClient.get("/api/publish"),
@@ -302,7 +329,7 @@ export const api = {
   // Health & Metrics
   health: {
     check: () => apiClient.get("/api/health"),
-    metrics: () => apiClient.get("/api/metrics"),
+    metrics: () => apiClient.get("/api/health/metrics"),
   },
 
   // Marketing
@@ -327,9 +354,10 @@ export const api = {
     variants: {
       create: (data: unknown) =>
         apiClient.post("/api/marketing/ab/variants", data),
-      list: () => apiClient.get("/api/marketing/ab/variants"),
+      list: (videoId: string) =>
+        apiClient.get(`/api/marketing/ab/variants/${videoId}`),
       getResults: (testId: string) =>
-        apiClient.get(`/api/marketing/ab/variants/${testId}/results`),
+        apiClient.get(`/api/abtesting/${testId}/analyze`),
       assign: (videoId: string) =>
         apiClient.post(`/api/marketing/ab/assign/${videoId}`, {}),
     },
@@ -380,6 +408,10 @@ export const api = {
         apiClient.get(`/api/tenants/${tenantId}/keys`),
       create: (tenantId: string, data: unknown) =>
         apiClient.post(`/api/tenants/${tenantId}/keys`, data),
+      update: (tenantId: string, data: unknown) =>
+        apiClient.post(`/api/tenants/${tenantId}/keys`, data),
+      regenerate: (tenantId: string, data: unknown) =>
+        apiClient.post(`/api/tenants/${tenantId}/keys`, data),
       delete: (tenantId: string, keyId: string) =>
         apiClient.delete(`/api/tenants/${tenantId}/keys/${keyId}`),
     },
@@ -413,6 +445,8 @@ export const api = {
     list: () => apiClient.get("/api/channel-configs"),
     create: (data: unknown) =>
       apiClient.post("/api/channel-configs", data),
+    remove: (id: string) =>
+      apiClient.delete(`/api/channel-configs/${id}`),
   },
 };
 
