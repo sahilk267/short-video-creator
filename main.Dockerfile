@@ -55,7 +55,7 @@ ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 
 FROM base AS prod-deps
-COPY package.json pnpm-lock.yaml* /app/
+COPY package.json pnpm-lock.yaml* .pnpmfile.cjs /app/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 RUN pnpm install --prefer-offline --no-cache --prod
 
@@ -68,6 +68,7 @@ ENV HF_HOME=/app/cache/huggingface
 COPY tsconfig.json /app
 COPY tsconfig.build.json /app
 COPY vite.config.ts /app
+COPY .pnpmfile.cjs /app
 COPY src /app/src
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm build
