@@ -35,10 +35,19 @@ export interface LlmProviderOptions {
   openrouterApiKey?: string;
   openrouterUrl?: string;
   openrouterModel?: string;
+  openrouterModels?: string[];
 }
 
 const DEFAULT_OPENROUTER_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-chat-v3-0324:free";
+const DEFAULT_OPENROUTER_MODEL = "google/gemma-4-26b-a4b-it:free";
+const DEFAULT_OPENROUTER_MODELS: string[] = [
+  "google/gemma-4-26b-a4b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "poolside/laguna-s-2.1:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "nvidia/nemotron-nano-9b-v2:free",
+  "inclusionai/ling-3.0-tiny:free",
+];
 
 let defaultLlmOptions: LlmProviderOptions = {};
 
@@ -71,13 +80,22 @@ export class AiLlmGenerator {
     return options.provider !== "ollama";
   }
 
+  private openRouterModelsList(): string[] {
+    const options = this.effectiveOptions();
+    if (options.openrouterModels && options.openrouterModels.length > 0) {
+      return options.openrouterModels;
+    }
+    const explicit = options.openrouterModel || DEFAULT_OPENROUTER_MODEL;
+    return [explicit, ...DEFAULT_OPENROUTER_MODELS.filter((model) => model !== explicit)];
+  }
+
   private async complete(prompt: string, format?: "json" | "text"): Promise<string> {
     if (this.useOpenRouter()) {
       try {
         return await this.completeOpenRouter(prompt, format);
       } catch (error: any) {
         console.warn(
-          "[AiLlmGenerator] OpenRouter request failed, falling back to Ollama:",
+          "[AiLlmGenerator] All OpenRouter models failed, falling back to Ollama:",
           error?.response?.data?.error?.message || error?.message,
         );
       }
@@ -88,38 +106,57 @@ export class AiLlmGenerator {
   private async completeOpenRouter(prompt: string, format?: "json" | "text"): Promise<string> {
     const options = this.effectiveOptions();
     const baseUrl = (options.openrouterUrl || DEFAULT_OPENROUTER_URL).replace(/\/+$/, "");
-    const model = options.openrouterModel || DEFAULT_OPENROUTER_MODEL;
-    const body: Record<string, unknown> = {
-      model,
-      messages: [
-        {
-          role: "system",
-          content: format === "json"
-            ? "You are a precise assistant. Respond ONLY with valid JSON matching the exact structure requested, with no surrounding text or code fences."
-            : "You are a precise assistant. Respond only with the requested output and no extra commentary.",
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 4000,
-      stream: false,
-    };
-    const response = await axios.post(`${baseUrl}/chat/completions`, body, {
-      headers: {
-        Authorization: `Bearer ${options.openrouterApiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/sahilk267/short-video-creator",
-        "X-Title": "Short Video Creator",
-      },
-      timeout: 120000,
-    });
-    const content = response?.data?.choices?.[0]?.message?.content;
-    if (typeof content !== "string" || !content.trim()) {
-      const error: any = new Error("OpenRouter returned no completion content");
-      error.rawResponse = JSON.stringify(response?.data);
-      throw error;
+    const models = this.openRouterModelsList();
+    const lastError: any = {};
+
+    for (const model of models) {
+      try {
+        const body: Record<string, unknown> = {
+          model,
+          messages: [
+            {
+              role: "system",
+              content: format === "json"
+                ? "You are a precise assistant. Respond ONLY with valid JSON matching the exact structure requested, with no surrounding text or code fences."
+                : "You are a precise assistant. Respond only with the requested output and no extra commentary.",
+            },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+          stream: false,
+        };
+        const response = await axios.post(`${baseUrl}/chat/completions`, body, {
+          headers: {
+            Authorization: `Bearer ${options.openrouterApiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/sahilk267/short-video-creator",
+            "X-Title": "Short Video Creator",
+          },
+          timeout: 120000,
+        });
+        const content = response?.data?.choices?.[0]?.message?.content;
+        if (typeof content !== "string" || !content.trim()) {
+          const error: any = new Error("OpenRouter returned no completion content");
+          error.rawResponse = JSON.stringify(response?.data);
+          throw error;
+        }
+        console.log(`[AiLlmGenerator] OpenRouter model "${model}" responded (${content.trim().length} chars)`);
+        return content.trim();
+      } catch (error: any) {
+        lastError.error = error;
+        console.warn(
+          `[AiLlmGenerator] OpenRouter model "${model}" failed, trying next:`,
+          error?.response?.data?.error?.message || error?.message,
+        );
+      }
     }
-    return content.trim();
+
+    const error = lastError.error || new Error("OpenRouter request failed for all models");
+    if (!error.response?.data) {
+      error.rawResponse = JSON.stringify(error.response?.data || error.message);
+    }
+    throw error;
   }
 
   private async completeOllama(prompt: string, format?: "json" | "text"): Promise<string> {
@@ -551,7 +588,7 @@ JSON Format Example:
 ]
 `;
 
-    console.log(`Sending prompt to AI LLM (${this.useOpenRouter() ? "OpenRouter" : "Ollama"}) using model ${this.useOpenRouter() ? (this.effectiveOptions().openrouterModel || DEFAULT_OPENROUTER_MODEL) : this.model}`);
+    console.log(`Sending prompt to AI LLM (${this.useOpenRouter() ? "OpenRouter" : "Ollama"}) using model ${this.useOpenRouter() ? this.openRouterModelsList().join(", ") : this.model}`);
     try {
       const jsonStr = await this.complete(prompt, "json");
 

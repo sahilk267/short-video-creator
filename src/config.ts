@@ -129,7 +129,8 @@ export class Config {
   public aiLlmProvider: "openrouter" | "ollama" = "ollama";
   public openrouterApiKey: string = "";
   public openrouterUrl: string = "https://openrouter.ai/api/v1";
-  public openrouterModel: string = "deepseek/deepseek-chat-v3-0324:free";
+  public openrouterModel: string = "google/gemma-4-26b-a4b-it:free";
+  public openrouterModels: string[] = [];
 
   // Phase 4: Redis / BullMQ
   public redisHost: string = "localhost";
@@ -220,7 +221,11 @@ export class Config {
     this.aiLlmModel = process.env.AI_LLM_MODEL || "llama3";
     this.openrouterApiKey = process.env.OPENROUTER_API_KEY || "";
     this.openrouterUrl = process.env.OPENROUTER_URL || "https://openrouter.ai/api/v1";
-    this.openrouterModel = process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3-0324:free";
+    this.openrouterModel = process.env.OPENROUTER_MODEL || "google/gemma-4-26b-a4b-it:free";
+    this.openrouterModels = (process.env.OPENROUTER_MODELS || "")
+      .split(",")
+      .map((model) => model.trim())
+      .filter(Boolean);
     this.aiLlmProvider = process.env.AI_LLM_PROVIDER === "ollama"
       ? "ollama"
       : (this.openrouterApiKey ? "openrouter" : "ollama");

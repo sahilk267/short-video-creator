@@ -53,6 +53,7 @@ export class APIRouter {
       openrouterApiKey: config.openrouterApiKey,
       openrouterUrl: config.openrouterUrl,
       openrouterModel: config.openrouterModel,
+      openrouterModels: config.openrouterModels,
     });
 
     this.router.use(express.json());
