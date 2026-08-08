@@ -425,6 +425,7 @@ bash database/seed.sh
 | [`docs/API.md`](docs/API.md) | Full REST API reference |
 | [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) | All JSON store schemas |
 | [`docs/CLIENT_PROFILES.md`](docs/CLIENT_PROFILES.md) | Client profiles & multi-account publishing reference |
+| [`docs/TESTING_CHECKLIST.md`](docs/TESTING_CHECKLIST.md) | Page-by-page manual testing checklist (44 pages) |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Deployment guides (VPS, Docker, PM2, systemd) |
 | [`docs/postman_collection.json`](docs/postman_collection.json) | Importable Postman collection |
 | [`.env.example`](.env.example) | All environment variables with descriptions |
