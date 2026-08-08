@@ -12,8 +12,8 @@ RUN apt install -y \
 WORKDIR /whisper
 RUN git clone https://github.com/ggml-org/whisper.cpp.git .
 RUN git checkout v1.7.1
-RUN make MK_CFLAGS='-std=c11 -fPIC -O3 -march=armv8.2-a+fp16' \
-    MK_CXXFLAGS='-std=c++11 -fPIC -O3 -march=armv8.2-a+fp16' \
+RUN make MK_CFLAGS='-std=c11 -fPIC -O3' \
+    MK_CXXFLAGS='-std=c++11 -fPIC -O3' \
     LDFLAGS='-fopenmp'
 WORKDIR /whisper/models
 RUN sh ./download-ggml-model.sh base.en
