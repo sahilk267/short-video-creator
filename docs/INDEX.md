@@ -1,6 +1,6 @@
 # Codebase Index (auto-generated)
 
-> For commit: `ab5703b` · 313 source files · 312 API endpoints · 44 pages · 18 stores
+> For commit: `ffbf410` · 313 source files · 312 API endpoints · 44 pages · 18 stores
 
 ## Files
 
