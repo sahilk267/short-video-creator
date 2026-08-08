@@ -1,0 +1,97 @@
+name: QA Auto-Index & Auto-QA
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+
+jobs:
+  # ── QA Checks (PRs) ─────────────────────────────────────────────
+  # Runs the QA scripts that are pinned to the mistake classes AI agents
+  # commonly leave behind, and enforces docs/index freshness so a PR can
+  # never merge with stale generated artifacts.
+  checks:
+    name: QA Checks
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck QA scripts
+        run: npx tsc -p tsconfig.scripts.json --noEmit
+      - name: Check AI-mistake classes
+        run: npx ts-node scripts/qa/check-ai-mistakes.ts
+      - name: Check tests exist for changed files
+        run: npx ts-node scripts/qa/check-test-existence.ts
+      - name: Check docs & index are not stale
+        run: npx ts-node scripts/qa/check-docs-consistency.ts
+      - name: Strict lint on changed files (no tolerance)
+        run: |
+          base="$(git merge-base origin/main HEAD || git rev-parse HEAD^ || echo HEAD)"
+          changed="$(git diff --name-only "$base" HEAD -- 'src/**/*.ts' 'src/**/*.tsx' || true)"
+          if [ -n "$changed" ]; then
+            echo "Linting changed files: $changed"
+            pnpm exec eslint $changed
+          else
+            echo "No changed source files to lint."
+          fi
+
+  # ── Auto-Update (main pushes) ───────────────────────────────────
+  # Regenerates codebase-index.json, docs/INDEX.md and the AUTO-GENERATED
+  # doc sections, then commits them automatically. Commits made with
+  # GITHUB_TOKEN do not re-trigger workflows, so no infinite loop.
+  autoupdate:
+    name: Auto-Update Docs & Index
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Regenerate index + docs
+        run: |
+          npx ts-node scripts/qa/generate-index.ts
+          npx ts-node scripts/qa/generate-docs.ts
+      - name: Commit generated artifacts if changed
+        id: commit
+        run: |
+          git config user.name "qa-bot[bot]"
+          git config user.email "qa-bot@users.noreply.github.com"
+          git add codebase-index.json docs/INDEX.md docs/API.md docs/SYSTEM_MAP.md docs/DATABASE_SCHEMA.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore(qa): auto-update codebase index and docs [skip ci]"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Push generated artifacts
+        if: steps.commit.outputs.changed == 'true'
+        run: git push origin HEAD:main

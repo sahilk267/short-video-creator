@@ -336,6 +336,26 @@ curl -X POST http://localhost:3123/api/oauth/youtube/connect \
 
 ---
 
+## Automated QA & Self-Updating Docs
+
+The repo ships with a QA gate (`npm run qa`) plus a GitHub Actions workflow (`.github/workflows/qa.yml`) that:
+
+- **Checks AI-mistake classes** on every PR — hardcoded secrets/placeholders, `@ts-ignore`, stray `console.log`, TODO/FIXME markers, duplicate React routes (`scripts/qa/check-ai-mistakes.ts`).
+- **Requires tests** for new/changed source files (`scripts/qa/check-test-existence.ts`).
+- **Detects docs drift** — every documented endpoint must exist in source; AUTO-GENERATED sections must be up to date (`scripts/qa/check-docs-consistency.ts`).
+- **Auto-updates on push to `main`** — regenerates `codebase-index.json`, `docs/INDEX.md`, and the AUTO-GENERATED sections of `docs/API.md`, `docs/SYSTEM_MAP.md`, `docs/DATABASE_SCHEMA.md`, then commits them (via `GITHUB_TOKEN`, which does not re-trigger workflows).
+
+```bash
+npm run qa           # check → regenerate → verify no drift
+npm run qa:check     # run the three checks (fails on violations)
+npm run qa:generate  # regenerate index + docs sections
+npm run qa:typecheck # typecheck the QA scripts themselves
+```
+
+See [`docs/TESTING_CHECKLIST.md`](docs/TESTING_CHECKLIST.md) for the manual testing checklist.
+
+---
+
 ## 60 AI Engines
 
 Accessible via the web UI or REST API:
@@ -425,6 +445,7 @@ bash database/seed.sh
 | [`docs/API.md`](docs/API.md) | Full REST API reference |
 | [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) | All JSON store schemas |
 | [`docs/CLIENT_PROFILES.md`](docs/CLIENT_PROFILES.md) | Client profiles & multi-account publishing reference |
+| [`docs/INDEX.md`](docs/INDEX.md) | Auto-generated codebase index (files, routes, pages, stores) |
 | [`docs/TESTING_CHECKLIST.md`](docs/TESTING_CHECKLIST.md) | Page-by-page manual testing checklist (44 pages) |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Deployment guides (VPS, Docker, PM2, systemd) |
 | [`docs/postman_collection.json`](docs/postman_collection.json) | Importable Postman collection |

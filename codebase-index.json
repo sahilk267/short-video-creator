@@ -1,0 +1,7030 @@
+{
+  "commit": "cdbff17",
+  "summary": {
+    "files": 313,
+    "endpoints": 312,
+    "pages": 44,
+    "stores": 18
+  },
+  "files": [
+    {
+      "path": "src/agents/agent-loop.service.ts",
+      "type": "module",
+      "responsibility": "Agent Loop Service - Lightweight orchestration for self-improving pipeline Coordinates feedback, retries, and memory without heavy frameworks",
+      "exports": [
+        "AgentLoopConfig",
+        "AgentLoopService",
+        "AgentResult",
+        "GenerationAttempt"
+      ]
+    },
+    {
+      "path": "src/aggregator/ReportMerger.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "ReportMerger",
+        "ScriptPlan",
+        "ScriptScene"
+      ]
+    },
+    {
+      "path": "src/assets/asset.service.ts",
+      "type": "module",
+      "responsibility": "Asset Service - Multi-source fallback for video assets Gracefully falls back when primary source (Pexels) fails",
+      "exports": [
+        "AssetService",
+        "AssetSource",
+        "FallbackAsset"
+      ]
+    },
+    {
+      "path": "src/components/root/Root.tsx",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "RemotionRoot",
+        "calculateMetadata"
+      ]
+    },
+    {
+      "path": "src/components/root/index.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/components/types.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "AvailableComponentsEnum",
+        "OrientationConfig"
+      ]
+    },
+    {
+      "path": "src/components/utils.ts",
+      "type": "module",
+      "responsibility": "Check if we need to start a new page due to time gap",
+      "exports": [
+        "calculateVolume",
+        "createCaptionPages",
+        "getOrientationConfig",
+        "shortVideoSchema"
+      ]
+    },
+    {
+      "path": "src/components/videos/LandscapeVideo.tsx",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "LandscapeVideo"
+      ]
+    },
+    {
+      "path": "src/components/videos/LongFormVideo.tsx",
+      "type": "module",
+      "responsibility": "LongFormVideo – Phase 3.2 Remotion component for 16:9 landscape long-form video (YouTube standard). Supports chapters derived from scenes, bottom captions, B-roll + music.",
+      "exports": [
+        "LongFormVideo"
+      ]
+    },
+    {
+      "path": "src/components/videos/NewsOverlay.tsx",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "NewsOverlay"
+      ]
+    },
+    {
+      "path": "src/components/videos/PortraitVideo.tsx",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "PortraitVideo"
+      ]
+    },
+    {
+      "path": "src/components/videos/Test.tsx",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "TestVideo"
+      ]
+    },
+    {
+      "path": "src/components/videos/fontStacks.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "videoUiFontFamily"
+      ]
+    },
+    {
+      "path": "src/config.ts",
+      "type": "config",
+      "responsibility": "Create the global logger",
+      "exports": [
+        "Config",
+        "KOKORO_MODEL",
+        "isDevMode",
+        "logger"
+      ]
+    },
+    {
+      "path": "src/config/categories.ts",
+      "type": "config",
+      "responsibility": "",
+      "exports": [
+        "CONTENT_CATEGORIES",
+        "ContentCategory",
+        "SOURCE_CATEGORIES",
+        "isContentCategory",
+        "normalizeCategory"
+      ]
+    },
+    {
+      "path": "src/config/channelRules.ts",
+      "type": "config",
+      "responsibility": "",
+      "exports": [
+        "defaultCategoryRules",
+        "getCategoryRule"
+      ]
+    },
+    {
+      "path": "src/config/featureFlags.ts",
+      "type": "config",
+      "responsibility": "Feature Flags - Control experimental features safely All new features are behind flags to maintain backward compatibility",
+      "exports": [
+        "DEFAULT_FEATURE_FLAGS",
+        "FeatureFlags",
+        "SAFE_PRODUCTION_FLAGS",
+        "getFeatureFlags"
+      ]
+    },
+    {
+      "path": "src/config/languageSupport.ts",
+      "type": "config",
+      "responsibility": "",
+      "exports": [
+        "SupportedLanguageOption",
+        "defaultVoiceForLanguage",
+        "labelForLanguage",
+        "supportedCreateLanguages",
+        "supportedLanguageCodes",
+        "toSpeechSynthesisLocale"
+      ]
+    },
+    {
+      "path": "src/config/validate.ts",
+      "type": "config",
+      "responsibility": "Environment Variables Validation Call validateEnvironment() early in startup to: 1. Catch missing required vars before the server boots 2. Warn about missing optional-but-recommended vars 3. Validate ",
+      "exports": [
+        "runEnvironmentValidation",
+        "validateEnvironment"
+      ]
+    },
+    {
+      "path": "src/db/ABVariantStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "ABVariantRecord",
+        "ABVariantStore"
+      ]
+    },
+    {
+      "path": "src/db/AiLearningStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "AiLearningStore",
+        "LearningEvent",
+        "LearningModelState",
+        "LearningOutcome"
+      ]
+    },
+    {
+      "path": "src/db/AnalyticsStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "AnalyticsRecord",
+        "AnalyticsStore"
+      ]
+    },
+    {
+      "path": "src/db/AudienceStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "AudienceStore",
+        "AudienceTargetRecord"
+      ]
+    },
+    {
+      "path": "src/db/ChannelConfigStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "ChannelConfigRecord",
+        "ChannelConfigStore"
+      ]
+    },
+    {
+      "path": "src/db/CustomNewsSourceStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "CustomNewsSourceRecord",
+        "CustomNewsSourceStore"
+      ]
+    },
+    {
+      "path": "src/db/PipelineStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "AIScores",
+        "ComparisonRun",
+        "GeneratedVariation",
+        "PipelineJob",
+        "PipelineStatus",
+        "PipelineStore",
+        "PlatformComparisonEntry"
+      ]
+    },
+    {
+      "path": "src/db/ProfileAccountStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "ProfileAccountStore"
+      ]
+    },
+    {
+      "path": "src/db/ProfileStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "ProfileStore"
+      ]
+    },
+    {
+      "path": "src/db/PublishJobStore.ts",
+      "type": "db",
+      "responsibility": "Idempotency check: same render output + platform + channel",
+      "exports": [
+        "PublishJobStore"
+      ]
+    },
+    {
+      "path": "src/db/RenderJobStore.ts",
+      "type": "db",
+      "responsibility": "Find existing job with same idempotency key",
+      "exports": [
+        "RenderJobStore"
+      ]
+    },
+    {
+      "path": "src/db/ReportStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "ReportRecord",
+        "ReportStatus",
+        "ReportStore"
+      ]
+    },
+    {
+      "path": "src/db/ScheduleStore.ts",
+      "type": "db",
+      "responsibility": "Calculate next run based on cron expression (simplified)",
+      "exports": [
+        "ScheduleRecord",
+        "ScheduleStore"
+      ]
+    },
+    {
+      "path": "src/db/ScriptPlanStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "ScriptPlanItem",
+        "ScriptPlanStore"
+      ]
+    },
+    {
+      "path": "src/db/TenantStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "TenantRecord",
+        "TenantStore",
+        "TenantTier"
+      ]
+    },
+    {
+      "path": "src/db/TenantUsageStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "TenantUsageStore",
+        "UsageRecord"
+      ]
+    },
+    {
+      "path": "src/db/VideoLibraryStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "VideoLibraryStore",
+        "VideoRecord"
+      ]
+    },
+    {
+      "path": "src/db/VideoMetadataStore.ts",
+      "type": "db",
+      "responsibility": "",
+      "exports": [
+        "VideoMetadataStore"
+      ]
+    },
+    {
+      "path": "src/enhanced-types.ts",
+      "type": "module",
+      "responsibility": "Enhanced Features Types & Interfaces Import from here for full TypeScript support with new services",
+      "exports": [
+        "ALL_FEATURES",
+        "AgentLoopConfig",
+        "AgentResult",
+        "AssetSource",
+        "AssetSourceType",
+        "AssetStats",
+        "BeatSyncConfig",
+        "EXPERIMENTAL_FEATURES",
+        "EngagementPrediction",
+        "EnhancedFeature",
+        "EnhancedPlatform",
+        "EnhancedRecommendation",
+        "EnhancedServicesRegistry",
+        "EnhancedStyle",
+        "FallbackAsset",
+        "FeatureFlag",
+        "FeedbackContext",
+        "GenerationAttempt",
+        "GenerationContext",
+        "HookOption",
+        "IssueSeverity",
+        "IssueType",
+        "MemoryStats",
+        "PLATFORMS",
+        "PatternQuery",
+        "PlatformLimits",
+        "PlatformMetadata",
+        "PlatformType",
+        "REQUIRES_FEEDBACK",
+        "REQUIRES_MEMORY",
+        "SAFE_PRODUCTION_FEATURES",
+        "STYLES",
+        "ScriptQualityIssue",
+        "StoredPattern",
+        "StoredPatternStyle",
+        "SyncStats",
+        "SyncedScene",
+        "ViabilityAssessment",
+        "ViabilityRecommendation"
+      ]
+    },
+    {
+      "path": "src/feedback/feedback.service.ts",
+      "type": "module",
+      "responsibility": "Feedback Service - Improve scripts based on scoring feedback Enables self-improving script generation within retry budget",
+      "exports": [
+        "FeedbackContext",
+        "FeedbackService",
+        "ScriptQualityIssue"
+      ]
+    },
+    {
+      "path": "src/index.ts",
+      "type": "module",
+      "responsibility": "Create a deferred ShortCreator that resolves once all heavy libs are ready.",
+      "exports": []
+    },
+    {
+      "path": "src/logger.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/memory/memory.service.ts",
+      "type": "module",
+      "responsibility": "Memory Service - Store and retrieve high-performing script patterns Enables the system to learn from successful content",
+      "exports": [
+        "MemoryService",
+        "PatternQuery",
+        "StoredPattern"
+      ]
+    },
+    {
+      "path": "src/metadata/metadata.service.ts",
+      "type": "module",
+      "responsibility": "Metadata Service - Generate platform-specific metadata Creates titles, descriptions, and hashtags optimized per platform",
+      "exports": [
+        "MetadataService",
+        "PlatformLimits",
+        "PlatformMetadata",
+        "PlatformType"
+      ]
+    },
+    {
+      "path": "src/news-fetcher/RssFetcher.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "NEWS_SOURCES",
+        "NewsSourceDefinition",
+        "NewsStory",
+        "RssFetcher"
+      ]
+    },
+    {
+      "path": "src/predict/predict.service.ts",
+      "type": "module",
+      "responsibility": "Predictive Scoring Service - Assess topic viability before generation Uses past patterns and keywords to predict engagement potential",
+      "exports": [
+        "PredictiveService",
+        "ViabilityAssessment"
+      ]
+    },
+    {
+      "path": "src/publishers/FacebookPublisher.ts",
+      "type": "publisher",
+      "responsibility": "FacebookPublisher – Full Facebook Graph API implementation Supports Reels, regular video posts, scheduled publishing, and Crossposting",
+      "exports": [
+        "FacebookPublisher"
+      ]
+    },
+    {
+      "path": "src/publishers/InstagramPublisher.ts",
+      "type": "publisher",
+      "responsibility": "InstagramPublisher – Full Instagram Graph API implementation Supports Reels, Stories, Carousels, scheduled posts, and first comments",
+      "exports": [
+        "InstagramPublisher"
+      ]
+    },
+    {
+      "path": "src/publishers/LinkedInPublisher.ts",
+      "type": "publisher",
+      "responsibility": "",
+      "exports": [
+        "LinkedInPublisher"
+      ]
+    },
+    {
+      "path": "src/publishers/PlatformLimits.ts",
+      "type": "publisher",
+      "responsibility": "",
+      "exports": [
+        "enforcePlatformMetadataLimits",
+        "getPlatformLimits",
+        "validatePublishPayload"
+      ]
+    },
+    {
+      "path": "src/publishers/PlatformPublisher.ts",
+      "type": "publisher",
+      "responsibility": "PlatformPublisher – Enhanced interface with all advanced fields",
+      "exports": [
+        "PlatformCapabilities",
+        "PlatformLimits",
+        "PlatformPublisher",
+        "PublishParams",
+        "PublishResult"
+      ]
+    },
+    {
+      "path": "src/publishers/PublisherFactory.ts",
+      "type": "publisher",
+      "responsibility": "PublisherFactory – Phase 5.2 Instantiates the right PlatformPublisher implementation for a given platform.",
+      "exports": [
+        "createPublisher",
+        "createPublisherForAccount"
+      ]
+    },
+    {
+      "path": "src/publishers/TelegramPublisher.ts",
+      "type": "publisher",
+      "responsibility": "TelegramPublisher – Phase 5.4 Sends videos to a Telegram channel via Bot API sendVideo. No OAuth needed – just BOT_TOKEN + CHANNEL_ID.",
+      "exports": [
+        "TelegramPublisher"
+      ]
+    },
+    {
+      "path": "src/publishers/XTwitterPublisher.ts",
+      "type": "publisher",
+      "responsibility": "",
+      "exports": [
+        "XTwitterPublisher"
+      ]
+    },
+    {
+      "path": "src/publishers/YouTubePublisher.ts",
+      "type": "publisher",
+      "responsibility": "YouTubePublisher – Phase 5.3 Uploads videos to YouTube using the Data API v3 via googleapis. OAuth2: refresh token flow (offline access).",
+      "exports": [
+        "YouTubePublisher"
+      ]
+    },
+    {
+      "path": "src/script-generator/AiLlmGenerator.ts",
+      "type": "module",
+      "responsibility": "Roughly 8-10 seconds of narration per scene for a 25-30 word scene.",
+      "exports": [
+        "AiLlmGenerator",
+        "AutoScriptStyle",
+        "HookOption",
+        "LlmProviderOptions",
+        "ScriptGenerationOptions",
+        "configureLlmDefaults"
+      ]
+    },
+    {
+      "path": "src/scripts/fetchReports.ts",
+      "type": "module",
+      "responsibility": "run immediately once",
+      "exports": [
+        "fetchReports"
+      ]
+    },
+    {
+      "path": "src/scripts/install.ts",
+      "type": "module",
+      "responsibility": "runs in docker",
+      "exports": [
+        "install"
+      ]
+    },
+    {
+      "path": "src/scripts/normalizeMusic.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "normalizeMusic"
+      ]
+    },
+    {
+      "path": "src/server/auth.ts",
+      "type": "server",
+      "responsibility": "Fail-closed admin guard. Requires the X-Admin-Key header to match ADMIN_API_KEY. If the server has no ADMIN_API_KEY configured, the endpoint is disabled (403).",
+      "exports": [
+        "adminKeyConfigured",
+        "logAdminKeyStatus",
+        "requireAdminKey",
+        "validateTokenIfPresent"
+      ]
+    },
+    {
+      "path": "src/server/rateLimit.ts",
+      "type": "server",
+      "responsibility": "",
+      "exports": [
+        "apiRateLimiter"
+      ]
+    },
+    {
+      "path": "src/server/readiness.ts",
+      "type": "server",
+      "responsibility": "Shared readiness state so health checks can report the true status of the heavy video pipeline (ShortCreator) which initializes asynchronously.",
+      "exports": [
+        "readiness"
+      ]
+    },
+    {
+      "path": "src/server/routers/abtesting.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "ABTestingRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/account.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "AccountRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/ai.ts",
+      "type": "router",
+      "responsibility": "eslint-disable-next-line @typescript-eslint/no-require-imports",
+      "exports": [
+        "AiRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/approval.ts",
+      "type": "router",
+      "responsibility": "Approval queue",
+      "exports": [
+        "ApprovalRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/attention.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "AttentionRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/audio.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "AudioRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/branding.ts",
+      "type": "router",
+      "responsibility": "GET /api/branding/:tenantId — get branding config",
+      "exports": [
+        "BrandingRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/channelconfigs.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "ChannelConfigRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/competitor.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "CompetitorRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/content.ts",
+      "type": "router",
+      "responsibility": "eslint-disable-next-line @typescript-eslint/no-require-imports",
+      "exports": [
+        "ContentRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/contentbuckets.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "ContentBucketsRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/costs.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "CostsRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/editing.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "EditingRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/emotional.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "EmotionalRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/engagement.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "EngagementRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/engines.ts",
+      "type": "router",
+      "responsibility": "Trend Hijacking",
+      "exports": [
+        "EnginesRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/health.ts",
+      "type": "router",
+      "responsibility": "HealthRouter – Phase 4.4 GET /api/health – liveness + readiness GET /api/health/queue – BullMQ queue sizes GET /api/metrics – Prometheus text output",
+      "exports": [
+        "HealthRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/hooks.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "HooksRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/humanized.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "HumanizedRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/image.ts",
+      "type": "router",
+      "responsibility": "GET /api/image/filters Returns all available filter presets",
+      "exports": [
+        "ImageRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/marketing.ts",
+      "type": "router",
+      "responsibility": "eslint-disable-next-line @typescript-eslint/no-require-imports",
+      "exports": [
+        "MarketingRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/mcp.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "MCPRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/pipeline.ts",
+      "type": "router",
+      "responsibility": "Run all platforms in parallel — each updates the comparison entry as it completes",
+      "exports": [
+        "PipelineRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/profiles.ts",
+      "type": "router",
+      "responsibility": "Accounts",
+      "exports": [
+        "OAuthRouter",
+        "ProfilesRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/publish.ts",
+      "type": "router",
+      "responsibility": "PublishRouter – Phase 5.5 POST /api/publish – enqueue a video for publishing GET /api/publish/:id – get publish job status + attempts GET /api/publish – list recent publish jobs",
+      "exports": [
+        "PublishRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/quality.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "QualityRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/queue.ts",
+      "type": "router",
+      "responsibility": "eslint-disable-next-line @typescript-eslint/no-require-imports",
+      "exports": [
+        "QueueRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/recycle.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "RecycleRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/rest.ts",
+      "type": "router",
+      "responsibility": "Resolve a user-supplied file name safely inside a base directory,",
+      "exports": [
+        "APIRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/schedule.ts",
+      "type": "router",
+      "responsibility": "ScheduleRouter – Full schedule persistence with cron-like runner GET /api/schedule – list schedules POST /api/schedule – create schedule GET /api/schedule/stats – schedule statistics GET /api/schedule",
+      "exports": [
+        "ScheduleRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/shadowban.ts",
+      "type": "router",
+      "responsibility": "Shadowban",
+      "exports": [
+        "ShadowbanRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/strategy.ts",
+      "type": "router",
+      "responsibility": "Platform psychology",
+      "exports": [
+        "StrategyRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/systemengines.ts",
+      "type": "router",
+      "responsibility": "─── Resource Engine ───",
+      "exports": [
+        "SystemEnginesRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/tenants.ts",
+      "type": "router",
+      "responsibility": "API-key read/rotation is admin-only.",
+      "exports": [
+        "TenantRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/thumbnail.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "ThumbnailRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/translate.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "TranslateRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/trends.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "TrendsRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/videolibrary.ts",
+      "type": "router",
+      "responsibility": "VideoLibraryRouter – Full CRUD + search + stats for video library GET /api/videolibrary – list videos (with pagination, filter) POST /api/videolibrary – create video record GET /api/videolibrary/stats",
+      "exports": [
+        "VideoLibraryRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/visual.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "VisualRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/watermark.ts",
+      "type": "router",
+      "responsibility": "",
+      "exports": [
+        "WatermarkRouter"
+      ]
+    },
+    {
+      "path": "src/server/routers/webhooks.ts",
+      "type": "router",
+      "responsibility": "GET /api/webhooks — list all webhooks",
+      "exports": [
+        "WebhooksRouter"
+      ]
+    },
+    {
+      "path": "src/server/server.ts",
+      "type": "server",
+      "responsibility": "Trust proxies only when explicitly enabled (behind a reverse proxy).",
+      "exports": [
+        "Server"
+      ]
+    },
+    {
+      "path": "src/server/swagger.ts",
+      "type": "server",
+      "responsibility": "OpenAPI 3.0 Specification for AI Viral Content Empire SaaS Platform Served at GET /api/docs (Swagger UI) and GET /api/docs.json (raw spec)",
+      "exports": [
+        "swaggerSpec"
+      ]
+    },
+    {
+      "path": "src/server/validator.ts",
+      "type": "server",
+      "responsibility": "Process the validation errors",
+      "exports": [
+        "ValidationErrorResult",
+        "validateCreateShortInput",
+        "validateStatusRequest",
+        "validateVideoId"
+      ]
+    },
+    {
+      "path": "src/services/ABTestingEngine.ts",
+      "type": "engine",
+      "responsibility": "Simple conservative fallback for unsupported degrees of freedom",
+      "exports": [
+        "ABTest",
+        "ABTestingEngine",
+        "ABVariant",
+        "StatResult"
+      ]
+    },
+    {
+      "path": "src/services/AccountManagerEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "AccountGoal",
+        "AccountManagerEngine",
+        "AccountMetrics"
+      ]
+    },
+    {
+      "path": "src/services/AiMonitoringService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "AiMonitoringService",
+        "MonitoringResult"
+      ]
+    },
+    {
+      "path": "src/services/AiPredictionService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "AiPredictionService",
+        "AiSuggestion",
+        "SuggestionContext"
+      ]
+    },
+    {
+      "path": "src/services/AiTrainingService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "AiTrainingService"
+      ]
+    },
+    {
+      "path": "src/services/AlertingService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "AlertPayload",
+        "AlertingService"
+      ]
+    },
+    {
+      "path": "src/services/AntiDuplicationEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "AntiDuplicationEngine",
+        "ContentFingerprint",
+        "DuplicationCheckResult"
+      ]
+    },
+    {
+      "path": "src/services/ApprovalEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ApprovalEngine",
+        "ApprovalItem",
+        "ApprovalStatus",
+        "ChecklistItem"
+      ]
+    },
+    {
+      "path": "src/services/AssetLibraryEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "Asset",
+        "AssetLibraryEngine",
+        "AssetSearchQuery",
+        "AssetType",
+        "ImportResult"
+      ]
+    },
+    {
+      "path": "src/services/AttentionOptimizerEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "AttentionOptimization",
+        "AttentionOptimizerEngine",
+        "AttentionSpan"
+      ]
+    },
+    {
+      "path": "src/services/AudioQualityEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "AudioEnhancement",
+        "AudioQualityEngine",
+        "AudioSettings"
+      ]
+    },
+    {
+      "path": "src/services/AuthEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "AuthEngine",
+        "AuthResult",
+        "AuthToken",
+        "Tenant",
+        "verifyJwtToken"
+      ]
+    },
+    {
+      "path": "src/services/BestTimeLearningEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "BestTimeLearningEngine",
+        "BestTimeRecommendation",
+        "TimeSlotPerformance"
+      ]
+    },
+    {
+      "path": "src/services/BrandingEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "BrandingColors",
+        "BrandingConfig",
+        "BrandingEngine",
+        "BrandingLogo",
+        "BrandingTypography"
+      ]
+    },
+    {
+      "path": "src/services/CaptionEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "CaptionEngine",
+        "CaptionOptions",
+        "CaptionResult"
+      ]
+    },
+    {
+      "path": "src/services/CategoryEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "CategoryEngine",
+        "CategoryResult",
+        "ContentCategory"
+      ]
+    },
+    {
+      "path": "src/services/CommentCtaEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "CommentCtaEngine",
+        "CtaOption",
+        "CtaPlacement",
+        "CtaPlatform"
+      ]
+    },
+    {
+      "path": "src/services/CompetitorAnalysisEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "CompetitorAnalysisEngine",
+        "CompetitorStrategy",
+        "CreatorProfile",
+        "ViralPattern"
+      ]
+    },
+    {
+      "path": "src/services/ComplianceEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ComplianceAction",
+        "ComplianceEngine",
+        "ComplianceLog",
+        "ComplianceReport"
+      ]
+    },
+    {
+      "path": "src/services/ContentBucketEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "BucketRecord",
+        "BucketType",
+        "ContentBucket",
+        "ContentBucketEngine"
+      ]
+    },
+    {
+      "path": "src/services/ContentEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ContentEngine",
+        "ContentRequest",
+        "ScriptOutput"
+      ]
+    },
+    {
+      "path": "src/services/ContentEnhancementService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "AccessibilityResult",
+        "ContentEnhancementService",
+        "EditingOptions",
+        "IdeationInput",
+        "ModerationResult",
+        "PersonalizationInput"
+      ]
+    },
+    {
+      "path": "src/services/ContentFreshnessEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ContentFreshnessEngine",
+        "FreshnessCheckResult",
+        "FreshnessRecord"
+      ]
+    },
+    {
+      "path": "src/services/ContentRecycleEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ContentRecycleEngine",
+        "RecycleAction",
+        "RecycleCandidate"
+      ]
+    },
+    {
+      "path": "src/services/CostTrackingEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "CostCategory",
+        "CostRecord",
+        "CostSummary",
+        "CostTrackingEngine"
+      ]
+    },
+    {
+      "path": "src/services/CreatorKnowledgeBase.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "CreatorKnowledgeBase",
+        "KnowledgeRule",
+        "RuleCategory",
+        "SearchResult"
+      ]
+    },
+    {
+      "path": "src/services/CredentialRotationEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "Credential",
+        "CredentialRotationEngine",
+        "CredentialType",
+        "RotationResult",
+        "RotationSchedule",
+        "RotationStatus"
+      ]
+    },
+    {
+      "path": "src/services/CryptoService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "CryptoService"
+      ]
+    },
+    {
+      "path": "src/services/EmotionalResonanceEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "EmotionalDirectives",
+        "EmotionalResonanceEngine",
+        "EmotionalScore",
+        "EmotionalTone"
+      ]
+    },
+    {
+      "path": "src/services/EngagementPredictionEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "EngagementPrediction",
+        "EngagementPredictionEngine"
+      ]
+    },
+    {
+      "path": "src/services/ErrorRecoveryEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ErrorCategory",
+        "ErrorEvent",
+        "ErrorRecoveryEngine",
+        "RecoveryStatus",
+        "RecoveryStrategy"
+      ]
+    },
+    {
+      "path": "src/services/ExpertEditingEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "EditingDirectives",
+        "EditingEffect",
+        "EditingTechnique",
+        "ExpertEditingEngine"
+      ]
+    },
+    {
+      "path": "src/services/ExportEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ExportEngine",
+        "ExportFile",
+        "ExportFormat",
+        "ExportManifest",
+        "RestoreResult"
+      ]
+    },
+    {
+      "path": "src/services/HashtagLearningEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "HashtagLearningEngine",
+        "HashtagPerformance",
+        "HashtagRecommendation"
+      ]
+    },
+    {
+      "path": "src/services/HookLibraryEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "Hook",
+        "HookEmotion",
+        "HookLibraryEngine",
+        "HookType"
+      ]
+    },
+    {
+      "path": "src/services/HumanMimicryEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "HumanMimicryEngine",
+        "HumanizedSchedule"
+      ]
+    },
+    {
+      "path": "src/services/HumanizedContentEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "HumanizationConfig",
+        "HumanizedContentEngine",
+        "HumanizedOutput"
+      ]
+    },
+    {
+      "path": "src/services/ImageEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "BannerOptions",
+        "CarouselOptions",
+        "CarouselSlide",
+        "ImageEngine",
+        "ImageRenderResult",
+        "ImageTemplate",
+        "PosterOptions",
+        "QuoteCardOptions"
+      ]
+    },
+    {
+      "path": "src/services/ImageFiltersEngine.ts",
+      "type": "engine",
+      "responsibility": "ImageFiltersEngine – Advanced image filters and processing pipeline Supports 20+ filter types: color grading, cinematic, social-media-optimized presets Works via SVG filter generation (universal) + ca",
+      "exports": [
+        "CanvasOp",
+        "FilterOptions",
+        "FilterPreset",
+        "FilterResult",
+        "FilterType",
+        "ImageFiltersEngine"
+      ]
+    },
+    {
+      "path": "src/services/ImageGenerationEngine.ts",
+      "type": "engine",
+      "responsibility": "eslint-disable-next-line @typescript-eslint/no-require-imports",
+      "exports": [
+        "GeneratedImage",
+        "ImageGenerationEngine",
+        "ImageGenerationOptions",
+        "ImageType"
+      ]
+    },
+    {
+      "path": "src/services/LlmGenerator.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "LlmConfig",
+        "LlmGenerator"
+      ]
+    },
+    {
+      "path": "src/services/MarketingEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "BannerVariant",
+        "CampaignPlan",
+        "MarketingEngine",
+        "MockWebsiteData"
+      ]
+    },
+    {
+      "path": "src/services/MetadataGenerator.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "MetadataGenerator",
+        "VideoMetadata"
+      ]
+    },
+    {
+      "path": "src/services/ModerationEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ModerationEngine",
+        "ModerationFlag",
+        "ModerationResult",
+        "ModerationSeverity"
+      ]
+    },
+    {
+      "path": "src/services/OAuthProvider.ts",
+      "type": "module",
+      "responsibility": "Whether a web OAuth flow is implemented for this provider.",
+      "exports": [
+        "OAuthConnectRequest",
+        "OAuthExchangeResult",
+        "OAuthProviderInfo",
+        "buildAuthorizationUrl",
+        "defaultCallbackUrl",
+        "exchangeOAuthCode",
+        "oauthProviderInfo"
+      ]
+    },
+    {
+      "path": "src/services/PipelineOrchestrator.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "PipelineInput",
+        "PipelineOrchestrator",
+        "PipelineResult"
+      ]
+    },
+    {
+      "path": "src/services/PlatformPsychologyEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "Platform",
+        "PlatformProfile",
+        "PlatformPsychologyEngine"
+      ]
+    },
+    {
+      "path": "src/services/ProfileService.ts",
+      "type": "service",
+      "responsibility": "Resolve the active accounts that should receive a video of `category` on `platform`.",
+      "exports": [
+        "ProfileService"
+      ]
+    },
+    {
+      "path": "src/services/QualityScoringEngine.ts",
+      "type": "engine",
+      "responsibility": "Deterministic proxy for engagement potential (no randomness).",
+      "exports": [
+        "QualityMetrics",
+        "QualityScoringEngine"
+      ]
+    },
+    {
+      "path": "src/services/ResourceEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "CpuSnapshot",
+        "DiskSnapshot",
+        "MemorySnapshot",
+        "ResourceEngine",
+        "ResourceOptimization",
+        "ResourcePrediction",
+        "ResourceSnapshot"
+      ]
+    },
+    {
+      "path": "src/services/RuleBasedGenerator.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "RuleBasedGenerator"
+      ]
+    },
+    {
+      "path": "src/services/SchedulerService.ts",
+      "type": "service",
+      "responsibility": "SchedulerService – Phase 6.1 node-cron job that periodically: 1. Fetches new RSS reports 2. Creates ScriptPlan entries 3. Enqueues RenderJobs on the BullMQ render_queue When Redis is disabled, jobs ar",
+      "exports": [
+        "SchedulerService"
+      ]
+    },
+    {
+      "path": "src/services/SeoOptimizerService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "SeoOptimizerService"
+      ]
+    },
+    {
+      "path": "src/services/SeriesBuilderEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "Episode",
+        "Series",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "path": "src/services/ShadowbanDetectionEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "PlatformMetrics",
+        "RecoveryPlan",
+        "ShadowbanDetectionEngine",
+        "ShadowbanStatus",
+        "WarmupDay"
+      ]
+    },
+    {
+      "path": "src/services/SkipAnalysisEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "SkipAnalysis",
+        "SkipAnalysisEngine",
+        "SkipDataPoint"
+      ]
+    },
+    {
+      "path": "src/services/TenantLoggerService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "TenantLoggerService"
+      ]
+    },
+    {
+      "path": "src/services/TenantQuotaService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "TenantQuotaService"
+      ]
+    },
+    {
+      "path": "src/services/ThrottlingEngine.ts",
+      "type": "engine",
+      "responsibility": "Fail-closed: on unexpected errors deny access rather than granting it.",
+      "exports": [
+        "QuotaLimits",
+        "QuotaUsage",
+        "TenantQuota",
+        "ThrottleResult",
+        "ThrottlingEngine"
+      ]
+    },
+    {
+      "path": "src/services/ThumbnailEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ThumbnailDirectives",
+        "ThumbnailEngine",
+        "ThumbnailOptions"
+      ]
+    },
+    {
+      "path": "src/services/TranslationEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "SupportedLanguage",
+        "TranslationEngine",
+        "TranslationResult"
+      ]
+    },
+    {
+      "path": "src/services/TrendEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "TrendEngine",
+        "TrendResult",
+        "TrendTopic"
+      ]
+    },
+    {
+      "path": "src/services/TrendHijackingEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "TrendFormat",
+        "TrendHijackResult",
+        "TrendHijackingEngine"
+      ]
+    },
+    {
+      "path": "src/services/ValidationEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "ImageValidationInput",
+        "MetadataValidationInput",
+        "ValidationEngine",
+        "ValidationIssue",
+        "ValidationResult",
+        "VideoValidationInput"
+      ]
+    },
+    {
+      "path": "src/services/ViralRadarEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "RadarResult",
+        "ViralAlert",
+        "ViralRadarEngine"
+      ]
+    },
+    {
+      "path": "src/services/ViralStrategyService.ts",
+      "type": "service",
+      "responsibility": "",
+      "exports": [
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "path": "src/services/VisualEnhancementEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "EnhancementResult",
+        "EnhancementSettings",
+        "VisualEnhancementEngine"
+      ]
+    },
+    {
+      "path": "src/services/VoiceEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "TTSProvider",
+        "TTSRequest",
+        "TTSResult",
+        "VoiceEngine",
+        "VoiceGender",
+        "VoiceProfile",
+        "VoiceSpeed"
+      ]
+    },
+    {
+      "path": "src/services/WatermarkEngine.ts",
+      "type": "engine",
+      "responsibility": "",
+      "exports": [
+        "WatermarkConfig",
+        "WatermarkEngine"
+      ]
+    },
+    {
+      "path": "src/services/WebhookNotificationEngine.ts",
+      "type": "engine",
+      "responsibility": "Telegram",
+      "exports": [
+        "NotificationEvent",
+        "NotificationLog",
+        "NotificationPayload",
+        "NotificationResult",
+        "WebhookChannel",
+        "WebhookConfig",
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "path": "src/short-creator/ShortCreator.ts",
+      "type": "module",
+      "responsibility": "todo add a semaphore",
+      "exports": [
+        "ShortCreator"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/FFmpeg.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "FFMpeg"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/Kokoro.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "Kokoro"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/Pexels.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "PexelsAPI"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/Pixabay.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "PixabayAPI",
+        "PixabayVideo"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/Remotion.ts",
+      "type": "module",
+      "responsibility": "Long-form always uses the LongFormVideo composition (16:9 landscape)",
+      "exports": [
+        "Remotion"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/SubtitleBuilder.ts",
+      "type": "module",
+      "responsibility": "SubtitleBuilder – Phase 2.5 Generates subtitle files from Whisper transcription captions. Supports multiple languages, SRT + WebVTT output, Hinglish mixing, coverage validation, and fallback safety.",
+      "exports": [
+        "SubtitleBuilder",
+        "SubtitleOptions",
+        "SubtitleResult"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/TtsAdapter.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "TtsAdapter"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/Whisper.ts",
+      "type": "module",
+      "responsibility": "Mirror @remotion/install-whisper-cpp getWhisperExecutablePath logic",
+      "exports": [
+        "ErrorWhisper",
+        "Whisper"
+      ]
+    },
+    {
+      "path": "src/short-creator/music.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "MusicManager"
+      ]
+    },
+    {
+      "path": "src/types/profiles.ts",
+      "type": "types",
+      "responsibility": "OAuth / token payload. Stored ENCRYPTED at rest (AES-256-GCM).",
+      "exports": [
+        "ProfileAccountCredentials",
+        "ProfileAccountRecord",
+        "ProfileAccountStatus",
+        "ProfileAccountSummary",
+        "ProfileRecord",
+        "ProfileSummary"
+      ]
+    },
+    {
+      "path": "src/types/shorts.ts",
+      "type": "types",
+      "responsibility": "Business logic validation: ensure total text length is reasonable for video duration",
+      "exports": [
+        "Caption",
+        "CaptionLine",
+        "CaptionPage",
+        "CaptionPositionEnum",
+        "CategoryRule",
+        "ChannelConfig",
+        "CreateShortInput",
+        "LanguageEnum",
+        "LanguageProfile",
+        "Music",
+        "MusicForVideo",
+        "MusicMoodEnum",
+        "MusicTag",
+        "MusicVolumeEnum",
+        "OrientationEnum",
+        "PlatformType",
+        "PublishAttemptRecord",
+        "PublishJobRecord",
+        "PublishJobStatus",
+        "RenderConfig",
+        "RenderJobRecord",
+        "RenderJobStatus",
+        "Scene",
+        "SceneInput",
+        "StatusRequest",
+        "TextModeEnum",
+        "Video",
+        "VideoMetadataRecord",
+        "VideoStatus",
+        "VideoType",
+        "VideoTypeEnum",
+        "VoiceEnum",
+        "Voices",
+        "createShortInput",
+        "kokoroModelPrecision",
+        "renderConfig",
+        "sceneInput",
+        "statusRequestSchema",
+        "videoIdSchema",
+        "whisperModels"
+      ]
+    },
+    {
+      "path": "src/ui/App.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/ErrorBoundary.tsx",
+      "type": "ui",
+      "responsibility": "Error Boundary - React error boundary component for graceful error handling",
+      "exports": [
+        "ErrorBoundary",
+        "ErrorBoundaryProps",
+        "ErrorBoundaryState"
+      ]
+    },
+    {
+      "path": "src/ui/components/Layout.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/ab-testing/ActiveTestsList.tsx",
+      "type": "ui",
+      "responsibility": "ActiveTestsList – list all variants for the selected video with live stats",
+      "exports": [
+        "ActiveTestsList"
+      ]
+    },
+    {
+      "path": "src/ui/components/ab-testing/HistoricalTests.tsx",
+      "type": "ui",
+      "responsibility": "HistoricalTests – table of all variants for the current video with full details",
+      "exports": [
+        "HistoricalTests"
+      ]
+    },
+    {
+      "path": "src/ui/components/ab-testing/ResultsView.tsx",
+      "type": "ui",
+      "responsibility": "ResultsView – visual A/B test results comparison with winner highlight",
+      "exports": [
+        "ResultsView"
+      ]
+    },
+    {
+      "path": "src/ui/components/ab-testing/VariantCreationForm.tsx",
+      "type": "ui",
+      "responsibility": "VariantCreationForm – create a new A/B test variant for a video",
+      "exports": [
+        "VariantCreationForm"
+      ]
+    },
+    {
+      "path": "src/ui/components/ai/ModelComparison.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "ModelComparison"
+      ]
+    },
+    {
+      "path": "src/ui/components/ai/ModelHealthCard.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "ModelHealthCard"
+      ]
+    },
+    {
+      "path": "src/ui/components/ai/PredictionsList.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "PredictionsList"
+      ]
+    },
+    {
+      "path": "src/ui/components/ai/RecommendationsPanel.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "RecommendationsPanel"
+      ]
+    },
+    {
+      "path": "src/ui/components/ai/TrainingHistory.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "TrainingHistory"
+      ]
+    },
+    {
+      "path": "src/ui/components/ai/TrainingJobsList.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "TrainingJobsList"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/ContentHeatmap.tsx",
+      "type": "ui",
+      "responsibility": "ContentHeatmap Component - Day x Hour grid showing when content performs best",
+      "exports": [
+        "ContentHeatmap"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/DateRangePicker.tsx",
+      "type": "ui",
+      "responsibility": "DateRangePicker Component - Select predefined or custom date ranges",
+      "exports": [
+        "DateRangePicker"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/EngagementBreakdown.tsx",
+      "type": "ui",
+      "responsibility": "EngagementBreakdown Component - Stacked bars showing likes/shares/comments per platform",
+      "exports": [
+        "EngagementBreakdown"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/KPICards.tsx",
+      "type": "ui",
+      "responsibility": "KPICards Component - Key Performance Indicator summary cards",
+      "exports": [
+        "KPICards"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/PlatformComparison.tsx",
+      "type": "ui",
+      "responsibility": "PlatformComparison Component - Horizontal bar chart comparing platform metrics",
+      "exports": [
+        "PlatformComparison"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/TimeSeriesChart.tsx",
+      "type": "ui",
+      "responsibility": "TimeSeriesChart Component - SVG line chart for views/engagement over time",
+      "exports": [
+        "TimeSeriesChart"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/TopVideosTable.tsx",
+      "type": "ui",
+      "responsibility": "TopVideosTable Component - Ranked list of best-performing videos",
+      "exports": [
+        "TopVideosTable"
+      ]
+    },
+    {
+      "path": "src/ui/components/analytics/TrendAnalysis.tsx",
+      "type": "ui",
+      "responsibility": "TrendAnalysis Component - Period-over-period trend indicators and sparklines",
+      "exports": [
+        "TrendAnalysis"
+      ]
+    },
+    {
+      "path": "src/ui/components/content/AccessibilityChecker.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/content/EditingRecommendations.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/content/IdeationPanel.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/content/ModerationChecker.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/content/ScriptImprover.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/content/ThumbnailGenerator.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/publish/MetadataEditor.tsx",
+      "type": "ui",
+      "responsibility": "MetadataEditor Component - Configure metadata per platform",
+      "exports": [
+        "MetadataEditor",
+        "MetadataEditorProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/publish/PlatformSelector.tsx",
+      "type": "ui",
+      "responsibility": "PlatformSelector Component - Choose publishing platforms",
+      "exports": [
+        "PlatformSelector",
+        "PlatformSelectorProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/publish/PublishStatusTracker.tsx",
+      "type": "ui",
+      "responsibility": "PublishStatusTracker Component - Monitor publishing progress",
+      "exports": [
+        "PublishStatusTracker"
+      ]
+    },
+    {
+      "path": "src/ui/components/publish/SchedulePicker.tsx",
+      "type": "ui",
+      "responsibility": "SchedulePicker Component - Configure publishing schedule",
+      "exports": [
+        "SchedulePicker"
+      ]
+    },
+    {
+      "path": "src/ui/components/publish/VideoSelector.tsx",
+      "type": "ui",
+      "responsibility": "VideoSelector Component - Multi-select videos for publishing",
+      "exports": [
+        "VideoSelector",
+        "VideoSelectorProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/scheduler/CronBuilder.tsx",
+      "type": "ui",
+      "responsibility": "CronBuilder – visual cron expression builder with presets + custom editor",
+      "exports": [
+        "CronBuilder",
+        "CronBuilderProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/scheduler/ScheduleCalendar.tsx",
+      "type": "ui",
+      "responsibility": "ScheduleCalendar – Weekly calendar grid with drag-to-reschedule Shows all active schedules mapped to their publish times. Drag a block to a new time slot → PATCHes /api/schedule/:id with the new publi",
+      "exports": [
+        "ScheduleCalendar"
+      ]
+    },
+    {
+      "path": "src/ui/components/scheduler/ScheduleForm.tsx",
+      "type": "ui",
+      "responsibility": "ScheduleForm – form to enqueue a new render job Updated: Added platforms, 30 languages, engine toggles, quality settings",
+      "exports": [
+        "ScheduleForm"
+      ]
+    },
+    {
+      "path": "src/ui/components/scheduler/ScheduleHistory.tsx",
+      "type": "ui",
+      "responsibility": "ScheduleHistory – execution history view with outcome timeline",
+      "exports": [
+        "ScheduleHistory"
+      ]
+    },
+    {
+      "path": "src/ui/components/scheduler/ScheduledJobsList.tsx",
+      "type": "ui",
+      "responsibility": "ScheduledJobsList – table of active/pending render and publish jobs with status chips",
+      "exports": [
+        "ScheduledJobsList"
+      ]
+    },
+    {
+      "path": "src/ui/components/shared/Button.tsx",
+      "type": "ui",
+      "responsibility": "Button Component - Wrapper around MUI Button with variants",
+      "exports": [
+        "Button",
+        "ButtonProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/shared/EmptyState.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "EmptyStateProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/shared/LoadingSpinner.tsx",
+      "type": "ui",
+      "responsibility": "LoadingSpinner Component - Reusable loading indicator with overlay option",
+      "exports": [
+        "LoadingSpinner",
+        "LoadingSpinnerProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/shared/Modal.tsx",
+      "type": "ui",
+      "responsibility": "Modal Component - Dialog wrapper with consistent styling",
+      "exports": [
+        "Modal",
+        "ModalProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/shared/Table.tsx",
+      "type": "ui",
+      "responsibility": "Table Component - Reusable data table with sorting, pagination, and actions",
+      "exports": [
+        "Column",
+        "Table",
+        "TableProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/shared/Toast.tsx",
+      "type": "ui",
+      "responsibility": "Toast Component - Notification displayer with Snackbar",
+      "exports": [
+        "Toast",
+        "ToastProps"
+      ]
+    },
+    {
+      "path": "src/ui/components/tenant/APIKeys.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/tenant/AuditLog.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "AuditLogEntry"
+      ]
+    },
+    {
+      "path": "src/ui/components/tenant/BillingPage.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "BillingData"
+      ]
+    },
+    {
+      "path": "src/ui/components/tenant/Integrations.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "IntegrationRecord"
+      ]
+    },
+    {
+      "path": "src/ui/components/tenant/QuotaUsage.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/tenant/SubscriptionManagement.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/tenant/TeamMembers.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/tenant/WorkspaceSettings.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/tenant/WorkspaceSwitcher.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/video-creator/AutoScriptPanel.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "AutoScriptStyle",
+        "NewsSourceOption"
+      ]
+    },
+    {
+      "path": "src/ui/components/video-creator/SceneEditorList.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "SceneFormData"
+      ]
+    },
+    {
+      "path": "src/ui/components/video-creator/ScenePreviewPanel.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/components/video-creator/VideoConfigPanel.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/hooks/useABTestMutation.ts",
+      "type": "ui",
+      "responsibility": "useABTestMutation Hook – create variants and assign them",
+      "exports": [
+        "CreateVariantRequest",
+        "useAssignVariant",
+        "useCreateVariant"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useABTestResults.ts",
+      "type": "ui",
+      "responsibility": "useABTestResults Hook – fetch video list + variants for a selected video",
+      "exports": [
+        "ABTestResultsState",
+        "ABVariant",
+        "VideoEntry",
+        "computeCTR",
+        "findWinner",
+        "useABTestResults"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useAIMetrics.ts",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "AIAlert",
+        "AIComparisonMetric",
+        "AIMetrics",
+        "AIMetricsData",
+        "AIRecommendation",
+        "LearningEvent",
+        "ModelState",
+        "MonitoringResult",
+        "PredictionRow",
+        "SuggestionContext",
+        "SuggestionResult",
+        "TrainingHistoryPoint",
+        "normalizeAIMetricsData",
+        "useAIMetrics"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useAITraining.ts",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "executeAISuggestion",
+        "executeAITraining",
+        "useAITraining"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useAnalytics.ts",
+      "type": "ui",
+      "responsibility": "useAnalytics Hook - Fetch and manage analytics data",
+      "exports": [
+        "AnalyticsDashboardData",
+        "DateRange",
+        "KPIsummary",
+        "PlatformMetrics",
+        "TimeSeriesPoint",
+        "VideoAnalytics",
+        "useAnalytics"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useAutoRefresh.ts",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "UseAutoRefreshOptions",
+        "UseAutoRefreshResult",
+        "useAutoRefresh"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useContentSuggestions.ts",
+      "type": "ui",
+      "responsibility": "── Response shapes ───────────────────────────────────────────────────────────",
+      "exports": [
+        "AccessibilityResult",
+        "EditingPayload",
+        "EditingResult",
+        "EditingSuggestion",
+        "IdeaItem",
+        "IdeationPayload",
+        "IdeationResult",
+        "ModerationResult",
+        "PersonalizePayload",
+        "TrendOptimizePayload",
+        "TrendOptimizeResult",
+        "TrendTag",
+        "useAccessibilityMutation",
+        "useEditingSuggestionsMutation",
+        "useIdeationMutation",
+        "useInteractiveMutation",
+        "useModerationMutation",
+        "usePersonalizeMutation",
+        "useTrendOptimizeMutation"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useHealthDashboard.ts",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "HealthDashboardData",
+        "QueueCounts",
+        "executeHealthDashboardFetch",
+        "useHealthDashboard"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useMutation.ts",
+      "type": "ui",
+      "responsibility": "useMutation Hook - For mutations/side effects with loading and error handling",
+      "exports": [
+        "UseMutationOptions",
+        "UseMutationResult",
+        "useMutation"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/usePublish.ts",
+      "type": "ui",
+      "responsibility": "usePublish Hook - Custom hook for publishing videos to multiple platforms",
+      "exports": [
+        "PublishRequest",
+        "PublishResponse",
+        "usePublish"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useQuery.ts",
+      "type": "ui",
+      "responsibility": "useQuery Hook - For fetching data with caching and error handling",
+      "exports": [
+        "UseQueryOptions",
+        "UseQueryResult",
+        "useQuery"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useScheduledJobs.ts",
+      "type": "ui",
+      "responsibility": "useScheduledJobs Hook – fetch queue stats and render/publish job lists",
+      "exports": [
+        "PublishJob",
+        "QueueCounts",
+        "QueueStats",
+        "RenderJob",
+        "ScheduledJobsData",
+        "UseScheduledJobsReturn",
+        "useScheduledJobs"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useSchedulerMutation.ts",
+      "type": "ui",
+      "responsibility": "useSchedulerMutation Hook – enqueue render jobs and manage queue actions",
+      "exports": [
+        "EnqueueJobRequest",
+        "EnqueueJobResponse",
+        "useEnqueueJob"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useTenantInfo.ts",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "TenantApiKey",
+        "TenantBillingSnapshot",
+        "TenantMember",
+        "TenantQuotaSnapshot",
+        "TenantRecord",
+        "useTenantBilling",
+        "useTenantDetails",
+        "useTenantKeys",
+        "useTenantMembers",
+        "useTenantQuota",
+        "useTenants"
+      ]
+    },
+    {
+      "path": "src/ui/hooks/useTenantMutation.ts",
+      "type": "ui",
+      "responsibility": "",
+      "exports": [
+        "CreateApiKeyPayload",
+        "CreateTenantPayload",
+        "InviteMemberPayload",
+        "UpdateWorkspacePayload",
+        "useCancelSubscriptionMutation",
+        "useCreateApiKeyMutation",
+        "useCreateTenantMutation",
+        "useIntegrationToggleMutation",
+        "useInviteMemberMutation",
+        "usePlanChangeMutation",
+        "useRegenerateApiKeyMutation",
+        "useRemoveMemberMutation",
+        "useRevokeApiKeyMutation",
+        "useUpdateWorkspaceMutation"
+      ]
+    },
+    {
+      "path": "src/ui/index.tsx",
+      "type": "ui",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/ABTestingDashboard.tsx",
+      "type": "page",
+      "responsibility": "ABTestingDashboard – Phase F4 Create and monitor A/B tests for video titles and thumbnails.",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/AIDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/AccountManagerPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/AnalyticsDashboard.tsx",
+      "type": "page",
+      "responsibility": "AnalyticsDashboard Page - Video performance analytics and insights",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/AttentionOptimizerPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/AudioQualityPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/AutoModePage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "AutoModePage"
+      ]
+    },
+    {
+      "path": "src/ui/pages/BrandingDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/BulkQueue.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/CategoryMapping.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/CommentCtaPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/ContentTools.tsx",
+      "type": "page",
+      "responsibility": "Old components (kept for backward compatibility)",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/CostTracker.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "CostTracker"
+      ]
+    },
+    {
+      "path": "src/ui/pages/EditingPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/EmotionalResonancePage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/EngagementPredictionPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/EnginesDashboard.tsx",
+      "type": "page",
+      "responsibility": "─── Tab 1: Competitor Analysis ───",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/HealthDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/HookLibrary.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "HookLibrary"
+      ]
+    },
+    {
+      "path": "src/ui/pages/HumanizedContentPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/ImageFilterPage.tsx",
+      "type": "page",
+      "responsibility": "ImageFilterPage – Advanced image filters with 20+ presets, live preview, and batch apply",
+      "exports": [
+        "ImageFilterPage"
+      ]
+    },
+    {
+      "path": "src/ui/pages/ImageGenerator.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "ImageGenerator"
+      ]
+    },
+    {
+      "path": "src/ui/pages/OAuthSuccessPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/PipelineComparePage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "PipelineComparePage"
+      ]
+    },
+    {
+      "path": "src/ui/pages/ProfilesPage.tsx",
+      "type": "page",
+      "responsibility": "Create profile form",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/PublishDashboard.tsx",
+      "type": "page",
+      "responsibility": "Publish Dashboard Page - Main publishing interface Allows users to select videos, choose platforms, set metadata, and publish",
+      "exports": [
+        "PlatformMetadata",
+        "PublishDashboard",
+        "ScheduleConfig",
+        "SelectedVideo"
+      ]
+    },
+    {
+      "path": "src/ui/pages/QualityScoringPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/RecycleDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "RecycleDashboard"
+      ]
+    },
+    {
+      "path": "src/ui/pages/SchedulePersistPage.tsx",
+      "type": "page",
+      "responsibility": "SchedulePersistPage – Full schedule management with persistence Create, list, pause/resume, and monitor scheduled publishing jobs",
+      "exports": [
+        "SchedulePersistPage"
+      ]
+    },
+    {
+      "path": "src/ui/pages/SchedulerDashboard.tsx",
+      "type": "page",
+      "responsibility": "SchedulerDashboard – Phase F3 Manage automated video creation scheduling, queue health, and job history.",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/SeriesBuilderPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/ShadowbanPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/StrategyDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "StrategyDashboard"
+      ]
+    },
+    {
+      "path": "src/ui/pages/TenantConsole.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/ThumbnailPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/TranslatePage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/TrendDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": [
+        "TrendDashboard"
+      ]
+    },
+    {
+      "path": "src/ui/pages/VideoCreator.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/VideoDetails.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/VideoLibraryPage.tsx",
+      "type": "page",
+      "responsibility": "VideoLibraryPage – Full video library management with CRUD, search, filters, stats + analytics",
+      "exports": [
+        "VideoLibraryPage"
+      ]
+    },
+    {
+      "path": "src/ui/pages/VideoList.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/VisualEnhancementPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/WatermarkPage.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/pages/WebhookDashboard.tsx",
+      "type": "page",
+      "responsibility": "",
+      "exports": []
+    },
+    {
+      "path": "src/ui/services/apiClient.ts",
+      "type": "ui",
+      "responsibility": "API Client Service Centralized HTTP client for all backend API calls with error handling, caching, and retry logic",
+      "exports": [
+        "ApiError",
+        "ApiResponse",
+        "api",
+        "apiClient"
+      ]
+    },
+    {
+      "path": "src/ui/store/authStore.ts",
+      "type": "ui",
+      "responsibility": "Auth Store - Zustand state management for authentication",
+      "exports": [
+        "AuthState",
+        "AuthUser",
+        "useAuthStore"
+      ]
+    },
+    {
+      "path": "src/ui/store/uiStore.ts",
+      "type": "ui",
+      "responsibility": "UI Store - Zustand state management for UI state",
+      "exports": [
+        "Notification",
+        "NotificationType",
+        "UIState",
+        "useNotification",
+        "useUIStore"
+      ]
+    },
+    {
+      "path": "src/video/beat-sync.service.ts",
+      "type": "module",
+      "responsibility": "Beat Sync Service - Align video scenes with music beats Adjusts scene durations to create rhythm-matched editing",
+      "exports": [
+        "BeatSyncConfig",
+        "BeatSyncService",
+        "SyncedScene"
+      ]
+    },
+    {
+      "path": "src/workers/DeadLetterWorker.ts",
+      "type": "module",
+      "responsibility": "DeadLetterWorker – Phase 4.7 Listens on deadletter_queue. Logs permanently failed jobs and marks them in the DB.",
+      "exports": [
+        "DeadLetterPayload",
+        "DeadLetterWorker"
+      ]
+    },
+    {
+      "path": "src/workers/IngestWorker.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "IngestJobPayload",
+        "IngestWorker"
+      ]
+    },
+    {
+      "path": "src/workers/PlanningWorker.ts",
+      "type": "module",
+      "responsibility": "",
+      "exports": [
+        "PlanningJobPayload",
+        "PlanningWorker"
+      ]
+    },
+    {
+      "path": "src/workers/PublishWorker.ts",
+      "type": "module",
+      "responsibility": "PublishWorker – Phase 4.1 / 5.1 BullMQ worker that processes publish_queue jobs. Concurrency = 3 (different platforms can run in parallel). Retries up to 2 times with exponential backoff, then deadlet",
+      "exports": [
+        "PublishJobPayload",
+        "PublishWorker"
+      ]
+    },
+    {
+      "path": "src/workers/QueueManager.ts",
+      "type": "module",
+      "responsibility": "QueueManager – Phase 4.1 Manages BullMQ queue instances backed by Redis. Falls back gracefully when Redis is unavailable (dev mode).",
+      "exports": [
+        "QUEUE_NAMES",
+        "QueueName",
+        "closeRedis",
+        "createPublishQueue",
+        "createQueue",
+        "createRenderQueue",
+        "getRedisConnection",
+        "testRedisConnection"
+      ]
+    },
+    {
+      "path": "src/workers/RenderWorker.ts",
+      "type": "module",
+      "responsibility": "RenderWorker – Phase 4.1 / 4.6 / 4.7 BullMQ worker that processes render_queue jobs. Concurrency = 1 (one render at a time, memory-safe). Retries up to 2 times on failure, then marks job as skipped.",
+      "exports": [
+        "RenderJobPayload",
+        "RenderWorker"
+      ]
+    }
+  ],
+  "apiRoutes": [
+    {
+      "method": "GET",
+      "path": "/api/abtesting",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/abtesting",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/abtesting/:id",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/abtesting/:id/analyze",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/abtesting/:id/event",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/abtesting/:id/pause",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/abtesting/:id/resume",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/abtesting/running",
+      "router": "abTestingRouter",
+      "referenced": [
+        "ABTestingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account/guidance",
+      "router": "accountRouter",
+      "referenced": [
+        "AccountManagerEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/account/load",
+      "router": "accountRouter",
+      "referenced": [
+        "AccountManagerEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account/metrics",
+      "router": "accountRouter",
+      "referenced": [
+        "AccountManagerEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account/save",
+      "router": "accountRouter",
+      "referenced": [
+        "AccountManagerEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai/dashboard",
+      "router": "aiRouter",
+      "referenced": [
+        "AiLearningStore",
+        "AiMonitoringService",
+        "AiPredictionService",
+        "AiTrainingService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai/events",
+      "router": "aiRouter",
+      "referenced": [
+        "AiLearningStore",
+        "AiMonitoringService",
+        "AiPredictionService",
+        "AiTrainingService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/events",
+      "router": "aiRouter",
+      "referenced": [
+        "AiLearningStore",
+        "AiMonitoringService",
+        "AiPredictionService",
+        "AiTrainingService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai/model",
+      "router": "aiRouter",
+      "referenced": [
+        "AiLearningStore",
+        "AiMonitoringService",
+        "AiPredictionService",
+        "AiTrainingService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/suggest",
+      "router": "aiRouter",
+      "referenced": [
+        "AiLearningStore",
+        "AiMonitoringService",
+        "AiPredictionService",
+        "AiTrainingService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/train",
+      "router": "aiRouter",
+      "referenced": [
+        "AiLearningStore",
+        "AiMonitoringService",
+        "AiPredictionService",
+        "AiTrainingService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/moderate",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/moderate/batch",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/approval/moderate/rules",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/approval/queue",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/queue/:id/auto-check",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/approval/queue/:id/checklist",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/queue/:id/review",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/approval/queue/pending",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/approval/queue/stats",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/queue/submit",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/validate/image",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/validate/metadata",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/approval/validate/platforms",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/approval/validate/video",
+      "router": "approvalRouter",
+      "referenced": [
+        "ApprovalEngine",
+        "ModerationEngine",
+        "String",
+        "ValidationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/attention/analyze",
+      "router": "attentionRouter",
+      "referenced": [
+        "AttentionOptimizerEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/attention/hook/:platform/:topic",
+      "router": "attentionRouter",
+      "referenced": [
+        "AttentionOptimizerEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/attention/optimize",
+      "router": "attentionRouter",
+      "referenced": [
+        "AttentionOptimizerEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/audio/detect-levels",
+      "router": "audioRouter",
+      "referenced": [
+        "AudioQualityEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/audio/ffmpeg-chain",
+      "router": "audioRouter",
+      "referenced": [
+        "AudioQualityEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/audio/process",
+      "router": "audioRouter",
+      "referenced": [
+        "AudioQualityEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/auto-script",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/auto-script/hooks",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/auto-script/topics",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/auto-script/translate",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/branding",
+      "router": "brandingRouter",
+      "referenced": [
+        "BrandingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/branding/:tenantId",
+      "router": "brandingRouter",
+      "referenced": [
+        "BrandingEngine"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/branding/:tenantId",
+      "router": "brandingRouter",
+      "referenced": [
+        "BrandingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/branding/:tenantId/css",
+      "router": "brandingRouter",
+      "referenced": [
+        "BrandingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/branding/:tenantId/reset",
+      "router": "brandingRouter",
+      "referenced": [
+        "BrandingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/channel-configs",
+      "router": "channelConfigRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/channel-configs",
+      "router": "channelConfigRouter",
+      "referenced": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/channel-configs/:id",
+      "router": "channelConfigRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/competitor/creators",
+      "router": "competitorRouter",
+      "referenced": [
+        "CompetitorAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/competitor/history",
+      "router": "competitorRouter",
+      "referenced": [
+        "CompetitorAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/competitor/patterns",
+      "router": "competitorRouter",
+      "referenced": [
+        "CompetitorAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/competitor/strategy",
+      "router": "competitorRouter",
+      "referenced": [
+        "CompetitorAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/accessibility",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/editing-primitives",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/ideation",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/interactive",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/moderate",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/personalize",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/trend-optimize",
+      "router": "contentRouter",
+      "referenced": [
+        "ContentEnhancementService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/costs/rates",
+      "router": "costsRouter",
+      "referenced": [
+        "CostTrackingEngine",
+        "Date"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/costs/record",
+      "router": "costsRouter",
+      "referenced": [
+        "CostTrackingEngine",
+        "Date"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/costs/summary",
+      "router": "costsRouter",
+      "referenced": [
+        "CostTrackingEngine",
+        "Date"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/costs/tenant/:tenantId",
+      "router": "costsRouter",
+      "referenced": [
+        "CostTrackingEngine",
+        "Date"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/editing/effects/:type/:intensity",
+      "router": "editingRouter",
+      "referenced": [
+        "ExpertEditingEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/editing/plan",
+      "router": "editingRouter",
+      "referenced": [
+        "ExpertEditingEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/emotional/directives/:emotion",
+      "router": "emotionalRouter",
+      "referenced": [
+        "EmotionalResonanceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/emotional/score",
+      "router": "emotionalRouter",
+      "referenced": [
+        "EmotionalResonanceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/emotional/validate",
+      "router": "emotionalRouter",
+      "referenced": [
+        "EmotionalResonanceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engagement/predict",
+      "router": "engagementRouter",
+      "referenced": [
+        "EngagementPredictionEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engagement/virality-factor",
+      "router": "engagementRouter",
+      "referenced": [
+        "EngagementPredictionEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/caption/generate",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/category/classify",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/engines/category/list",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/content/caption",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/content/hook",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/content/script",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/image/banner",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/image/carousel",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/image/poster",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/image/quote-card",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/trend-hijack",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/trend-hijack/evergreen",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/engines/trend-hijack/formats",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/engines/trend-hijack/history",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/engines/voice/profiles",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/voice/recommend",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/engines/voice/synthesize",
+      "router": "enginesRouter",
+      "referenced": [
+        "CaptionEngine",
+        "CategoryEngine",
+        "ContentEngine",
+        "ImageEngine",
+        "String",
+        "TrendHijackingEngine",
+        "VoiceEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "router": "healthRouter",
+      "referenced": [
+        "AiLearningStore",
+        "Awaited",
+        "Date",
+        "LearningEvent",
+        "Math",
+        "Number",
+        "PublishJobStore",
+        "RenderJobStore",
+        "ReturnType",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/dashboard",
+      "router": "healthRouter",
+      "referenced": [
+        "AiLearningStore",
+        "Awaited",
+        "Date",
+        "LearningEvent",
+        "Math",
+        "Number",
+        "PublishJobStore",
+        "RenderJobStore",
+        "ReturnType",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/metrics",
+      "router": "healthRouter",
+      "referenced": [
+        "AiLearningStore",
+        "Awaited",
+        "Date",
+        "LearningEvent",
+        "Math",
+        "Number",
+        "PublishJobStore",
+        "RenderJobStore",
+        "ReturnType",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/queue",
+      "router": "healthRouter",
+      "referenced": [
+        "AiLearningStore",
+        "Awaited",
+        "Date",
+        "LearningEvent",
+        "Math",
+        "Number",
+        "PublishJobStore",
+        "RenderJobStore",
+        "ReturnType",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/queue/states",
+      "router": "healthRouter",
+      "referenced": [
+        "AiLearningStore",
+        "Awaited",
+        "Date",
+        "LearningEvent",
+        "Math",
+        "Number",
+        "PublishJobStore",
+        "RenderJobStore",
+        "ReturnType",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/hooks",
+      "router": "hooksRouter",
+      "referenced": [
+        "HookEmotion",
+        "HookLibraryEngine",
+        "Number"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/hooks",
+      "router": "hooksRouter",
+      "referenced": [
+        "HookEmotion",
+        "HookLibraryEngine",
+        "Number"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/hooks/:hookId",
+      "router": "hooksRouter",
+      "referenced": [
+        "HookEmotion",
+        "HookLibraryEngine",
+        "Number"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/hooks/:hookId/track",
+      "router": "hooksRouter",
+      "referenced": [
+        "HookEmotion",
+        "HookLibraryEngine",
+        "Number"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/hooks/best",
+      "router": "hooksRouter",
+      "referenced": [
+        "HookEmotion",
+        "HookLibraryEngine",
+        "Number"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/hooks/generate",
+      "router": "hooksRouter",
+      "referenced": [
+        "HookEmotion",
+        "HookLibraryEngine",
+        "Number"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/humanized/avatar-directives/:emotion",
+      "router": "humanizedRouter",
+      "referenced": [
+        "HumanizedContentEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/humanized/config",
+      "router": "humanizedRouter",
+      "referenced": [
+        "HumanizedContentEngine"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/humanized/config",
+      "router": "humanizedRouter",
+      "referenced": [
+        "HumanizedContentEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/humanized/humanize",
+      "router": "humanizedRouter",
+      "referenced": [
+        "HumanizedContentEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/announcement",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/image/file/:fileName",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/image/filtered/:fileName",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/image/filters",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/image/filters/:filterId",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/filters/apply",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/filters/batch",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/filters/css",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/filters/preview",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/image/filters/preview/file/:fileName",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/generate",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/quote-card",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/image/thumbnail",
+      "router": "imageRouter",
+      "referenced": [
+        "FilterOptions",
+        "ImageFiltersEngine",
+        "ImageGenerationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/marketing/ab/assign/:videoId",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/marketing/ab/variants",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/marketing/ab/variants/:videoId",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/marketing/analytics",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/marketing/analytics/:videoId",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/marketing/audience",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/marketing/audience",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/marketing/dashboard",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/marketing/seo/optimize",
+      "router": "marketingRouter",
+      "referenced": [
+        "ABVariantStore",
+        "AnalyticsStore",
+        "AudienceStore",
+        "SeoOptimizerService",
+        "ViralStrategyService"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/music-tags",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/music/:fileName",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/news-sources",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/news-sources/custom",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/oauth/:provider/callback",
+      "router": "oauthRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/oauth/:provider/connect",
+      "router": "oauthRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/pipeline/compare",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pipeline/comparisons",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pipeline/comparisons/:id",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pipeline/jobs",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pipeline/jobs/:id",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/pipeline/run",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/pipeline/stats",
+      "router": "pipelineRouter",
+      "referenced": [
+        "Date",
+        "PipelineOrchestrator",
+        "PipelineStore",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/profiles",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/profiles",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/profiles/:id",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/profiles/:id",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/profiles/:id",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/profiles/:id/accounts",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/profiles/:id/accounts",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/profiles/:id/accounts/:accountId",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/profiles/:id/accounts/:accountId/refresh",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/profiles/resolve",
+      "router": "profilesRouter",
+      "referenced": [
+        "Date",
+        "PlatformType",
+        "ProfileService",
+        "Record",
+        "String"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/publish",
+      "router": "publishRouter",
+      "referenced": [
+        "Date",
+        "MetadataGenerator",
+        "PlatformType",
+        "PublishJobPayload",
+        "PublishJobStore",
+        "VideoMetadataStore"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/publish",
+      "router": "publishRouter",
+      "referenced": [
+        "Date",
+        "MetadataGenerator",
+        "PlatformType",
+        "PublishJobPayload",
+        "PublishJobStore",
+        "VideoMetadataStore"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/publish/:id",
+      "router": "publishRouter",
+      "referenced": [
+        "Date",
+        "MetadataGenerator",
+        "PlatformType",
+        "PublishJobPayload",
+        "PublishJobStore",
+        "VideoMetadataStore"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/publish/metadata-suggestions",
+      "router": "publishRouter",
+      "referenced": [
+        "Date",
+        "MetadataGenerator",
+        "PlatformType",
+        "PublishJobPayload",
+        "PublishJobStore",
+        "VideoMetadataStore"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/quality/score",
+      "router": "qualityRouter",
+      "referenced": [
+        "QualityScoringEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/queue/bulk",
+      "router": "deferredQueueRouter",
+      "referenced": []
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/recycle/:videoId/metrics",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/recycle/:videoId/recycle",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/recycle/candidates",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/recycle/dedupe/check",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/recycle/dedupe/stats",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/recycle/freshness/check",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/recycle/freshness/record",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/recycle/register",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/recycle/stats",
+      "router": "recycleRouter",
+      "referenced": [
+        "AntiDuplicationEngine",
+        "ContentFreshnessEngine",
+        "ContentRecycleEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/:reportId",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/reports/fetch",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/reports/merge",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/schedule",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/schedule/:id",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/:id",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/schedule/:id",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/schedule/:id/run",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/schedule/:id/status",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/best-times",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/due",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/stats",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/upcoming",
+      "router": "scheduleRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "CaptionPositionEnum",
+        "ContentFreshnessEngine",
+        "Date",
+        "ImageEngine",
+        "Math",
+        "MusicMoodEnum",
+        "MusicVolumeEnum",
+        "NodeJS",
+        "OrientationEnum",
+        "Record",
+        "ScheduleStore",
+        "ShortCreator",
+        "TextModeEnum",
+        "VideoTypeEnum",
+        "VoiceEnum"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/script-plans",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/shadowban",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/shadowban/analyze/:platform/:accountId",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/shadowban/best-time/:platform",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/shadowban/best-time/record",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/shadowban/hashtags/:platform",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/shadowban/hashtags/:platform/trending",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/shadowban/hashtags/record",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/shadowban/humanize-schedule",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/shadowban/metrics",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/shadowban/skip/:platform/:category",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/shadowban/skip/record",
+      "router": "shadowbanRouter",
+      "referenced": [
+        "BestTimeLearningEngine",
+        "Date",
+        "HashtagLearningEngine",
+        "HumanMimicryEngine",
+        "ShadowbanDetectionEngine",
+        "SkipAnalysisEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/short-video",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/short-video/:videoId",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/short-video/:videoId",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/short-video/:videoId/metadata",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/short-video/:videoId/render-path",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/short-video/:videoId/status",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/short-videos",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/buckets",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/strategy/buckets/add",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/buckets/next",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/cta",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/strategy/cta/generate",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/platform/:platform",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/strategy/platform/optimal",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/platforms",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/series",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/strategy/series",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/strategy/series/:id",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/series/:id",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/series/:id/cliffhanger/:episode",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/strategy/series/:id/episode/:ep",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/strategy/series/:id/next-episode",
+      "router": "strategyRouter",
+      "referenced": [
+        "CommentCtaEngine",
+        "ContentBucketEngine",
+        "PlatformPsychologyEngine",
+        "SeriesBuilderEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/assets",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/assets",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/system/assets/:id",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/system/assets/:id/tags",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/assets/stats",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/auth/authenticate",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/auth/register",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/auth/rotate/:tenantId",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/auth/tenants",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/auth/verify",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/compliance/critical",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/compliance/log",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/compliance/logs",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/compliance/report",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/content-buckets/add",
+      "router": "contentBucketsRouter",
+      "referenced": [
+        "ContentBucketEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/content-buckets/detect",
+      "router": "contentBucketsRouter",
+      "referenced": [
+        "ContentBucketEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/content-buckets/next",
+      "router": "contentBucketsRouter",
+      "referenced": [
+        "ContentBucketEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/content-buckets/stats",
+      "router": "contentBucketsRouter",
+      "referenced": [
+        "ContentBucketEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/credentials",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/credentials",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/credentials/:id/rotate",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/credentials/expiring",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/credentials/schedule",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/errorrecovery",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/errorrecovery/:id/dead",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/errorrecovery/:id/recover",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/errorrecovery/clear",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/errorrecovery/deadletter",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/errorrecovery/process",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/errorrecovery/record",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/errorrecovery/stats",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/export",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/export/backup",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/export/list",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/export/restore",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/knowledgebase",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/knowledgebase",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/system/knowledgebase/:id",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/system/knowledgebase/:id",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/knowledgebase/categories",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/knowledgebase/top",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/marketing-engine/banners",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/marketing-engine/campaign",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/marketing-engine/scrape",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/resource/history",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/resource/optimize",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/resource/predict",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/resource/snapshot",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/throttle/check",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/throttle/plan",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/throttle/quotas",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/system/throttle/quotas/:tenantId",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/system/throttle/reset",
+      "router": "systemEnginesRouter",
+      "referenced": [
+        "AssetLibraryEngine",
+        "AuthEngine",
+        "ComplianceEngine",
+        "CreatorKnowledgeBase",
+        "CredentialRotationEngine",
+        "Date",
+        "ErrorRecoveryEngine",
+        "ExportEngine",
+        "MarketingEngine",
+        "ResourceEngine",
+        "String",
+        "ThrottlingEngine",
+        "Value"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/tenants",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/tenants",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/tenants/:tenantId",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/tenants/:tenantId/billing",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/tenants/:tenantId/engines",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/tenants/:tenantId/keys",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/tenants/:tenantId/logs/:engine",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/tenants/:tenantId/quotas",
+      "router": "tenantRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnail/curiosity-gap/:topic",
+      "router": "thumbnailRouter",
+      "referenced": [
+        "ThumbnailEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/thumbnail/generate",
+      "router": "thumbnailRouter",
+      "referenced": [
+        "ThumbnailEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/thumbnail/validate-contrast",
+      "router": "thumbnailRouter",
+      "referenced": [
+        "ThumbnailEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/tmp/:tmpFile",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/translate",
+      "router": "translateRouter",
+      "referenced": [
+        "TranslationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/translate/batch",
+      "router": "translateRouter",
+      "referenced": [
+        "TranslationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/translate/languages",
+      "router": "translateRouter",
+      "referenced": [
+        "TranslationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/trends",
+      "router": "trendsRouter",
+      "referenced": [
+        "TrendEngine",
+        "ViralRadarEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/trends/category/:category",
+      "router": "trendsRouter",
+      "referenced": [
+        "TrendEngine",
+        "ViralRadarEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/trends/refresh",
+      "router": "trendsRouter",
+      "referenced": [
+        "TrendEngine",
+        "ViralRadarEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/trends/viral-radar",
+      "router": "trendsRouter",
+      "referenced": [
+        "TrendEngine",
+        "ViralRadarEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/videolibrary",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/videolibrary",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/videolibrary/:id",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/videolibrary/:id",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/videolibrary/:id",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/videolibrary/:id/metrics",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/videolibrary/:id/status",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/videolibrary/search",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/videolibrary/stats",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/videolibrary/tags",
+      "router": "videoLibraryRouter",
+      "referenced": [
+        "VideoLibraryStore"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/visual/enhance",
+      "router": "visualRouter",
+      "referenced": [
+        "VisualEnhancementEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/visual/ffmpeg-filters",
+      "router": "visualRouter",
+      "referenced": [
+        "VisualEnhancementEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/voices",
+      "router": "deferredApiRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/watermark/default",
+      "router": "watermarkRouter",
+      "referenced": [
+        "WatermarkEngine"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/watermark/default",
+      "router": "watermarkRouter",
+      "referenced": [
+        "WatermarkEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/watermark/filter",
+      "router": "watermarkRouter",
+      "referenced": [
+        "WatermarkEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/webhooks",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/webhooks/:id",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/api/webhooks/:id",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/:id/test",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/webhooks/:id/toggle",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/webhooks/logs",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/notify",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/webhooks/stats",
+      "router": "webhooksRouter",
+      "referenced": [
+        "WebhookNotificationEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/mcp/messages",
+      "router": "deferredMcpRouter",
+      "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/mcp/sse",
+      "router": "deferredMcpRouter",
+      "referenced": []
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "component": "VideoList",
+      "file": "src/ui/pages/VideoList.tsx",
+      "apiCalls": [
+        "/api/short-videos",
+        "/api/short-video/:p"
+      ]
+    },
+    {
+      "route": "/create",
+      "component": "VideoCreator",
+      "file": "src/ui/pages/VideoCreator.tsx",
+      "apiCalls": [
+        "/api/voices",
+        "/api/music-tags",
+        "/api/news-sources",
+        "/api/auto-script/topics",
+        "/api/auto-script/hooks",
+        "/api/news-sources/custom",
+        "/api/auto-script",
+        "/api/short-video"
+      ]
+    },
+    {
+      "route": "/video/:videoId",
+      "component": "VideoDetails",
+      "file": "src/ui/pages/VideoDetails.tsx",
+      "apiCalls": [
+        "/api/short-video/:p/status",
+        "/api/short-video/:p"
+      ]
+    },
+    {
+      "route": "/queue",
+      "component": "BulkQueue",
+      "file": "src/ui/pages/BulkQueue.tsx",
+      "apiCalls": [
+        "/api/health/queue/states",
+        "/api/queue/bulk"
+      ]
+    },
+    {
+      "route": "/mappings",
+      "component": "CategoryMapping",
+      "file": "src/ui/pages/CategoryMapping.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/publish",
+      "component": "PublishDashboard",
+      "file": "src/ui/pages/PublishDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/analytics",
+      "component": "AnalyticsDashboard",
+      "file": "src/ui/pages/AnalyticsDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/scheduler",
+      "component": "SchedulerDashboard",
+      "file": "src/ui/pages/SchedulerDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/ab-testing",
+      "component": "ABTestingDashboard",
+      "file": "src/ui/pages/ABTestingDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/ai",
+      "component": "AIDashboard",
+      "file": "src/ui/pages/AIDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/health",
+      "component": "HealthDashboard",
+      "file": "src/ui/pages/HealthDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/tenants",
+      "component": "TenantConsole",
+      "file": "src/ui/pages/TenantConsole.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/content-tools",
+      "component": "ContentTools",
+      "file": "src/ui/pages/ContentTools.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/trends",
+      "component": "TrendDashboard",
+      "file": "src/ui/pages/TrendDashboard.tsx",
+      "apiCalls": [
+        "/api/trends",
+        "/api/trends/viral-radar",
+        "/api/trends/refresh"
+      ]
+    },
+    {
+      "route": "/hooks",
+      "component": "HookLibrary",
+      "file": "src/ui/pages/HookLibrary.tsx",
+      "apiCalls": [
+        "/api/hooks",
+        "/api/hooks/generate",
+        "/api/hooks/:p"
+      ]
+    },
+    {
+      "route": "/image-generator",
+      "component": "ImageGenerator",
+      "file": "src/ui/pages/ImageGenerator.tsx",
+      "apiCalls": [
+        "/api/image/:p",
+        "/api/image/file/:p"
+      ]
+    },
+    {
+      "route": "/recycle",
+      "component": "RecycleDashboard",
+      "file": "src/ui/pages/RecycleDashboard.tsx",
+      "apiCalls": [
+        "/api/recycle/candidates",
+        "/api/recycle/stats",
+        "/api/recycle/:p/recycle",
+        "/api/recycle/freshness/check",
+        "/api/recycle/dedupe/check"
+      ]
+    },
+    {
+      "route": "/costs",
+      "component": "CostTracker",
+      "file": "src/ui/pages/CostTracker.tsx",
+      "apiCalls": [
+        "/api/costs/summary",
+        "/api/costs/record"
+      ]
+    },
+    {
+      "route": "/strategy",
+      "component": "StrategyDashboard",
+      "file": "src/ui/pages/StrategyDashboard.tsx",
+      "apiCalls": [
+        "/api/strategy/platforms",
+        "/api/strategy/buckets",
+        "/api/strategy/buckets/next"
+      ]
+    },
+    {
+      "route": "/webhooks",
+      "component": "WebhookDashboard",
+      "file": "src/ui/pages/WebhookDashboard.tsx",
+      "apiCalls": [
+        "/api/webhooks",
+        "/api/webhooks/stats",
+        "/api/webhooks/:p",
+        "/api/webhooks/:p/toggle",
+        "/api/webhooks/:p/test"
+      ]
+    },
+    {
+      "route": "/branding",
+      "component": "BrandingDashboard",
+      "file": "src/ui/pages/BrandingDashboard.tsx",
+      "apiCalls": [
+        "/api/branding/:p",
+        "/api/branding/:p/reset"
+      ]
+    },
+    {
+      "route": "/humanized",
+      "component": "HumanizedContentPage",
+      "file": "src/ui/pages/HumanizedContentPage.tsx",
+      "apiCalls": [
+        "/api/humanized/humanize"
+      ]
+    },
+    {
+      "route": "/thumbnail",
+      "component": "ThumbnailPage",
+      "file": "src/ui/pages/ThumbnailPage.tsx",
+      "apiCalls": [
+        "/api/thumbnail/generate"
+      ]
+    },
+    {
+      "route": "/editing",
+      "component": "EditingPage",
+      "file": "src/ui/pages/EditingPage.tsx",
+      "apiCalls": [
+        "/api/editing/plan"
+      ]
+    },
+    {
+      "route": "/visual",
+      "component": "VisualEnhancementPage",
+      "file": "src/ui/pages/VisualEnhancementPage.tsx",
+      "apiCalls": [
+        "/api/visual/enhance"
+      ]
+    },
+    {
+      "route": "/audio",
+      "component": "AudioQualityPage",
+      "file": "src/ui/pages/AudioQualityPage.tsx",
+      "apiCalls": [
+        "/api/audio/process"
+      ]
+    },
+    {
+      "route": "/emotional",
+      "component": "EmotionalResonancePage",
+      "file": "src/ui/pages/EmotionalResonancePage.tsx",
+      "apiCalls": [
+        "/api/emotional/score"
+      ]
+    },
+    {
+      "route": "/attention",
+      "component": "AttentionOptimizerPage",
+      "file": "src/ui/pages/AttentionOptimizerPage.tsx",
+      "apiCalls": [
+        "/api/attention/optimize"
+      ]
+    },
+    {
+      "route": "/quality",
+      "component": "QualityScoringPage",
+      "file": "src/ui/pages/QualityScoringPage.tsx",
+      "apiCalls": [
+        "/api/quality/score"
+      ]
+    },
+    {
+      "route": "/engagement",
+      "component": "EngagementPredictionPage",
+      "file": "src/ui/pages/EngagementPredictionPage.tsx",
+      "apiCalls": [
+        "/api/engagement/predict"
+      ]
+    },
+    {
+      "route": "/account",
+      "component": "AccountManagerPage",
+      "file": "src/ui/pages/AccountManagerPage.tsx",
+      "apiCalls": [
+        "/api/account/metrics",
+        "/api/account/guidance"
+      ]
+    },
+    {
+      "route": "/translate",
+      "component": "TranslatePage",
+      "file": "src/ui/pages/TranslatePage.tsx",
+      "apiCalls": [
+        "/api/translate/languages",
+        "/api/translate/",
+        "/api/translate/batch"
+      ]
+    },
+    {
+      "route": "/comment-cta",
+      "component": "CommentCtaPage",
+      "file": "src/ui/pages/CommentCtaPage.tsx",
+      "apiCalls": [
+        "/api/strategy/cta/generate",
+        "/api/strategy/cta?:p"
+      ]
+    },
+    {
+      "route": "/series",
+      "component": "SeriesBuilderPage",
+      "file": "src/ui/pages/SeriesBuilderPage.tsx",
+      "apiCalls": [
+        "/api/strategy/series",
+        "/api/strategy/series/:p"
+      ]
+    },
+    {
+      "route": "/watermark",
+      "component": "WatermarkPage",
+      "file": "src/ui/pages/WatermarkPage.tsx",
+      "apiCalls": [
+        "/api/watermark/filter",
+        "/api/watermark/default"
+      ]
+    },
+    {
+      "route": "/shadowban",
+      "component": "ShadowbanPage",
+      "file": "src/ui/pages/ShadowbanPage.tsx",
+      "apiCalls": [
+        "/api/shadowban/"
+      ]
+    },
+    {
+      "route": "/video-library",
+      "component": "VideoLibraryPage",
+      "file": "src/ui/pages/VideoLibraryPage.tsx",
+      "apiCalls": [
+        "/api/videolibrary/stats",
+        "/api/videolibrary/tags",
+        "/api/videolibrary/:p",
+        "/api/videolibrary",
+        "/api/videolibrary/:p/status"
+      ]
+    },
+    {
+      "route": "/schedule-manager",
+      "component": "SchedulePersistPage",
+      "file": "src/ui/pages/SchedulePersistPage.tsx",
+      "apiCalls": [
+        "/api/schedule/stats",
+        "/api/schedule",
+        "/api/schedule/:p/status",
+        "/api/schedule/:p/run",
+        "/api/schedule/:p"
+      ]
+    },
+    {
+      "route": "/image-filters",
+      "component": "ImageFilterPage",
+      "file": "src/ui/pages/ImageFilterPage.tsx",
+      "apiCalls": [
+        "/api/image/filters",
+        "/api/image/filters/css",
+        "/api/image/filters/preview",
+        "/api/image/filters/preview/file/:p"
+      ]
+    },
+    {
+      "route": "/auto-mode",
+      "component": "AutoModePage",
+      "file": "?",
+      "apiCalls": []
+    },
+    {
+      "route": "/compare",
+      "component": "PipelineComparePage",
+      "file": "?",
+      "apiCalls": []
+    },
+    {
+      "route": "/engines-dashboard",
+      "component": "EnginesDashboard",
+      "file": "src/ui/pages/EnginesDashboard.tsx",
+      "apiCalls": []
+    },
+    {
+      "route": "/profiles",
+      "component": "ProfilesPage",
+      "file": "src/ui/pages/ProfilesPage.tsx",
+      "apiCalls": [
+        "/api/profiles",
+        "/api/profiles/:p",
+        "/api/profiles/:p/accounts",
+        "/api/profiles/:p/accounts/:p",
+        "/api/oauth/:p/connect",
+        "/api/profiles/resolve"
+      ]
+    },
+    {
+      "route": "/oauth/success",
+      "component": "OAuthSuccessPage",
+      "file": "src/ui/pages/OAuthSuccessPage.tsx",
+      "apiCalls": []
+    }
+  ],
+  "stores": [
+    {
+      "file": "src/db/ABVariantStore.ts",
+      "class": "ABVariantStore",
+      "jsonFile": "abVariants.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/AiLearningStore.ts",
+      "class": "AiLearningStore",
+      "jsonFile": "ai-learning-events.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/AnalyticsStore.ts",
+      "class": "AnalyticsStore",
+      "jsonFile": "analytics.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/AudienceStore.ts",
+      "class": "AudienceStore",
+      "jsonFile": "audienceTargets.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/ChannelConfigStore.ts",
+      "class": "ChannelConfigStore",
+      "jsonFile": "channelConfigs.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/CustomNewsSourceStore.ts",
+      "class": "CustomNewsSourceStore",
+      "jsonFile": "customNewsSources.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/PipelineStore.ts",
+      "class": "PipelineStore",
+      "jsonFile": "pipeline-jobs.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/ProfileAccountStore.ts",
+      "class": "ProfileAccountStore",
+      "jsonFile": "profileAccounts.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/ProfileStore.ts",
+      "class": "ProfileStore",
+      "jsonFile": "profiles.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/PublishJobStore.ts",
+      "class": "PublishJobStore",
+      "jsonFile": "publishJobs.json",
+      "purpose": "Idempotency check: same render output + platform + channel"
+    },
+    {
+      "file": "src/db/RenderJobStore.ts",
+      "class": "RenderJobStore",
+      "jsonFile": "renderJobs.json",
+      "purpose": "Find existing job with same idempotency key"
+    },
+    {
+      "file": "src/db/ReportStore.ts",
+      "class": "ReportStore",
+      "jsonFile": "reports.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/ScheduleStore.ts",
+      "class": "ScheduleStore",
+      "jsonFile": "schedules.json",
+      "purpose": "Calculate next run based on cron expression (simplified)"
+    },
+    {
+      "file": "src/db/ScriptPlanStore.ts",
+      "class": "ScriptPlanStore",
+      "jsonFile": "scriptPlans.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/TenantStore.ts",
+      "class": "TenantStore",
+      "jsonFile": "tenants.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/TenantUsageStore.ts",
+      "class": "TenantUsageStore",
+      "jsonFile": "tenantUsage.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/VideoLibraryStore.ts",
+      "class": "VideoLibraryStore",
+      "jsonFile": "videoLibrary.json",
+      "purpose": ""
+    },
+    {
+      "file": "src/db/VideoMetadataStore.ts",
+      "class": "VideoMetadataStore",
+      "jsonFile": "videoMetadata.json",
+      "purpose": ""
+    }
+  ]
+}

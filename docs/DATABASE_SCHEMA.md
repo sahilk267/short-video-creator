@@ -374,3 +374,29 @@ Seeders live in `database/seeders/` and are numbered similarly.
 | analytics.json | ~50MB (1M events) | ~500ms |
 
 > For `analytics.json` at high volume, consider switching to SQLite or a time-series DB.
+
+
+<!-- AUTO-GENERATED:store-inventory:BEGIN -->
+JSON-backed data stores in `src/db/` (18).
+
+| File | Class | JSON File | Purpose |
+|------|-------|-----------|---------|
+| `src/db/ABVariantStore.ts` | ABVariantStore | `abVariants.json` | - |
+| `src/db/AiLearningStore.ts` | AiLearningStore | `ai-learning-events.json` | - |
+| `src/db/AnalyticsStore.ts` | AnalyticsStore | `analytics.json` | - |
+| `src/db/AudienceStore.ts` | AudienceStore | `audienceTargets.json` | - |
+| `src/db/ChannelConfigStore.ts` | ChannelConfigStore | `channelConfigs.json` | - |
+| `src/db/CustomNewsSourceStore.ts` | CustomNewsSourceStore | `customNewsSources.json` | - |
+| `src/db/PipelineStore.ts` | PipelineStore | `pipeline-jobs.json` | - |
+| `src/db/ProfileAccountStore.ts` | ProfileAccountStore | `profileAccounts.json` | - |
+| `src/db/ProfileStore.ts` | ProfileStore | `profiles.json` | - |
+| `src/db/PublishJobStore.ts` | PublishJobStore | `publishJobs.json` | Idempotency check: same render output + platform + channel |
+| `src/db/RenderJobStore.ts` | RenderJobStore | `renderJobs.json` | Find existing job with same idempotency key |
+| `src/db/ReportStore.ts` | ReportStore | `reports.json` | - |
+| `src/db/ScheduleStore.ts` | ScheduleStore | `schedules.json` | Calculate next run based on cron expression (simplified) |
+| `src/db/ScriptPlanStore.ts` | ScriptPlanStore | `scriptPlans.json` | - |
+| `src/db/TenantStore.ts` | TenantStore | `tenants.json` | - |
+| `src/db/TenantUsageStore.ts` | TenantUsageStore | `tenantUsage.json` | - |
+| `src/db/VideoLibraryStore.ts` | VideoLibraryStore | `videoLibrary.json` | - |
+| `src/db/VideoMetadataStore.ts` | VideoMetadataStore | `videoMetadata.json` | - |
+<!-- AUTO-GENERATED:store-inventory:END -->

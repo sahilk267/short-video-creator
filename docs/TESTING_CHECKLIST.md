@@ -4,6 +4,23 @@ All **44 UI pages** grouped by sidebar section. For each page: what to click, wh
 
 Server: `http://localhost:3123` · API docs: `/api/docs` · Start with a clean profile in Client Profiles when testing publishing.
 
+## Automated QA Gate (run before manual testing)
+
+The repo enforces these automatically in CI, but run them locally too:
+
+```bash
+npm run qa           # check → regenerate → verify no drift
+npm run qa:check     # must exit 0
+```
+
+| Check | What it catches | Pass condition |
+|-------|-----------------|----------------|
+| `check-ai-mistakes.ts` | hardcoded secrets/placeholders, `@ts-ignore`, stray `console.log`, TODO/FIXME, duplicate routes | 0 errors |
+| `check-test-existence.ts` | new/changed source file without a test | all changed files tested |
+| `check-docs-consistency.ts` | documented endpoints missing from source; stale AUTO-GENERATED sections | 0 errors |
+
+> If `check-docs-consistency` fails with "run generate-*", execute `npm run qa:generate` and review the diff.
+
 ---
 
 ## AI Pipeline

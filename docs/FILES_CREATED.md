@@ -260,6 +260,25 @@ import type { EnhancedServicesRegistry } from "./enhanced-types";
 
 ---
 
+# Auto-QA / Auto-Index System Files (2026-08-08)
+
+- [x] `scripts/qa/lib.ts` — shared helpers (file walking, findings, git/dir utils)
+- [x] `scripts/qa/docs-lib.ts` — parses the live API surface from `server.ts` mounts + router files
+- [x] `scripts/qa/index-lib.ts` — builds the codebase index (files, routes, pages, stores)
+- [x] `scripts/qa/allowlist.json` — allowlist for pre-existing, intentional findings
+- [x] `scripts/qa/check-ai-mistakes.ts` — secrets/placeholders, @ts-ignore, console.log, TODO/FIXME, duplicate routes
+- [x] `scripts/qa/check-test-existence.ts` — new/changed source files must have a test
+- [x] `scripts/qa/check-docs-consistency.ts` — documented endpoints exist, AUTO-GENERATED sections are fresh
+- [x] `scripts/qa/generate-index.ts` — writes `codebase-index.json` + `docs/INDEX.md`
+- [x] `scripts/qa/generate-docs.ts` — regenerates AUTO-GENERATED sections of API.md / SYSTEM_MAP.md / DATABASE_SCHEMA.md
+- [x] `tsconfig.scripts.json` — typecheck config for the QA scripts
+- [x] `.github/workflows/qa.yml` — PR checks + auto-update job on main pushes
+- [x] `package.json` — `qa`, `qa:check`, `qa:generate`, `qa:typecheck` scripts
+- [x] `.gitignore` — `data/*.json`, `renderJobs.json`, `.roo/`
+- [x] `codebase-index.json` — machine-readable codebase index (committed, auto-updated)
+
+---
+
 # Success Indicators
 
 ✅ **You're done when**:

@@ -1,0 +1,31 @@
+{
+  "console.log": {
+    "files": [
+      "src/short-creator/ShortCreator.ts",
+      "src/script-generator/AiLlmGenerator.ts",
+      "src/news-fetcher/RssFetcher.ts"
+    ],
+    "lines": []
+  },
+  "ts-bypass": {
+    "files": ["src/services/ImageFiltersEngine.ts"],
+    "lines": []
+  },
+  "secrets": {
+    "files": [],
+    "lines": []
+  },
+  "placeholder": {
+    "files": [
+      "src/config/validate.ts",
+      "src/server/routers/tenants.ts",
+      "src/services/AuthEngine.ts",
+      "src/services/ProfileService.ts"
+    ],
+    "lines": []
+  },
+  "todo": {
+    "files": [],
+    "lines": []
+  }
+}

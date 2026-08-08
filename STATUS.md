@@ -20,6 +20,24 @@ See [`docs/CLIENT_PROFILES.md`](docs/CLIENT_PROFILES.md) for the full reference.
 
 ---
 
+## Recent Feature: Auto-QA / Auto-Index System ✅
+
+| # | Component | File | Status |
+|---|-----------|------|--------|
+| 1 | AI-mistake scanner | scripts/qa/check-ai-mistakes.ts | ✅ |
+| 2 | Test-existence gate | scripts/qa/check-test-existence.ts | ✅ |
+| 3 | Docs-consistency checker | scripts/qa/check-docs-consistency.ts | ✅ |
+| 4 | Codebase index generator | scripts/qa/generate-index.ts → codebase-index.json + docs/INDEX.md | ✅ |
+| 5 | Docs section generator | scripts/qa/generate-docs.ts (API.md / SYSTEM_MAP.md / DATABASE_SCHEMA.md) | ✅ |
+| 6 | CI workflow | .github/workflows/qa.yml (PR checks + auto-update on main) | ✅ |
+| 7 | npm scripts | `qa`, `qa:check`, `qa:generate`, `qa:typecheck` | ✅ |
+
+- **Verified locally**: all 3 checks pass clean (exit 0), fail correctly on injected violations (exit 1), generators are idempotent (zero diff on re-run), typecheck + 65/65 tests + `npm run build` all green.
+- **Fix-ups made**: corrected 28 hallucinated endpoints in `docs/API.md` (e.g. `/api/shorts` → `/api/short-video`, `/api/ab-testing` → `/api/abtesting`, `/api/analytics` → `/api/marketing/analytics`) that the consistency check caught.
+- Run `npm run qa` locally; CI enforces the same on every PR and self-updates docs on push to `main`.
+
+---
+
 ## Overall Progress
 
 | Phase | Engines | Done | Pending |

@@ -9,6 +9,7 @@ dist
 lint_full.txt
 lint_output.txt
 server.log
+.roo/
 
 # Runtime media (never commit large video/audio artifacts)
 data/videos/
@@ -16,6 +17,8 @@ data/temp/
 data/generated-images/
 data/filtered-images/
 data/exports/
+data/*.json
+renderJobs.json
 
 # Video/intermediate media (never commit to git — waste storage)
 # NOTE: static/music/*.mp3 is a deliberate, tracked royalty-free music library.
