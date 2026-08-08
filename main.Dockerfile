@@ -52,7 +52,7 @@ RUN apt install -y \
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 
 FROM base AS prod-deps
 COPY package.json pnpm-lock.yaml* /app/
