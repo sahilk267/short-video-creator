@@ -392,6 +392,7 @@ export interface PublishJobRecord {
   externalId: string | null;
   publishedUrl: string | null;
   error: string | null;
+  accountId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

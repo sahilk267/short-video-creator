@@ -148,7 +148,9 @@ export class Config {
   public telegramBotToken: string = "";
   public telegramChannelId: string = "";
   public instagramAccessToken: string = "";
+  public instagramBusinessAccountId: string = "";
   public facebookAccessToken: string = "";
+  public facebookPageId: string = "";
   public slackWebhookUrl: string = "";
   public pagerDutyRoutingKey: string = "";
   public alertEmailTo: string = "";
@@ -244,7 +246,9 @@ export class Config {
   this.telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
   this.telegramChannelId = process.env.TELEGRAM_CHANNEL_ID || "";
   this.instagramAccessToken = process.env.INSTAGRAM_ACCESS_TOKEN || "";
+  this.instagramBusinessAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || "";
   this.facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN || "";
+  this.facebookPageId = process.env.FACEBOOK_PAGE_ID || "";
   this.slackWebhookUrl = process.env.SLACK_WEBHOOK_URL || "";
   this.pagerDutyRoutingKey = process.env.PAGERDUTY_ROUTING_KEY || "";
   this.alertEmailTo = process.env.ALERT_EMAIL_TO || "";

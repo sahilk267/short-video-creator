@@ -46,6 +46,8 @@ const ImageFilterPage = lazy(() => import('./pages/ImageFilterPage'));
 const AutoModePage = lazy(() => import('./pages/AutoModePage'));
 const PipelineComparePage = lazy(() => import('./pages/PipelineComparePage'));
 const EnginesDashboard = lazy(() => import('./pages/EnginesDashboard'));
+const ProfilesPage = lazy(() => import('./pages/ProfilesPage'));
+const OAuthSuccessPage = lazy(() => import('./pages/OAuthSuccessPage'));
 
 const App: React.FC = () => {
   return (
@@ -96,6 +98,8 @@ const App: React.FC = () => {
               <Route path="/auto-mode" element={<AutoModePage />} />
               <Route path="/compare" element={<PipelineComparePage />} />
               <Route path="/engines-dashboard" element={<EnginesDashboard />} />
+              <Route path="/profiles" element={<ProfilesPage />} />
+              <Route path="/oauth/success" element={<OAuthSuccessPage />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>

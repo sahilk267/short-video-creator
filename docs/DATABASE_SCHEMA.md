@@ -153,6 +153,48 @@ Array of `Tenant` objects.
 }
 ```
 
+### `profiles.json` — Client Profiles
+
+Array of `ProfileRecord` objects. Each profile represents a client / niche and lists the content categories that route to it.
+
+```json
+{
+  "id": "string",
+  "name": "TechBrand Client",
+  "description": "Technology content for TechBrand",
+  "genres": ["Technology", "Science"],
+  "accountIds": ["<profileAccountId>"],
+  "createdAt": "ISO8601",
+  "updatedAt": "ISO8601"
+}
+```
+
+### `profileAccounts.json` — Profile Platform Accounts
+
+Array of `ProfileAccountRecord` objects. Each account belongs to exactly one profile.
+
+```json
+{
+  "id": "string",
+  "profileId": "string",
+  "provider": "youtube | telegram | instagram | facebook | linkedin | x",
+  "label": "TechBrand Telegram channel",
+  "externalId": "string | null",
+  "displayName": "string | null",
+  "avatarUrl": "string | null",
+  "status": "active | needs-reauth | error",
+  "lastError": "string | null",
+  "credentials": {
+    "botToken": "ENCRYPTED_BASE64",
+    "channelId": "ENCRYPTED_BASE64"
+  },
+  "createdAt": "ISO8601",
+  "updatedAt": "ISO8601"
+}
+```
+
+> **Credentials are encrypted at rest** with AES-256-GCM using `TENANT_KEYS_SECRET`. Each value is `base64(iv || authTag || ciphertext)`. The API summary exposes `hasCredentials` instead of the encrypted values.
+
 ### `analytics.json` — Performance Analytics
 
 ```json

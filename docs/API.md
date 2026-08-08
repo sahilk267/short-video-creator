@@ -181,14 +181,91 @@ Publish a video to a platform.
 
 ```json
 {
-  "videoId": "clx1234abc",
+  "renderOutputPath": "/path/to/video.mp4",
   "platform": "youtube",
+  "channelId": "channel_handle_or_id",
+  "accountId": "optional_profile_account_id",
   "title": "My Viral Video",
   "description": "Watch this amazing content!",
   "tags": ["viral", "AI", "tech"],
   "category": "Technology"
 }
 ```
+
+**Optional `accountId`:** when provided, publishes using that profile account's stored (encrypted) credentials instead of the global env credentials.
+
+---
+
+### Client Profiles (Multi-Account)
+
+Manage client profiles and their per-platform accounts. Credentials are encrypted at rest (AES-256-GCM via `TENANT_KEYS_SECRET`). See [`docs/CLIENT_PROFILES.md`](CLIENT_PROFILES.md) for details.
+
+#### `GET /api/profiles`
+List all profiles with their account summaries.
+
+#### `POST /api/profiles`
+Create a profile.
+
+```json
+{
+  "name": "TechBrand Client",
+  "description": "Technology content for TechBrand",
+  "genres": ["Technology", "Science"]
+}
+```
+
+#### `GET /api/profiles/:id`
+Get one profile with its accounts.
+
+#### `PATCH /api/profiles/:id`
+Update `name`, `description`, or `genres`.
+
+#### `DELETE /api/profiles/:id`
+Delete a profile and all its accounts.
+
+#### `POST /api/profiles/resolve`
+Auto-routing: which accounts should receive a video for a category + platform.
+
+```json
+{ "category": "Technology", "platform": "youtube" }
+```
+
+Response: array of matching `ProfileAccountSummary` objects (active accounts on profiles whose `genres` include the category).
+
+#### `GET /api/profiles/:id/accounts`
+List accounts for a profile.
+
+#### `POST /api/profiles/:id/accounts`
+Add a platform account manually.
+
+```json
+{
+  "provider": "telegram",
+  "label": "TechBrand Telegram channel",
+  "credentials": { "botToken": "...", "channelId": "@techbrand" },
+  "displayName": "TechBrand"
+}
+```
+
+Credential keys per provider: `youtube` → `clientId, clientSecret, refreshToken`; `telegram` → `botToken, channelId`; `instagram` → `accessToken, businessAccountId`; `facebook` → `accessToken, pageId`; `linkedin` → `accessToken, personUrn`; `x` → `bearerToken, apiKey, apiSecret, accessToken, accessSecret`.
+
+#### `DELETE /api/profiles/:id/accounts/:accountId`
+Remove an account.
+
+#### `POST /api/profiles/:id/accounts/:accountId/refresh`
+Token refresh info (stub; auto-refresh happens on next publish).
+
+#### `POST /api/oauth/:provider/connect`
+Start an OAuth connect flow.
+
+```json
+{ "profileId": "<profileId>", "redirectUri": "optional_custom_base" }
+```
+
+Response: `{ authorizationUrl, state, provider }`. Only YouTube is currently supported (`webOAuthSupported: true`); other providers return a hint to add credentials manually.
+
+#### `GET /api/oauth/:provider/callback`
+OAuth provider redirect target. Exchanges the code, creates the account, then redirects the browser to `/oauth/success?status=...`.
 
 ---
 

@@ -244,6 +244,22 @@ import type { EnhancedServicesRegistry } from "./enhanced-types";
 
 ---
 
+# Multi-Profile System Files (2026-08-08)
+
+- [x] `src/types/profiles.ts` — ProfileRecord / ProfileAccountRecord / summaries / credentials types
+- [x] `src/db/ProfileStore.ts` — JSON store for client profiles
+- [x] `src/db/ProfileAccountStore.ts` — JSON store for per-profile platform accounts
+- [x] `src/services/ProfileService.ts` — CRUD, AES-256-GCM credential encryption, category auto-routing
+- [x] `src/services/OAuthProvider.ts` — OAuth auth-URL building + code exchange (YouTube), provider hints
+- [x] `src/server/routers/profiles.ts` — ProfilesRouter (/api/profiles) + OAuthRouter (/api/oauth)
+- [x] `src/publishers/PublisherFactory.ts` — added `createPublisherForAccount` per-account credential mapping
+- [x] `src/workers/PublishWorker.ts` — publishes to a specific account via `accountId`
+- [x] `src/ui/pages/ProfilesPage.tsx` — Client Profiles UI
+- [x] `src/ui/pages/OAuthSuccessPage.tsx` — OAuth callback result page
+- [x] `docs/CLIENT_PROFILES.md` — full feature reference
+
+---
+
 # Success Indicators
 
 ✅ **You're done when**:

@@ -22,7 +22,8 @@ export class InstagramPublisher implements PlatformPublisher {
 
   constructor(config: Config) {
     this.accessToken = config.instagramAccessToken || process.env.INSTAGRAM_ACCESS_TOKEN || "";
-    this.businessAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || "";
+    this.businessAccountId =
+      config.instagramBusinessAccountId || process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || "";
   }
 
   async validateCredentials(): Promise<boolean> {

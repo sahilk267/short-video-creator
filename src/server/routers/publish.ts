@@ -19,7 +19,7 @@ import type { PublishJobPayload } from "../../workers/PublishWorker";
 import { validatePublishPayload } from "../../publishers/PlatformLimits";
 import { MetadataGenerator } from "../../services/MetadataGenerator";
 
-const ALLOWED_PLATFORMS: PlatformType[] = ["youtube", "telegram", "instagram", "facebook"];
+const ALLOWED_PLATFORMS: PlatformType[] = ["youtube", "telegram", "instagram", "facebook", "linkedin", "x"];
 
 export class PublishRouter {
   public router: Router;
@@ -97,6 +97,7 @@ export class PublishRouter {
       renderOutputPath,
       platform,
       channelId,
+      accountId,
       title,
       description = "",
       tags = [],
@@ -134,6 +135,7 @@ export class PublishRouter {
       renderOutputPath,
       platform: platform as PlatformType,
       channelId,
+      accountId,
       title: title as string,
       description: description as string,
       tags: tags as string[],
@@ -168,6 +170,7 @@ export class PublishRouter {
         renderOutputPath,
         platform: platform as PlatformType,
         channelId,
+        accountId,
         title: title as string,
         description: description as string,
         tags: tags as string[],

@@ -49,6 +49,7 @@ import { ApprovalRouter } from "./routers/approval";
 import { SystemEnginesRouter } from "./routers/systemengines";
 import { ContentBucketsRouter } from "./routers/contentbuckets";
 import { ChannelConfigRouter } from "./routers/channelconfigs";
+import { ProfilesRouter, OAuthRouter } from "./routers/profiles";
 import { apiRateLimiter } from "./rateLimit";
 import { logger } from "../logger";
 import { Config } from "../config";
@@ -139,6 +140,8 @@ export class Server {
     const systemEnginesRouter = new SystemEnginesRouter(config);
     const contentBucketsRouter = new ContentBucketsRouter(config);
     const channelConfigRouter = new ChannelConfigRouter(config);
+    const profilesRouter = new ProfilesRouter(config);
+    const oauthRouter = new OAuthRouter(config);
 
     // Always-available routes (no ShortCreator dependency)
     this.app.use("/api/health", healthRouter.router);
@@ -178,6 +181,8 @@ export class Server {
     this.app.use("/api/system", systemEnginesRouter.router);
     this.app.use("/api/system/content-buckets", contentBucketsRouter.router);
     this.app.use("/api/channel-configs", channelConfigRouter.router);
+    this.app.use("/api/profiles", profilesRouter.router);
+    this.app.use("/api/oauth", oauthRouter.router);
 
     // API Documentation (Swagger UI) — always available
     this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

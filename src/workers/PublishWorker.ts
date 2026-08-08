@@ -25,6 +25,8 @@ export interface PublishJobPayload {
   language: string;
   thumbnailPath?: string;
   scheduleAt?: string;
+  /** Optional profile account id. When set, the job publishes to that account. */
+  accountId?: string;
 }
 
 export class PublishWorker {
@@ -103,7 +105,27 @@ export class PublishWorker {
     // Dynamic import of the right publisher based on platform
     try {
       const { createPublisher } = await import("../publishers/PublisherFactory.js");
-      const publisher = createPublisher(platform, this.config);
+
+      let publisher;
+      if (job.data.accountId) {
+        const { ProfileService } = await import("../services/ProfileService.js");
+        const service = new ProfileService(
+          this.config.dataDirPath,
+          process.env.TENANT_KEYS_SECRET || "",
+        );
+        const credentials = await service.getAccountCredentials(job.data.accountId);
+        const account = await service.getAccount(job.data.accountId);
+        if (!account || account.provider !== platform) {
+          throw new Error(`Account ${job.data.accountId} not found or provider mismatch`);
+        }
+        if (!credentials || Object.keys(credentials).length === 0) {
+          throw new Error(`Account ${job.data.accountId} has no stored credentials`);
+        }
+        const { createPublisherForAccount } = await import("../publishers/PublisherFactory.js");
+        publisher = createPublisherForAccount(platform, this.config, credentials);
+      } else {
+        publisher = createPublisher(platform, this.config);
+      }
 
       const credentialsValid = await publisher.validateCredentials();
       if (!credentialsValid) {
@@ -153,12 +175,13 @@ export class PublishWorker {
       await job.updateProgress(100);
       logger.info({ publishJobId, platform, externalId: result.externalId }, "Published successfully");
 
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       await this.publishJobStore.addAttempt({
         publishJobId,
         attemptNumber: (job.attemptsMade ?? 0) + 1,
         status: "failed",
-        responseBody: err.message,
+        responseBody: message,
       });
       throw err; // Let BullMQ handle retry
     }

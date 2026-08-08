@@ -47,6 +47,12 @@ An open-source, production-ready platform for automated viral short-form video c
 ### Publishing Platforms
 YouTube · Instagram · TikTok · Facebook · LinkedIn · X/Twitter · Telegram
 
+### Client Profiles & Multi-Account
+- **1 user → N profiles** (clients / niches / genres) → **N platform accounts per profile**
+- Category-based **auto-routing**: videos publish to every active account whose profile matches the content category
+- **OAuth connect flow** (YouTube via Google OAuth2) or manual credential entry for all platforms
+- Credentials **encrypted at rest** with `TENANT_KEYS_SECRET` (AES-256-GCM)
+
 ### SaaS Infrastructure
 - Multi-tenant with API key management
 - Per-tenant usage tracking and billing hooks
@@ -247,7 +253,7 @@ Browser (React + Vite + MUI)
     │
     ▼
 Express.js API Server (Port 3123)
-├── 33 Feature Routers (/api/*)
+├── 42 Feature Routers (/api/*)
 ├── Swagger UI (/api/docs)
 ├── Rate Limiter (120 req/min)
 └── Static UI (/*)
@@ -280,6 +286,53 @@ Express.js API Server (Port 3123)
 | **Telegram** | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHANNEL_ID` |
 | **LinkedIn** | `LINKEDIN_ACCESS_TOKEN` |
 | **X/Twitter** | `TWITTER_API_KEY` + `TWITTER_API_SECRET` + tokens |
+
+### Client Profiles (Multi-Account Publishing)
+
+See [`docs/CLIENT_PROFILES.md`](docs/CLIENT_PROFILES.md) for the full reference.
+
+Manage clients/niches and their connected platform accounts from **UI → Client Profiles** (`/profiles`) or via REST:
+
+```bash
+# Create a profile (client / niche) with routing categories
+curl -X POST http://localhost:3123/api/profiles \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "TechBrand Client",
+    "description": "Technology content for TechBrand",
+    "genres": ["Technology", "Science"]
+  }'
+
+# Add a platform account manually (credentials encrypted at rest)
+curl -X POST http://localhost:3123/api/profiles/<profileId>/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "telegram",
+    "label": "TechBrand Telegram channel",
+    "credentials": { "botToken": "...", "channelId": "@techbrand" }
+  }'
+
+# Resolve which accounts should receive a video for a category+platform (auto-routing)
+curl -X POST http://localhost:3123/api/profiles/resolve \
+  -H "Content-Type: application/json" \
+  -d '{ "category": "Technology", "platform": "youtube" }'
+```
+
+**Publishing to a specific account:** pass `accountId` in `POST /api/publish`. The publish worker decrypts that account's credentials and publishes as that account (falls back to global env credentials when omitted).
+
+**OAuth connect (YouTube):**
+
+```bash
+# Start the flow → returns an authorizationUrl to open in a browser
+curl -X POST http://localhost:3123/api/oauth/youtube/connect \
+  -H "Content-Type: application/json" \
+  -d '{ "profileId": "<profileId>" }'
+
+# User approves → provider redirects to /api/oauth/youtube/callback?code=...&state=...
+# The account is created automatically; UI shows the result at /oauth/success
+```
+
+> **Note:** `TENANT_KEYS_SECRET` is now **required** when using profiles — account credentials are encrypted with it. Generate one with `openssl rand -hex 32`.
 
 ---
 
@@ -371,6 +424,7 @@ bash database/seed.sh
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, data flow diagrams |
 | [`docs/API.md`](docs/API.md) | Full REST API reference |
 | [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) | All JSON store schemas |
+| [`docs/CLIENT_PROFILES.md`](docs/CLIENT_PROFILES.md) | Client profiles & multi-account publishing reference |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Deployment guides (VPS, Docker, PM2, systemd) |
 | [`docs/postman_collection.json`](docs/postman_collection.json) | Importable Postman collection |
 | [`.env.example`](.env.example) | All environment variables with descriptions |
@@ -388,6 +442,8 @@ All data is stored as JSON files under `DATA_DIR_PATH` (default: `~/.ai-content-
 ├── renderJobs.json          # Render job queue
 ├── publishJobs.json         # Publish job queue
 ├── tenants.json             # Multi-tenant accounts
+├── profiles.json            # Client profiles (multi-account system)
+├── profileAccounts.json     # Per-profile platform accounts (encrypted credentials)
 ├── analytics.json           # Performance events
 ├── hooks.json               # Hook templates
 ├── brandingConfig.json      # White-label branding

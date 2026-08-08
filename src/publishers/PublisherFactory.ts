@@ -53,3 +53,60 @@ export function createPublisher(platform: PlatformType, config: Config): Platfor
     }
   }
 }
+
+/**
+ * Maps per-account credential keys (as stored on ProfileAccountCredentials) to
+ * the Config field names each publisher reads them from.
+ */
+const ACCOUNT_CREDENTIAL_TO_CONFIG: Record<PlatformType, Record<string, string>> = {
+  youtube: {
+    clientId: "youtubeClientId",
+    clientSecret: "youtubeClientSecret",
+    refreshToken: "youtubeRefreshToken",
+  },
+  telegram: {
+    botToken: "telegramBotToken",
+    channelId: "telegramChannelId",
+  },
+  instagram: {
+    accessToken: "instagramAccessToken",
+    businessAccountId: "instagramBusinessAccountId",
+  },
+  facebook: {
+    accessToken: "facebookAccessToken",
+    pageId: "facebookPageId",
+  },
+  linkedin: {
+    accessToken: "linkedinAccessToken",
+    personUrn: "linkedinPersonUrn",
+  },
+  x: {
+    bearerToken: "xBearerToken",
+    apiKey: "xApiKey",
+    apiSecret: "xApiSecret",
+    accessToken: "xAccessToken",
+    accessSecret: "xAccessSecret",
+  },
+};
+
+/**
+ * Builds a publisher for a specific profile account, overlaying the account's
+ * decrypted credentials on top of the global config. Falls back to global
+ * credentials for any key the account does not provide.
+ */
+export function createPublisherForAccount(
+  platform: PlatformType,
+  config: Config,
+  credentials: Record<string, string>,
+): PlatformPublisher {
+  const mapping = ACCOUNT_CREDENTIAL_TO_CONFIG[platform];
+  if (!mapping) {
+    throw new Error(`No account credential mapping for platform: ${platform}`);
+  }
+  const overlay: Record<string, string> = {};
+  for (const [credentialKey, configKey] of Object.entries(mapping)) {
+    if (credentials[credentialKey]) overlay[configKey] = credentials[credentialKey];
+  }
+  const merged = Object.assign(Object.create(config), overlay) as Config;
+  return createPublisher(platform, merged);
+}

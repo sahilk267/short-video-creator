@@ -20,12 +20,13 @@ AI Viral Content Empire is a full-stack SaaS platform for automated viral conten
 │  └─────────────┘  └─────┬──────┘  └────────────┘               │
 │                          │                                       │
 │  ┌───────────────────────┴────────────────────────────────────┐ │
-│  │                    33 Feature Routers                       │ │
+│  │                    42 Feature Routers                       │ │
 │  │  health │ publish │ queue │ tenants │ marketing │ ai        │ │
 │  │  content│ trends  │ hooks │ translate│ image    │ recycle   │ │
 │  │  costs  │ shadowban│strategy│webhooks│branding  │ humanized │ │
 │  │  thumbnail│editing│visual │ audio  │ emotional │ attention  │ │
 │  │  quality│ engagement│account│watermark│videolibrary│schedule│ │
+│  │  profiles │ oauth │ pipeline │ ...                         │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 └─────────────────────────┬──────────────────────────────────────┘
                           │

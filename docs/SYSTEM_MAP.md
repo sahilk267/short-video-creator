@@ -1,6 +1,6 @@
 # System Map — AI Viral Content Empire v12.0
 
-Generated: 2026-05-05
+Generated: 2026-08-08
 
 ---
 
@@ -14,7 +14,7 @@ Generated: 2026-05-05
                         │ HTTP (port 5000)
 ┌───────────────────────▼─────────────────────────────────────────┐
 │                   Express API Server                             │
-│              33+ routers · Rate limiting · Swagger               │
+│              42 routers · Rate limiting · Swagger                │
 └───────────────────────┬─────────────────────────────────────────┘
                         │
       ┌─────────────────┼──────────────────┐
@@ -88,6 +88,7 @@ Generated: 2026-05-05
 | Video Creator | `ShortCreator.ts` + Remotion | Core video rendering engine |
 | TTS (Kokoro) | `@huggingface/transformers` | Local text-to-speech (82M ONNX model) |
 | STT (Whisper.cpp) | Binary at `~/.ai-agents-az-video-generator/libs/whisper/` | Speech-to-text transcription |
+| Client Profiles | `ProfileService.ts` + `ProfileStore.ts` + `ProfileAccountStore.ts` | Multi-client accounts; encrypted credentials (AES-256-GCM via TENANT_KEYS_SECRET); OAuth connect |
 
 ---
 
@@ -158,10 +159,12 @@ Ready-to-post content package
 | TenantStore | `tenants.json` | Multi-tenant configs |
 | VideoLibraryStore | `video-library.json` | Video metadata catalogue |
 | ReportStore | `reports.json` | News/trend reports |
+| ProfileStore | `profiles.json` | Client profiles (per client / niche) with routing categories |
+| ProfileAccountStore | `profileAccounts.json` | Per-profile platform accounts (credentials encrypted AES-256-GCM) |
 
 ---
 
-## API Endpoints Summary (37+ routes)
+## API Endpoints Summary (40+ routes)
 
 ```
 Core Video:
@@ -169,6 +172,19 @@ Core Video:
   GET    /api/short-video/:id/status   – Check render status
   GET    /api/voices                   – List TTS voices (28)
   GET    /api/music-tags               – List music categories (12)
+
+Client Profiles (multi-account):
+  GET    /api/profiles                 – List profiles + account summaries
+  POST   /api/profiles                 – Create profile (name, genres)
+  GET    /api/profiles/:id             – Get profile
+  PATCH  /api/profiles/:id             – Update profile
+  DELETE /api/profiles/:id             – Delete profile + accounts
+  POST   /api/profiles/resolve         – Auto-route: { category, platform } → accounts
+  GET    /api/profiles/:id/accounts    – List profile accounts
+  POST   /api/profiles/:id/accounts    – Add account (encrypted credentials)
+  DELETE /api/profiles/:id/accounts/:accountId – Remove account
+  POST   /api/oauth/:provider/connect  – Start OAuth flow (YouTube supported)
+  GET    /api/oauth/:provider/callback – OAuth redirect target
 
 Pipeline (NEW):
   POST   /api/pipeline/run             – Run full AI pipeline (single platform)

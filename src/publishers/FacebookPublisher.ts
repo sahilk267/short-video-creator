@@ -21,7 +21,7 @@ export class FacebookPublisher implements PlatformPublisher {
 
   constructor(config: Config) {
     this.pageAccessToken = config.facebookAccessToken || process.env.FACEBOOK_PAGE_ACCESS_TOKEN || "";
-    this.pageId = process.env.FACEBOOK_PAGE_ID || "";
+    this.pageId = config.facebookPageId || process.env.FACEBOOK_PAGE_ID || "";
   }
 
   async validateCredentials(): Promise<boolean> {

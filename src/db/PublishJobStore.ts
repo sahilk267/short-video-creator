@@ -49,6 +49,7 @@ export class PublishJobStore {
     language: string;
     thumbnailPath?: string;
     scheduleAt?: string;
+    accountId?: string;
   }): Promise<PublishJobRecord> {
     const jobs = await this.readJobs();
     const now = new Date().toISOString();
@@ -64,6 +65,7 @@ export class PublishJobStore {
       language: params.language,
       thumbnailPath: params.thumbnailPath,
       scheduleAt: params.scheduleAt ?? null,
+      accountId: params.accountId ?? null,
       status: "queued",
       attemptCount: 0,
       externalId: null,

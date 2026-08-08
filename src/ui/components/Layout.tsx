@@ -79,6 +79,7 @@ const NAV_SECTIONS = [
     title: 'Publishing & Growth',
     items: [
       { path: '/publish', label: 'Publish', icon: <PublishIcon /> },
+      { path: '/profiles', label: 'Client Profiles', icon: <BusinessIcon />, badge: 'NEW' },
       { path: '/scheduler', label: 'Scheduler (Queue)', icon: <ScheduleIcon /> },
       { path: '/schedule-manager', label: 'Schedule Manager', icon: <EventRepeatIcon />, badge: 'NEW' },
       { path: '/queue', label: 'Bulk Queue', icon: <QueueIcon /> },
