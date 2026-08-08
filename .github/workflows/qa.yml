@@ -75,6 +75,10 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Typecheck QA scripts
+        run: npx tsc -p tsconfig.scripts.json --noEmit
+      - name: Check AI-mistake classes
+        run: npx ts-node scripts/qa/check-ai-mistakes.ts
       - name: Regenerate index + docs
         run: |
           npx ts-node scripts/qa/generate-index.ts
