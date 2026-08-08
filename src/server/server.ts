@@ -76,6 +76,28 @@ export class Server {
     this.applySecurityHeaders();
     this.applyCors();
 
+    // Trace-level request logging: every request (method, path, status, duration)
+    // is logged when LOG_LEVEL=trace, so even the smallest UI click shows up.
+    this.app.use((req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+      if (this.config.logLevel === "trace") {
+        const start = process.hrtime.bigint();
+        res.on("finish", () => {
+          const durationMs = (Number(process.hrtime.bigint() - start) / 1e6).toFixed(2);
+          logger.trace(
+            {
+              method: req.method,
+              path: req.originalUrl,
+              status: res.statusCode,
+              durationMs,
+              ip: req.ip,
+            },
+            "http request",
+          );
+        });
+      }
+      next();
+    });
+
     // Optional token validation (non-blocking) + global API rate limit.
     this.app.use(validateTokenIfPresent);
     this.app.use("/api", apiRateLimiter);

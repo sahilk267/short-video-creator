@@ -25,7 +25,7 @@ const defaultWhisperModel: whisperModels = "medium.en"; // possible options: "ti
 
 // Create the global logger
 const versionNumber = process.env.npm_package_version;
-const dataDirPath = process.env.DATA_DIR_PATH || path.join(os.homedir(), ".ai-agents-az-video-generator");
+const dataDirPath = expandHomeDir(process.env.DATA_DIR_PATH) || path.join(os.homedir(), ".ai-agents-az-video-generator");
 const logsDirPath = path.join(dataDirPath, "logs");
 
 // Ensure logs directory exists
@@ -62,6 +62,7 @@ export const logger = isRunningInDocker
       ],
     })
   : pino({
+      level: process.env.LOG_LEVEL || defaultLogLevel,
       timestamp: pino.stdTimeFunctions.isoTime,
       redact: [
         "youtubeClientSecret",
@@ -81,23 +82,20 @@ export const logger = isRunningInDocker
         pid: process.pid,
         version: versionNumber,
       },
-    }, pino.transport({
-      targets: [
-        {
-          target: 'pino/file',
-          level: process.env.LOG_LEVEL || defaultLogLevel,
-          options: { destination: 1 } // stdout
-        },
-        {
-          target: 'pino/file',
-          level: process.env.LOG_LEVEL || defaultLogLevel,
-          options: { 
-            destination: path.join(logsDirPath, "app.log"),
-            mkdir: true 
-          }
-        }
-      ]
-    }));
+    }, pino.multistream([
+      {
+        stream: process.stdout,
+        level: process.env.LOG_LEVEL || defaultLogLevel,
+      },
+      {
+        stream: pino.destination({
+          dest: path.join(logsDirPath, "app.log"),
+          mkdir: true,
+          sync: true,
+        }),
+        level: process.env.LOG_LEVEL || defaultLogLevel,
+      },
+    ]));
 
 export class Config {
   public dataDirPath: string;
