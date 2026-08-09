@@ -21,17 +21,17 @@ import { logger } from "../logger";
 import { MusicManager } from "./music";
 import { VideoMetadataStore } from "../db/VideoMetadataStore";
 import { AiLlmGenerator } from "../script-generator/AiLlmGenerator";
+import { resolveTheme } from "../components/videos/ThemeEngine";
 import type {
   SceneInput,
   RenderConfig,
   Scene,
   Caption,
   VideoStatus,
-  MusicMoodEnum,
   MusicTag,
   MusicForVideo,
 } from "../types/shorts";
-import { LanguageEnum, TextModeEnum } from "../types/shorts";
+import { LanguageEnum, TextModeEnum, MusicMoodEnum } from "../types/shorts";
 
 const ignoredCapitalizedSearchPhrases = new Set([
   "this",
@@ -626,6 +626,7 @@ export class ShortCreator {
       scenes.push({
         captions: displayCaptions,
         headline: overlayHeadline,
+        subcategory: scene.subcategory,
         [mediaUrl.endsWith(".mp4") ? "video" : "imageUrl"]: mediaUrl,
         visualPrompt: scene.visualPrompt,
         audio: {
@@ -638,7 +639,7 @@ export class ShortCreator {
       index++;
     }
 
-    const selectedMusic = this.findMusic(totalDuration, config.music);
+    const selectedMusic = this.findMusic(totalDuration, config.music, config.category);
     logger.debug({ selectedMusic }, "Selected music for the video");
 
     console.log(`[ShortCreator] Final rendering with Remotion for video ${videoId}...`);
@@ -662,6 +663,8 @@ export class ShortCreator {
             subtitleLanguage: config.captionLanguage || config.subtitleLanguage,
           },
           musicVolume: config.musicVolume,
+          category: config.category,
+          templateVariant: config.templateVariant,
         },
       },
       videoId,
@@ -757,14 +760,24 @@ export class ShortCreator {
     return fs.readFileSync(videoPath);
   }
 
-  private findMusic(videoDuration: number, tag?: MusicMoodEnum): MusicForVideo {
+  private findMusic(
+    videoDuration: number,
+    tag?: MusicMoodEnum,
+    category?: string,
+  ): MusicForVideo {
+    let effectiveTag = tag;
+    if (!effectiveTag || effectiveTag === MusicMoodEnum.chill) {
+      const themeMood = resolveTheme(category || "News").musicMood;
+      effectiveTag = themeMood;
+    }
     const musicFiles = this.musicManager.musicList().filter((music) => {
-      if (tag) {
-        return music.mood === tag;
+      if (effectiveTag) {
+        return music.mood === effectiveTag;
       }
       return true;
     });
-    return musicFiles[Math.floor(Math.random() * musicFiles.length)];
+    const pool = musicFiles.length > 0 ? musicFiles : this.musicManager.musicList();
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   public ListAvailableMusicTags(): MusicTag[] {

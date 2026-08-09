@@ -14,6 +14,7 @@ export const shortVideoSchema = z.object({
     z.object({
       captions: z.custom<Caption[]>(),
       headline: z.string().optional(),
+      subcategory: z.string().optional(),
       audio: z.object({
         url: z.string(),
         duration: z.number(),
@@ -37,6 +38,8 @@ export const shortVideoSchema = z.object({
     durationMs: z.number(),
     musicVolume: z.nativeEnum(MusicVolumeEnum).optional(),
     useAiImages: z.boolean().optional(),
+    category: z.string().optional(),
+    templateVariant: z.string().optional(),
   }),
   music: z.object({
     file: z.string(),

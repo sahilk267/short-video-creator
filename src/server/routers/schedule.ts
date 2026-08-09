@@ -176,6 +176,7 @@ export class ScheduleRouter {
               subtitleFontScale: 1,
               paddingBack: 1500,
               useAiImages: false,
+              category,
             },
             VideoTypeEnum.short,
             language,

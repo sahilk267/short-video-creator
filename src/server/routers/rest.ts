@@ -69,6 +69,11 @@ export class APIRouter {
           const input = validateCreateShortInput(req.body);
           logger.info({ input }, "Queueing short video");
 
+          const category = input.category || input.contentCategory || input.config.category || "News";
+          if (!input.config.category) {
+            input.config.category = category;
+          }
+
           const videoId = this.shortCreator.addToQueue(
             input.scenes,
             input.config,

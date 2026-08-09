@@ -104,6 +104,7 @@ export class RenderWorker {
       videoType,
       subtitleLanguage,
       orientation,
+      category,
       namingKey,
     } = job.data;
 
@@ -117,9 +118,14 @@ export class RenderWorker {
     // Update job progress
     await job.updateProgress(5);
 
+    const renderConfig: RenderConfig = {
+      ...config,
+      category: category || config?.category || "News",
+    };
+
     const videoId = this.shortCreator.addToQueue(
       sceneInput,
-      config,
+      renderConfig,
       videoType,
       subtitleLanguage,
     );

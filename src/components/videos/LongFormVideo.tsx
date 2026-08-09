@@ -19,6 +19,7 @@ import { calculateVolume, createCaptionPages, shortVideoSchema } from "../utils"
 import { NewsOverlay } from "./NewsOverlay";
 import { TextModeEnum } from "../../types/shorts";
 import { videoUiFontFamily } from "./fontStacks";
+import { pickTemplateVariant, resolveTheme, stableHash } from "./ThemeEngine";
 
 /** Same schema as shortVideoSchema – reused for compatibility */
 export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
@@ -34,7 +35,17 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   const showOverlay = textMode !== TextModeEnum.captions;
   const showCaptions = textMode !== TextModeEnum.overlay;
 
-  const captionBackgroundColor = config.captionBackgroundColor ?? "#111111";
+  const theme = resolveTheme(
+    config.category || "News",
+    scenes.map((s) => s.subcategory || ""),
+  );
+  const variant = pickTemplateVariant(
+    theme,
+    stableHash(`${scenes[0]?.headline || ""}${(config.category || "")}${scenes.length}`).toString(),
+    config.templateVariant,
+  );
+
+  const captionBackgroundColor = config.captionBackgroundColor ?? theme.palette.captionHighlight;
   const [musicVolume, musicMuted] = calculateVolume(config.musicVolume);
 
   // Chapter label derived from scene headline
@@ -44,7 +55,7 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   };
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
+    <AbsoluteFill style={{ backgroundColor: theme.palette.bg }}>
       {/* Background music loop */}
       <Audio
         loop
@@ -109,6 +120,9 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                 tickerText={buildChapterLabel(headline, i)}
                 sceneIndex={i}
                 totalScenes={scenes.length}
+                categoryLabel={theme.label}
+                theme={theme}
+                variant={variant}
               />
             ) : null}
 
@@ -133,12 +147,12 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                   fontWeight: 800,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
-                  background: "rgba(8,12,18,0.58)",
-                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: `${theme.palette.accent}22`,
+                  border: `1px solid ${theme.palette.accent}88`,
                   padding: "10px 16px",
                   borderRadius: 999,
                   backdropFilter: "blur(12px)",
-                  boxShadow: "0 16px 32px rgba(0,0,0,0.24)",
+                  boxShadow: `0 16px 32px rgba(0,0,0,0.24), 0 0 24px ${theme.palette.accentGlow}`,
                   opacity: interpolate(
                     relativeFrame,
                     [0, 15, durationInFrames - 15, durationInFrames],

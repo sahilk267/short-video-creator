@@ -32,6 +32,7 @@ export enum LanguageEnum {
 export type Scene = {
   captions: Caption[];
   headline?: string;
+  subcategory?: string;
   video?: string;
   imageUrl?: string;
   visualPrompt?: string;
@@ -258,6 +259,16 @@ export const renderConfig = z.object({
     .max(3600)
     .default(180)
     .describe("Target maximum output duration in seconds before auto-splitting"),
+  category: z
+    .string()
+    .max(60)
+    .default("News")
+    .describe("Content category/genre - drives theme, template variant, and music selection"),
+  templateVariant: z
+    .string()
+    .max(40)
+    .optional()
+    .describe("Optional template variant override (auto-picked by genre when unset)"),
 });
 export type RenderConfig = z.infer<typeof renderConfig>;
 
@@ -290,6 +301,20 @@ export const createShortInput = z.object({
     .max(32, "Maximum 32 scenes allowed for current video length constraints")
     .describe("Video scenes in sequential order - each scene should flow naturally to the next"),
   config: renderConfig.describe("Video rendering configuration - affects style, audio, and presentation"),
+  contentCategory: z
+    .string()
+    .max(60)
+    .optional()
+    .describe("Legacy alias for the category selection from the UI creator (mapped onto config.category)"),
+  category: z
+    .string()
+    .max(60)
+    .optional()
+    .describe("Category/genre selection from the UI creator (primary source)"),
+  platformPsychology: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe("Optional platform psychology output stored alongside the video"),
 }).refine((data) => {
   // Business logic validation: ensure total text length is reasonable for video duration
   const totalTextLength = data.scenes.reduce((sum, scene) => sum + scene.text.length, 0);

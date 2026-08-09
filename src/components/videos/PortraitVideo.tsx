@@ -18,6 +18,7 @@ import {
 import { NewsOverlay } from "./NewsOverlay";
 import { TextModeEnum } from "../../types/shorts";
 import { videoUiFontFamily } from "./fontStacks";
+import { pickTemplateVariant, resolveTheme, stableHash } from "./ThemeEngine";
 
 export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   scenes,
@@ -32,7 +33,17 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   const showOverlay = textMode !== TextModeEnum.captions;
   const showCaptions = textMode !== TextModeEnum.overlay;
 
-  const captionBackgroundColor = config.captionBackgroundColor ?? "blue";
+  const theme = resolveTheme(
+    config.category || "News",
+    scenes.map((s) => s.subcategory || ""),
+  );
+  const variant = pickTemplateVariant(
+    theme,
+    stableHash(`${scenes[0]?.headline || ""}${(config.category || "")}${scenes.length}`).toString(),
+    config.templateVariant,
+  );
+
+  const captionBackgroundColor = config.captionBackgroundColor ?? theme.palette.captionHighlight;
 
   const activeStyle = {
     backgroundColor: captionBackgroundColor,
@@ -58,7 +69,7 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
   const [musicVolume, musicMuted] = calculateVolume(config.musicVolume);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#071018" }}>
+    <AbsoluteFill style={{ backgroundColor: theme.palette.bg }}>
       <Audio
         loop
         src={music.url}
@@ -90,12 +101,15 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
             durationInFrames={durationInFrames}
             key={`scene-${i}`}
           >
-            <SceneMedia scene={scene} durationInFrames={durationInFrames} />
+            <SceneMedia scene={scene} durationInFrames={durationInFrames} variant={variant} />
             {showOverlay ? (
               <NewsOverlay
                 headline={scene.headline}
                 sceneIndex={i}
                 totalScenes={scenes.length}
+                categoryLabel={theme.label}
+                theme={theme}
+                variant={variant}
               />
             ) : null}
             <Audio src={audio.url} />
@@ -167,21 +181,28 @@ export const PortraitVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
 const SceneMedia: React.FC<{
   scene: z.infer<typeof shortVideoSchema>["scenes"][number];
   durationInFrames: number;
-}> = ({ scene, durationInFrames }) => {
+  variant: ReturnType<typeof pickTemplateVariant>;
+}> = ({ scene, durationInFrames, variant }) => {
   const relativeFrame = useCurrentFrame();
+  const impactStart = 6;
+  const isImpact = variant === "bold" || variant === "dark";
   const driftX = interpolate(relativeFrame, [0, durationInFrames], [-18, 18], {
     extrapolateRight: "clamp",
   });
   const driftY = interpolate(relativeFrame, [0, durationInFrames], [10, -12], {
     extrapolateRight: "clamp",
   });
-  const scale = interpolate(relativeFrame, [0, durationInFrames], [1.02, 1.1], {
-    extrapolateRight: "clamp",
-  });
+  const scale = isImpact
+    ? interpolate(relativeFrame, [0, 10, durationInFrames], [1.35, 1.06, 1.1], {
+        extrapolateRight: "clamp",
+      })
+    : interpolate(relativeFrame, [0, durationInFrames], [1.02, 1.1], {
+        extrapolateRight: "clamp",
+      });
   const opacity = interpolate(
     relativeFrame,
     [0, 8, Math.max(10, durationInFrames - 10), durationInFrames],
-    [0.72, 1, 1, 0.86],
+    [0, 1, 1, 0.86],
     { extrapolateRight: "clamp" },
   );
 
@@ -200,6 +221,17 @@ const SceneMedia: React.FC<{
       ) : (
         <Img src={scene.imageUrl as string} style={mediaStyle} />
       )}
+      {isImpact ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 46%)`,
+            opacity: interpolate(relativeFrame, [0, impactStart, impactStart + 6], [1, 0, 0], {
+              extrapolateRight: "clamp",
+            }),
+            mixBlendMode: "screen",
+          }}
+        />
+      ) : null}
     </>
   );
 };

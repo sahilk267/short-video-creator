@@ -123,7 +123,7 @@ export class AiLlmGenerator {
             { role: "user", content: prompt },
           ],
           temperature: 0.7,
-          max_tokens: 4000,
+          max_tokens: 16000,
           stream: false,
         };
         const response = await axios.post(`${baseUrl}/chat/completions`, body, {

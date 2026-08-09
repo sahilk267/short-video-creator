@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { videoUiFontFamily } from "./fontStacks";
+import type { VideoTheme, TemplateVariantName } from "./ThemeEngine";
 
 interface NewsOverlayProps {
   headline?: string;
@@ -8,6 +9,8 @@ interface NewsOverlayProps {
   sceneIndex?: number;
   totalScenes?: number;
   categoryLabel?: string;
+  theme?: VideoTheme;
+  variant?: TemplateVariantName;
 }
 
 type OverlayTheme = {
@@ -65,10 +68,24 @@ export const NewsOverlay: React.FC<NewsOverlayProps> = ({
   sceneIndex = 0,
   totalScenes = 1,
   categoryLabel,
+  theme: resolvedTheme,
+  variant = "classic",
 }) => {
   const frame = useCurrentFrame();
   const { width } = useVideoConfig();
-  const theme = resolveOverlayTheme(headline, categoryLabel, tickerText);
+
+  const themeFromThemeEngine: OverlayTheme | undefined = resolvedTheme && {
+    label: resolvedTheme.label,
+    accent: resolvedTheme.palette.accent,
+    accentSoft: resolvedTheme.palette.accentSoft,
+    accentGlow: resolvedTheme.palette.accentGlow,
+  };
+  const theme = themeFromThemeEngine || resolveOverlayTheme(headline, categoryLabel, tickerText);
+  const accent = theme.accent;
+  const isBold = variant === "bold";
+  const isModern = variant === "modern";
+  const isDark = variant === "dark";
+  const isSoft = variant === "soft";
 
   const introOpacity = interpolate(frame, [0, 8, 20], [0, 1, 1], {
     extrapolateRight: "clamp",
@@ -180,34 +197,42 @@ export const NewsOverlay: React.FC<NewsOverlayProps> = ({
           <div
             style={{
               display: "inline-block",
-              maxWidth: "86%",
-              background: "rgba(10, 16, 24, 0.72)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              borderRadius: 28,
-              padding: "18px 24px 20px 24px",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.35)",
+              maxWidth: isBold ? "100%" : "86%",
+              background: isDark
+                ? "rgba(4, 6, 10, 0.9)"
+                : isBold
+                  ? `linear-gradient(135deg, ${accent} 0%, rgba(10,16,24,0.92) 70%)`
+                  : "rgba(10, 16, 24, 0.72)",
+border: isSoft
+                ? `2px solid ${theme.accentSoft}`
+                : `1px solid ${isModern ? accent : "rgba(255,255,255,0.18)"}`,
+              borderRadius: isBold ? 16 : isSoft ? 999 : 28,
+              padding: `18px ${isModern ? 20 : 24}px 20px 24px`,
+              boxShadow: isBold
+                ? `0 24px 60px rgba(0,0,0,0.5), 0 0 40px ${theme.accentGlow}`
+                : "0 24px 60px rgba(0,0,0,0.35)",
               backdropFilter: "blur(16px)",
             }}
           >
             <div
               style={{
-                color: theme.accent,
-                fontSize: "1.05rem",
+                color: accent,
+                fontSize: isBold ? "1.2rem" : "1.05rem",
                 fontWeight: 800,
-                letterSpacing: 1.8,
+                letterSpacing: isModern ? 3.2 : 1.8,
                 textTransform: "uppercase",
                 marginBottom: 8,
               }}
             >
-              {theme.label}
+              {isModern ? `${theme.label} :: BREAKING` : theme.label}
             </div>
             <div
               style={{
                 color: "#ffffff",
-                fontSize: "2.6rem",
+                fontSize: isBold ? "3rem" : "2.6rem",
                 lineHeight: 1,
                 fontWeight: 800,
-                letterSpacing: 0.2,
+                letterSpacing: isModern ? 0.6 : 0.2,
                 textTransform: "uppercase",
                 textShadow: "0 4px 18px rgba(0,0,0,0.25)",
               }}
@@ -217,10 +242,10 @@ export const NewsOverlay: React.FC<NewsOverlayProps> = ({
             <div
               style={{
                 marginTop: 12,
-                width: 88,
-                height: 5,
+                width: isBold ? 120 : 88,
+                height: isBold ? 8 : 5,
                 borderRadius: 999,
-                background: `linear-gradient(90deg, ${theme.accent} 0%, rgba(255,255,255,0.18) 100%)`,
+                background: `linear-gradient(90deg, ${accent} 0%, rgba(255,255,255,0.18) 100%)`,
               }}
             />
           </div>
