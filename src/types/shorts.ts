@@ -269,6 +269,11 @@ export const renderConfig = z.object({
     .max(40)
     .optional()
     .describe("Optional template variant override (auto-picked by genre when unset)"),
+  contentTemplate: z
+    .string()
+    .max(40)
+    .optional()
+    .describe("Optional content-structure template override (breaking, listicle, quiz, beforeafter, brainrot, explainer, story)"),
 });
 export type RenderConfig = z.infer<typeof renderConfig>;
 

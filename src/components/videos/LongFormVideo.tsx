@@ -17,6 +17,8 @@ import {
 import { z } from "zod";
 import { calculateVolume, createCaptionPages, shortVideoSchema } from "../utils";
 import { NewsOverlay } from "./NewsOverlay";
+import { TemplateChrome } from "./TemplateChrome";
+import { resolveContentTemplate } from "./ContentTemplateEngine";
 import { TextModeEnum } from "../../types/shorts";
 import { videoUiFontFamily } from "./fontStacks";
 import { pickTemplateVariant, resolveTheme, stableHash } from "./ThemeEngine";
@@ -44,6 +46,13 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
     stableHash(`${scenes[0]?.headline || ""}${(config.category || "")}${scenes.length}`).toString(),
     config.templateVariant,
   );
+
+  const contentTemplate = resolveContentTemplate({
+    category: config.category || "News",
+    scenes,
+    family: theme.family,
+    override: config.contentTemplate,
+  });
 
   const captionBackgroundColor = config.captionBackgroundColor ?? theme.palette.captionHighlight;
   const [musicVolume, musicMuted] = calculateVolume(config.musicVolume);
@@ -125,6 +134,13 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
                 variant={variant}
               />
             ) : null}
+
+            <TemplateChrome
+              template={contentTemplate}
+              theme={theme}
+              sceneIndex={i}
+              totalScenes={scenes.length}
+            />
 
             {/* Dark gradient overlay for readability */}
             <AbsoluteFill
