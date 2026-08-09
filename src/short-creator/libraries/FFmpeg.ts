@@ -1,4 +1,5 @@
 import ffmpeg from "fluent-ffmpeg";
+import { execFile } from "node:child_process";
 import { Readable } from "node:stream";
 import { logger } from "../../logger";
 
@@ -7,9 +8,11 @@ export class FFMpeg {
     return import("@ffmpeg-installer/ffmpeg").then((ffmpegInstaller) => {
       ffmpeg.setFfmpegPath(ffmpegInstaller.path);
       logger.info(`FFmpeg path set to: ${ffmpegInstaller.path}`);
-      return new FFMpeg();
+      return new FFMpeg(ffmpegInstaller.path);
     });
   }
+
+  private constructor(private readonly ffmpegBinPath: string) {}
 
   async saveNormalizedAudio(
     audio: ArrayBuffer,
@@ -107,6 +110,56 @@ export class FFMpeg {
           reject(error);
         })
         .save(outputPath);
+    });
+  }
+
+  async assessVideoFlatness(filePath: string): Promise<{
+    flat: boolean;
+    yavgRange: number;
+    frames: number;
+  }> {
+    return new Promise((resolve) => {
+      execFile(
+        this.ffmpegBinPath,
+        [
+          "-y",
+          "-i",
+          filePath,
+          "-vf",
+          "fps=2,signalstats,metadata=print",
+          "-f",
+          "null",
+          "-",
+        ],
+        {
+          timeout: 15000,
+          maxBuffer: 8 * 1024 * 1024,
+        },
+        (error, _stdout, stderr) => {
+          if (error) {
+            logger.warn({ error: error.message, filePath }, "Failed to assess video flatness");
+            resolve({ flat: false, yavgRange: 0, frames: 0 });
+            return;
+          }
+          const yavgRegex = /lavfi\.signalstats\.YAVG=([0-9.]+)/g;
+          const yavgValues: number[] = [];
+          let match: RegExpExecArray | null;
+          while ((match = yavgRegex.exec(stderr)) !== null) {
+            yavgValues.push(parseFloat(match[1]));
+          }
+
+          if (yavgValues.length === 0) {
+            resolve({ flat: false, yavgRange: 0, frames: 0 });
+            return;
+          }
+          const min = Math.min(...yavgValues);
+          const max = Math.max(...yavgValues);
+          const yavgRange = max - min;
+          // A video with barely any luma change across sampled frames is
+          // visually static/flat (dark frame or a solid-color scene).
+          resolve({ flat: yavgRange < 5, yavgRange, frames: yavgValues.length });
+        },
+      );
     });
   }
 

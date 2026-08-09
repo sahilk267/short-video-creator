@@ -610,6 +610,57 @@ export class ShortCreator {
         await this.downloadFile(video.url, tempMediaPath);
         excludeVideoIds.push(video.id);
         mediaUrl = `http://localhost:${this.config.port}/api/tmp/${tempMediaFileName}`;
+
+        // Detect visually flat/static stock clips (dark screens, solid-color
+        // shots, no motion) and replace them with an AI image so the scene
+        // keeps the viewer engaged instead of reading as a blank frame.
+        if (this.config.pollinationsApiKey && scene.visualPrompt) {
+          const { flat, yavgRange, frames } = await this.ffmpeg.assessVideoFlatness(
+            tempMediaPath,
+          );
+          if (flat) {
+            logger.info(
+              { sceneNum, yavgRange, frames, sceneId: sceneNum },
+              `Scene ${sceneNum}/${inputScenes.length} stock video is flat, generating AI image instead`,
+            );
+            console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Flat stock clip detected (YAVG range ${yavgRange.toFixed(1)}), generating AI image`);
+
+            const keywordFocus = (scene.keywords || []).slice(0, 4).join(", ");
+            const aiPrompt = (
+              scene.visualPrompt
+                ? `${scene.visualPrompt}${keywordFocus ? `. Focus on ${keywordFocus}.` : ""}`
+                : [scene.headline, scene.subcategory, ...(scene.keywords || []), scene.text]
+                  .filter(Boolean)
+                  .join(", ")
+            ).slice(0, 240);
+            const apiKeyParam = `&key=${this.config.pollinationsApiKey}`;
+            const pollinationsUrl = `https://gen.pollinations.ai/image/${encodeURIComponent(aiPrompt)}?width=${orientation === OrientationEnum.landscape ? 1920 : 1080}&height=${orientation === OrientationEnum.landscape ? 1080 : 1920}&nologo=true${apiKeyParam}`;
+            const aiFileName = `${cuid()}.jpg`;
+            const aiMediaPath = path.join(this.config.tempDirPath, aiFileName);
+            tempFiles.push(aiMediaPath);
+
+            console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] Fetching AI replacement image: ${pollinationsUrl.replace(/key=[^&]*/, 'key=***')}`);
+            try {
+              await this.downloadFile(pollinationsUrl, aiMediaPath);
+              mediaUrl = `http://localhost:${this.config.port}/api/tmp/${aiFileName}`;
+              tempMediaPath = aiMediaPath;
+              tempMediaFileName = aiFileName;
+              console.log(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] AI replacement image ready`);
+            } catch (aiErr: any) {
+              console.error(`[ShortCreator] [Scene ${sceneNum}/${inputScenes.length}] AI replacement image failed (${pollinationsUrl}): ${aiErr.message}. Keeping stock video.`);
+              logger.error(aiErr, `Error downloading flat-scene AI image for scene ${sceneNum}`);
+              const aiIndex = tempFiles.indexOf(aiMediaPath);
+              if (aiIndex > -1) {
+                tempFiles.splice(aiIndex, 1);
+              }
+            }
+          } else {
+            logger.debug(
+              { sceneNum, yavgRange, frames },
+              `Scene ${sceneNum}/${inputScenes.length} stock video has visual detail, keeping as-is`,
+            );
+          }
+        }
       }
 
       const baseHeadline =
