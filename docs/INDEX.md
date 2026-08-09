@@ -1,6 +1,6 @@
 # Codebase Index (auto-generated)
 
-> For commit: `b4898bc` · 313 source files · 312 API endpoints · 44 pages · 18 stores
+> For commit: `e15c4bd` · 314 source files · 312 API endpoints · 44 pages · 18 stores
 
 ## Files
 
@@ -18,6 +18,7 @@
 | `src/components/videos/NewsOverlay.tsx` | module | - | NewsOverlay |
 | `src/components/videos/PortraitVideo.tsx` | module | - | PortraitVideo |
 | `src/components/videos/Test.tsx` | module | - | TestVideo |
+| `src/components/videos/ThemeEngine.ts` | engine | ThemeEngine – genre-aware visual + audio theming for rendered videos. Maps a content category (plus optional per-scene s | TemplateVariantName, VideoTheme, pickTemplateVariant, resolveTheme, stableHash |
 | `src/components/videos/fontStacks.ts` | module | - | videoUiFontFamily |
 | `src/config.ts` | config | Create the global logger | Config, KOKORO_MODEL, isDevMode, logger |
 | `src/config/categories.ts` | config | - | CONTENT_CATEGORIES, ContentCategory, SOURCE_CATEGORIES, isContentCategory, normalizeCategory |

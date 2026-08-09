@@ -1,7 +1,7 @@
 {
-  "commit": "b4898bc",
+  "commit": "e15c4bd",
   "summary": {
-    "files": 313,
+    "files": 314,
     "endpoints": 312,
     "pages": 44,
     "stores": 18
@@ -111,6 +111,18 @@
       "responsibility": "",
       "exports": [
         "TestVideo"
+      ]
+    },
+    {
+      "path": "src/components/videos/ThemeEngine.ts",
+      "type": "engine",
+      "responsibility": "ThemeEngine – genre-aware visual + audio theming for rendered videos. Maps a content category (plus optional per-scene subcategory) to a full rendering theme: background/palette, overlay accent + labe",
+      "exports": [
+        "TemplateVariantName",
+        "VideoTheme",
+        "pickTemplateVariant",
+        "resolveTheme",
+        "stableHash"
       ]
     },
     {
