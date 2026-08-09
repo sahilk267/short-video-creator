@@ -1,6 +1,6 @@
 # Codebase Index (auto-generated)
 
-> For commit: `e15c4bd` · 314 source files · 312 API endpoints · 44 pages · 18 stores
+> For commit: `e0918ca` · 314 source files · 312 API endpoints · 44 pages · 18 stores
 
 ## Files
 
@@ -183,7 +183,7 @@
 | `src/services/WatermarkEngine.ts` | engine | - | WatermarkConfig, WatermarkEngine |
 | `src/services/WebhookNotificationEngine.ts` | engine | Telegram | NotificationEvent, NotificationLog, NotificationPayload, NotificationResult, WebhookChannel, WebhookConfig, WebhookNotificationEngine |
 | `src/short-creator/ShortCreator.ts` | module | todo add a semaphore | ShortCreator |
-| `src/short-creator/libraries/FFmpeg.ts` | module | - | FFMpeg |
+| `src/short-creator/libraries/FFmpeg.ts` | module | A video with barely any luma change across sampled frames is | FFMpeg |
 | `src/short-creator/libraries/Kokoro.ts` | module | - | Kokoro |
 | `src/short-creator/libraries/Pexels.ts` | module | - | PexelsAPI |
 | `src/short-creator/libraries/Pixabay.ts` | module | - | PixabayAPI, PixabayVideo |

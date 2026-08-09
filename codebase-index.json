@@ -1,5 +1,5 @@
 {
-  "commit": "e15c4bd",
+  "commit": "e0918ca",
   "summary": {
     "files": 314,
     "endpoints": 312,
@@ -1718,7 +1718,7 @@
     {
       "path": "src/short-creator/libraries/FFmpeg.ts",
       "type": "module",
-      "responsibility": "",
+      "responsibility": "A video with barely any luma change across sampled frames is",
       "exports": [
         "FFMpeg"
       ]
