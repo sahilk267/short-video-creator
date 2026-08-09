@@ -52,7 +52,7 @@ const VideoCreator: React.FC = () => {
   const [config, setConfig] = useState<RenderConfig>({
     paddingBack: 1500,
     music: MusicMoodEnum.chill,
-    captionPosition: CaptionPositionEnum.bottom,
+    captionPosition: CaptionPositionEnum.center,
     captionBackgroundColor: "blue",
     voice: VoiceEnum.af_heart,
     scriptLanguage: LanguageEnum.en,
@@ -61,7 +61,7 @@ const VideoCreator: React.FC = () => {
     captionLanguage: LanguageEnum.en,
     subtitleLanguage: LanguageEnum.en,
     textMode: TextModeEnum.hybrid,
-    subtitleLineCount: 1,
+    subtitleLineCount: 2,
     subtitleFontScale: 1,
     orientation: OrientationEnum.portrait,
     musicVolume: MusicVolumeEnum.high,

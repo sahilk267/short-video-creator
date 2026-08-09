@@ -189,7 +189,7 @@ export const renderConfig = z.object({
     .describe("Music mood that matches the video's emotional tone"),
   captionPosition: z
     .nativeEnum(CaptionPositionEnum)
-    .default(CaptionPositionEnum.bottom)
+    .default(CaptionPositionEnum.center)
     .describe("Caption placement for optimal readability"),
   captionBackgroundColor: z
     .string()
@@ -229,7 +229,7 @@ export const renderConfig = z.object({
     .int()
     .min(1)
     .max(3)
-    .default(1)
+    .default(2)
     .describe("Maximum subtitle lines shown at once"),
   subtitleFontScale: z
     .number()
