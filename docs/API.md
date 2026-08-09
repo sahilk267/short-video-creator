@@ -23,7 +23,7 @@ Rate limit exceeded: `HTTP 429 Too Many Requests`
 ---
 
 <!-- AUTO-GENERATED:api-endpoints:BEGIN -->
-Live API surface derived from source (312 routes).
+Live API surface derived from source (314 routes).
 
 | Method | Path | Router |
 |--------|------|--------|
@@ -195,6 +195,8 @@ Live API surface derived from source (312 routes).
 | `GET` | `/api/reports/:reportId` | deferredApiRouter |
 | `POST` | `/api/reports/fetch` | deferredApiRouter |
 | `POST` | `/api/reports/merge` | deferredApiRouter |
+| `GET` | `/api/repurpose` | repurposeRouter |
+| `POST` | `/api/repurpose` | repurposeRouter |
 | `GET` | `/api/schedule` | scheduleRouter |
 | `POST` | `/api/schedule` | scheduleRouter |
 | `DELETE` | `/api/schedule/:id` | scheduleRouter |

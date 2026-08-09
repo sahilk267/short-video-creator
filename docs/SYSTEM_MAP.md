@@ -223,7 +223,7 @@ System:
 
 
 <!-- AUTO-GENERATED:router-inventory:BEGIN -->
-**42 routers** registered in `src/server/server.ts`.
+**43 routers** registered in `src/server/server.ts`.
 
 | Method | Path | Router |
 |--------|------|--------|
@@ -395,6 +395,8 @@ System:
 | `GET` | `/api/reports/:reportId` | deferredApiRouter |
 | `POST` | `/api/reports/fetch` | deferredApiRouter |
 | `POST` | `/api/reports/merge` | deferredApiRouter |
+| `GET` | `/api/repurpose` | repurposeRouter |
+| `POST` | `/api/repurpose` | repurposeRouter |
 | `GET` | `/api/schedule` | scheduleRouter |
 | `POST` | `/api/schedule` | scheduleRouter |
 | `DELETE` | `/api/schedule/:id` | scheduleRouter |

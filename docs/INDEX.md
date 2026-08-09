@@ -1,6 +1,6 @@
 # Codebase Index (auto-generated)
 
-> For commit: `721e765` · 316 source files · 312 API endpoints · 44 pages · 18 stores
+> For commit: `73e326f` · 319 source files · 314 API endpoints · 44 pages · 18 stores
 
 ## Files
 
@@ -98,6 +98,7 @@
 | `src/server/routers/quality.ts` | router | - | QualityRouter |
 | `src/server/routers/queue.ts` | router | eslint-disable-next-line @typescript-eslint/no-require-imports | QueueRouter |
 | `src/server/routers/recycle.ts` | router | - | RecycleRouter |
+| `src/server/routers/repurpose.ts` | router | RepurposeRouter – long-form video → short clips (OpusClip-style, OSS). POST /api/repurpose { videoPath, clipSeconds?, ma | RepurposeRouter |
 | `src/server/routers/rest.ts` | router | Resolve a user-supplied file name safely inside a base directory, | APIRouter |
 | `src/server/routers/schedule.ts` | router | ScheduleRouter – Full schedule persistence with cron-like runner GET /api/schedule – list schedules POST /api/schedule – | ScheduleRouter |
 | `src/server/routers/shadowban.ts` | router | Shadowban | ShadowbanRouter |
@@ -163,6 +164,7 @@
 | `src/services/PlatformPsychologyEngine.ts` | engine | - | Platform, PlatformProfile, PlatformPsychologyEngine |
 | `src/services/ProfileService.ts` | service | Resolve the active accounts that should receive a video of `category` on `platform`. | ProfileService |
 | `src/services/QualityScoringEngine.ts` | engine | Deterministic proxy for engagement potential (no randomness). | QualityMetrics, QualityScoringEngine |
+| `src/services/RepurposeEngine.ts` | engine | Target clip length in seconds. | RepurposeClip, RepurposeEngine, RepurposeOptions |
 | `src/services/ResourceEngine.ts` | engine | - | CpuSnapshot, DiskSnapshot, MemorySnapshot, ResourceEngine, ResourceOptimization, ResourcePrediction, ResourceSnapshot |
 | `src/services/RuleBasedGenerator.ts` | module | - | RuleBasedGenerator |
 | `src/services/SchedulerService.ts` | service | SchedulerService – Phase 6.1 node-cron job that periodically: 1. Fetches new RSS reports 2. Creates ScriptPlan entries 3 | SchedulerService |
@@ -192,6 +194,7 @@
 | `src/short-creator/libraries/Remotion.ts` | module | Long-form always uses the LongFormVideo composition (16:9 landscape) | Remotion |
 | `src/short-creator/libraries/SubtitleBuilder.ts` | module | SubtitleBuilder – Phase 2.5 Generates subtitle files from Whisper transcription captions. Supports multiple languages, S | SubtitleBuilder, SubtitleOptions, SubtitleResult |
 | `src/short-creator/libraries/TtsAdapter.ts` | module | - | TtsAdapter |
+| `src/short-creator/libraries/VideoSegmenter.ts` | module | VideoSegmenter – pure, deterministic short-clip scoring logic. Turns a Whisper word-level transcript into candidate clip | ClipWindow, SegmentOptions, scoreWindow, selectTopClips |
 | `src/short-creator/libraries/Whisper.ts` | module | Mirror @remotion/install-whisper-cpp getWhisperExecutablePath logic | ErrorWhisper, Whisper |
 | `src/short-creator/music.ts` | module | - | MusicManager |
 | `src/types/profiles.ts` | types | OAuth / token payload. Stored ENCRYPTED at rest (AES-256-GCM). | ProfileAccountCredentials, ProfileAccountRecord, ProfileAccountStatus, ProfileAccountSummary, ProfileRecord, ProfileSummary |
@@ -495,6 +498,8 @@
 | `GET` | `/api/reports/:reportId` | deferredApiRouter |
 | `POST` | `/api/reports/fetch` | deferredApiRouter |
 | `POST` | `/api/reports/merge` | deferredApiRouter |
+| `GET` | `/api/repurpose` | repurposeRouter |
+| `POST` | `/api/repurpose` | repurposeRouter |
 | `GET` | `/api/schedule` | scheduleRouter |
 | `POST` | `/api/schedule` | scheduleRouter |
 | `DELETE` | `/api/schedule/:id` | scheduleRouter |

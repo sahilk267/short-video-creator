@@ -1,8 +1,8 @@
 {
-  "commit": "721e765",
+  "commit": "73e326f",
   "summary": {
-    "files": 316,
-    "endpoints": 312,
+    "files": 319,
+    "endpoints": 314,
     "pages": 44,
     "stores": 18
   },
@@ -865,6 +865,14 @@
       ]
     },
     {
+      "path": "src/server/routers/repurpose.ts",
+      "type": "router",
+      "responsibility": "RepurposeRouter – long-form video → short clips (OpusClip-style, OSS). POST /api/repurpose { videoPath, clipSeconds?, maxClips? } GET /api/repurpose list clips for a source (query: videoPath) The heav",
+      "exports": [
+        "RepurposeRouter"
+      ]
+    },
+    {
       "path": "src/server/routers/rest.ts",
       "type": "router",
       "responsibility": "Resolve a user-supplied file name safely inside a base directory,",
@@ -1515,6 +1523,16 @@
       ]
     },
     {
+      "path": "src/services/RepurposeEngine.ts",
+      "type": "engine",
+      "responsibility": "Target clip length in seconds.",
+      "exports": [
+        "RepurposeClip",
+        "RepurposeEngine",
+        "RepurposeOptions"
+      ]
+    },
+    {
       "path": "src/services/ResourceEngine.ts",
       "type": "engine",
       "responsibility": "",
@@ -1795,6 +1813,17 @@
       "responsibility": "",
       "exports": [
         "TtsAdapter"
+      ]
+    },
+    {
+      "path": "src/short-creator/libraries/VideoSegmenter.ts",
+      "type": "module",
+      "responsibility": "VideoSegmenter – pure, deterministic short-clip scoring logic. Turns a Whisper word-level transcript into candidate clips and picks the most \"short-form worthy\" segments without any paid/cloud process",
+      "exports": [
+        "ClipWindow",
+        "SegmentOptions",
+        "scoreWindow",
+        "selectTopClips"
       ]
     },
     {
@@ -4604,6 +4633,22 @@
       "path": "/api/reports/merge",
       "router": "deferredApiRouter",
       "referenced": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/repurpose",
+      "router": "repurposeRouter",
+      "referenced": [
+        "RepurposeEngine"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/repurpose",
+      "router": "repurposeRouter",
+      "referenced": [
+        "RepurposeEngine"
+      ]
     },
     {
       "method": "GET",
