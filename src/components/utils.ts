@@ -40,6 +40,7 @@ export const shortVideoSchema = z.object({
     useAiImages: z.boolean().optional(),
     category: z.string().optional(),
     templateVariant: z.string().optional(),
+    contentTemplate: z.string().optional(),
   }),
   music: z.object({
     file: z.string(),
