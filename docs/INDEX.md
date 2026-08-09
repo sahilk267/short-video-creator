@@ -1,6 +1,6 @@
 # Codebase Index (auto-generated)
 
-> For commit: `65d6e1f` · 314 source files · 312 API endpoints · 44 pages · 18 stores
+> For commit: `721e765` · 316 source files · 312 API endpoints · 44 pages · 18 stores
 
 ## Files
 
@@ -13,10 +13,12 @@
 | `src/components/root/index.ts` | module | - | - |
 | `src/components/types.ts` | module | - | AvailableComponentsEnum, OrientationConfig |
 | `src/components/utils.ts` | module | Check if we need to start a new page due to time gap | calculateVolume, createCaptionPages, getOrientationConfig, shortVideoSchema |
+| `src/components/videos/ContentTemplateEngine.ts` | engine | ContentTemplateEngine – content-driven layout/structure templates. Pairs with ThemeEngine (which picks the "look": palet | ChromeAnchor, ContentStructure, ContentTemplate, TemplateChromeKind, TemplateScene, listContentTemplates, pickTemplateChrome, resolveContentTemplate |
 | `src/components/videos/LandscapeVideo.tsx` | module | - | LandscapeVideo |
 | `src/components/videos/LongFormVideo.tsx` | module | LongFormVideo – Phase 3.2 Remotion component for 16:9 landscape long-form video (YouTube standard). Supports chapters de | LongFormVideo |
 | `src/components/videos/NewsOverlay.tsx` | module | - | NewsOverlay |
 | `src/components/videos/PortraitVideo.tsx` | module | - | PortraitVideo |
+| `src/components/videos/TemplateChrome.tsx` | module | Intro flash: full-frame accent flash for ~16 frames on scene 0. | TemplateChrome |
 | `src/components/videos/Test.tsx` | module | - | TestVideo |
 | `src/components/videos/ThemeEngine.ts` | engine | ThemeEngine – genre-aware visual + audio theming for rendered videos. Maps a content category (plus optional per-scene s | TemplateVariantName, VideoTheme, pickTemplateVariant, resolveTheme, stableHash |
 | `src/components/videos/fontStacks.ts` | module | - | videoUiFontFamily |

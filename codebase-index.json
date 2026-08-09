@@ -1,7 +1,7 @@
 {
-  "commit": "65d6e1f",
+  "commit": "721e765",
   "summary": {
-    "files": 314,
+    "files": 316,
     "endpoints": 312,
     "pages": 44,
     "stores": 18
@@ -74,6 +74,21 @@
       ]
     },
     {
+      "path": "src/components/videos/ContentTemplateEngine.ts",
+      "type": "engine",
+      "responsibility": "ContentTemplateEngine – content-driven layout/structure templates. Pairs with ThemeEngine (which picks the \"look\": palette, fonts, music). This engine picks the \"layout\": how scenes are structured and",
+      "exports": [
+        "ChromeAnchor",
+        "ContentStructure",
+        "ContentTemplate",
+        "TemplateChromeKind",
+        "TemplateScene",
+        "listContentTemplates",
+        "pickTemplateChrome",
+        "resolveContentTemplate"
+      ]
+    },
+    {
       "path": "src/components/videos/LandscapeVideo.tsx",
       "type": "module",
       "responsibility": "",
@@ -103,6 +118,14 @@
       "responsibility": "",
       "exports": [
         "PortraitVideo"
+      ]
+    },
+    {
+      "path": "src/components/videos/TemplateChrome.tsx",
+      "type": "module",
+      "responsibility": "Intro flash: full-frame accent flash for ~16 frames on scene 0.",
+      "exports": [
+        "TemplateChrome"
       ]
     },
     {
