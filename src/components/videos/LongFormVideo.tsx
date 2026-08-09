@@ -168,13 +168,25 @@ export const LongFormVideo: React.FC<z.infer<typeof shortVideoSchema>> = ({
             {/* Scene audio */}
             <Audio src={audio.url} />
 
-            {/* Bottom captions */}
+            {/* Captions */}
             {showCaptions ? (
               <AbsoluteFill
                 style={{
-                  justifyContent: "flex-end",
+                  justifyContent:
+                    config.captionPosition === "top"
+                      ? "flex-start"
+                      : config.captionPosition === "center"
+                        ? "center"
+                        : "flex-end",
                   alignItems: "center",
-                  paddingBottom: 60,
+                  paddingTop:
+                    config.captionPosition === "top"
+                      ? 100
+                      : config.captionPosition === "center"
+                        ? 60
+                        : 0,
+                  paddingBottom:
+                    config.captionPosition === "bottom" ? 60 : 0,
                 }}
               >
                 {pages.map((page, pageIdx) => {
